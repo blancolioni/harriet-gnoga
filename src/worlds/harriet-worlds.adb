@@ -1,7 +1,11 @@
+with Ada.Text_IO;
+
 with Harriet.Configure.Worlds;
 
 with Harriet.Db.Generation;
+with Harriet.Db.Sector_Vertex;
 with Harriet.Db.World;
+with Harriet.Db.World_Sector;
 
 package body Harriet.Worlds is
 
@@ -64,6 +68,42 @@ package body Harriet.Worlds is
          Selection.List := New_List;
       end if;
    end Filter;
+
+   ----------------
+   -- Get_Centre --
+   ----------------
+
+   function Get_Centre
+     (Sector : Harriet.Db.World_Sector_Reference)
+      return Sector_Vertex
+   is
+      Rec : constant Harriet.Db.World_Sector.World_Sector_Type :=
+              Harriet.Db.World_Sector.Get (Sector);
+   begin
+      return Sector_Vertex'
+        (Rec.X, Rec.Y, Rec.Z);
+   end Get_Centre;
+
+   ------------------
+   -- Get_Vertices --
+   ------------------
+
+   function Get_Vertices
+     (Sector : Harriet.Db.World_Sector_Reference)
+      return Sector_Vertex_Array
+   is
+      Count  : Natural := 0;
+   begin
+      return Result : Sector_Vertex_Array (1 .. 10) do
+         for Vertex of
+           Harriet.Db.Sector_Vertex.Select_By_Sector
+             (Harriet.Db.World_Sector.Get (Sector).Reference)
+         loop
+            Count := Count + 1;
+            Result (Count) := (Vertex.X, Vertex.Y, Vertex.Z);
+         end loop;
+      end return;
+   end Get_Vertices;
 
    ----------------
    -- Get_Worlds --
@@ -166,6 +206,23 @@ package body Harriet.Worlds is
    begin
       return Harriet.Db.World.Get (World).Radius;
    end Radius;
+
+   ------------------
+   -- Scan_Surface --
+   ------------------
+
+   procedure Scan_Surface
+     (World   : Harriet.Db.World_Reference;
+      Process : not null access
+        procedure (Sector : Harriet.Db.World_Sector_Reference))
+   is
+   begin
+      Ada.Text_IO.Put_Line (Name (World) & ": scanning surface");
+      for Sector of Harriet.Db.World_Sector.Select_By_World (World) loop
+         Process (Sector.Reference);
+      end loop;
+      Ada.Text_IO.Put_Line (Name (World) & ": done");
+   end Scan_Surface;
 
    -----------------
    -- Star_System --

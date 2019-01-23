@@ -47,6 +47,26 @@ package Harriet.Worlds is
      (World : Harriet.Db.World_Reference)
       return Boolean;
 
+   procedure Scan_Surface
+     (World : Harriet.Db.World_Reference;
+      Process : not null access
+        procedure (Sector : Harriet.Db.World_Sector_Reference));
+
+   type Sector_Vertex is
+      record
+         X, Y, Z : Signed_Unit_Real;
+      end record;
+
+   function Get_Centre
+     (Sector : Harriet.Db.World_Sector_Reference)
+      return Sector_Vertex;
+
+   type Sector_Vertex_Array is array (Positive range <>) of Sector_Vertex;
+
+   function Get_Vertices
+     (Sector : Harriet.Db.World_Sector_Reference)
+      return Sector_Vertex_Array;
+
 private
 
    package World_Lists is

@@ -84,6 +84,33 @@ package body Harriet.UI.Models.World is
             Model.Set_Cell (Row, 10, Rec.Ice_Coverage);
             Model.Set_Cell (Row, 11, Rec.Rotation_Period / 3600.0);
          end;
+
+         declare
+            procedure Add_Sector
+              (Sector : Harriet.Db.World_Sector_Reference);
+
+            procedure Add_Sector
+              (Sector : Harriet.Db.World_Sector_Reference)
+            is
+               Tiles : constant Harriet.Worlds.Sector_Vertex_Array :=
+                         Harriet.Worlds.Get_Vertices (Sector);
+               Rec   : World_Sector_Type :=
+                         World_Sector_Type'
+                           (Reference => Sector,
+                            Boundary  => <>,
+                            Centre    => Harriet.Worlds.Get_Centre (Sector));
+            begin
+               for Tile of Tiles loop
+                  Rec.Boundary.Append (Tile);
+               end loop;
+               Model.Sectors.Append (Rec);
+            end Add_Sector;
+
+         begin
+            Harriet.Worlds.Scan_Surface
+              (World, Add_Sector'Access);
+         end;
+
       end return;
    end Create;
 
