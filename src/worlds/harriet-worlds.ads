@@ -27,6 +27,18 @@ package Harriet.Worlds is
      (World : Harriet.Db.World_Reference)
       return Harriet.Db.Star_System_Reference;
 
+   function Name
+     (World : Harriet.Db.World_Reference)
+      return String;
+
+   function Mass
+     (World : Harriet.Db.World_Reference)
+      return Non_Negative_Real;
+
+   function Radius
+     (World : Harriet.Db.World_Reference)
+      return Non_Negative_Real;
+
    function Habitability
      (World : Harriet.Db.World_Reference)
       return Unit_Real;

@@ -1,6 +1,35 @@
+with Harriet.Configure.Worlds;
+
+with Harriet.Db.Generation;
 with Harriet.Db.World;
 
 package body Harriet.Worlds is
+
+   procedure Check_Surface
+     (World : Harriet.Db.World_Reference);
+
+   -------------------
+   -- Check_Surface --
+   -------------------
+
+   procedure Check_Surface
+     (World : Harriet.Db.World_Reference)
+   is
+      Is_Gen : constant Harriet.Db.Is_Generated_Reference :=
+                 Harriet.Db.World.Get (World).Reference;
+      Gen    : constant Harriet.Db.Generation.Generation_Type :=
+                 Harriet.Db.Generation.Get_By_Is_Generated
+                   (Is_Gen);
+   begin
+      if not Gen.Has_Element or else not Gen.Ready then
+         Harriet.Configure.Worlds.Generate_Surface (World);
+         if Gen.Has_Element then
+            Gen.Set_Ready (True);
+         else
+            Harriet.Db.Generation.Create (Is_Gen, True);
+         end if;
+      end if;
+   end Check_Surface;
 
    -----------
    -- Clear --
@@ -63,6 +92,7 @@ package body Harriet.Worlds is
       return Unit_Real
    is
    begin
+      Check_Surface (World);
       return Harriet.Db.World.Get (World).Habitability;
    end Habitability;
 
@@ -100,6 +130,42 @@ package body Harriet.Worlds is
       return Harriet.Db.World.Get (World).Category in
         Terrestrial .. Super_Terrestrial;
    end Is_Terrestrial;
+
+   ----------
+   -- Mass --
+   ----------
+
+   function Mass
+     (World : Harriet.Db.World_Reference)
+      return Non_Negative_Real
+   is
+   begin
+      return Harriet.Db.World.Get (World).Mass;
+   end Mass;
+
+   ----------
+   -- Name --
+   ----------
+
+   function Name
+     (World : Harriet.Db.World_Reference)
+      return String
+   is
+   begin
+      return Harriet.Db.World.Get (World).Name;
+   end Name;
+
+   ------------
+   -- Radius --
+   ------------
+
+   function Radius
+     (World : Harriet.Db.World_Reference)
+      return Non_Negative_Real
+   is
+   begin
+      return Harriet.Db.World.Get (World).Radius;
+   end Radius;
 
    -----------------
    -- Star_System --
