@@ -1,3 +1,4 @@
+private with Ada.Containers.Indefinite_Holders;
 private with Ada.Containers.Doubly_Linked_Lists;
 
 with Harriet.Db;
@@ -15,6 +16,13 @@ package Harriet.UI.Models.World is
      (Model : Root_World_Model'Class)
       return Harriet.Db.World_Reference;
 
+   procedure Scan_Surface
+     (Model   : Root_World_Model'Class;
+      Process : not null access
+        procedure (Sector   : Harriet.Db.World_Sector_Reference;
+                   Centre_X : Harriet.Worlds.Sector_Vertex;
+                   Boundary : Harriet.Worlds.Sector_Vertex_Array));
+
    type World_Model is
      access all Root_World_Model'Class;
 
@@ -24,14 +32,15 @@ package Harriet.UI.Models.World is
 
 private
 
-   package Sector_Boundary_Lists is
-     new Ada.Containers.Doubly_Linked_Lists
-       (Harriet.Worlds.Sector_Vertex, Harriet.Worlds."=");
+   package Sector_Boundary_Holders is
+     new Ada.Containers.Indefinite_Holders
+       (Harriet.Worlds.Sector_Vertex_Array,
+        Harriet.Worlds."=");
 
    type World_Sector_Type is
       record
          Reference : Harriet.Db.World_Sector_Reference;
-         Boundary  : Sector_Boundary_Lists.List;
+         Boundary  : Sector_Boundary_Holders.Holder;
          Centre    : Harriet.Worlds.Sector_Vertex;
       end record;
 
@@ -42,7 +51,7 @@ private
      new Harriet.UI.Models.Tables.Root_Table_Model with
       record
          Reference : Harriet.Db.World_Reference;
-         Sectors : World_Sector_Lists.List;
+         Sectors   : World_Sector_Lists.List;
       end record;
 
    function World

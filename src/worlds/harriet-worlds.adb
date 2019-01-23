@@ -1,5 +1,3 @@
-with Ada.Text_IO;
-
 with Harriet.Configure.Worlds;
 
 with Harriet.Db.Generation;
@@ -108,16 +106,16 @@ package body Harriet.Worlds is
       return Sector_Vertex_Array
    is
       Count  : Natural := 0;
+      Result : Sector_Vertex_Array (1 .. 10);
    begin
-      return Result : Sector_Vertex_Array (1 .. 10) do
-         for Vertex of
-           Harriet.Db.Sector_Vertex.Select_By_Sector
-             (Harriet.Db.World_Sector.Get (Sector).Reference)
-         loop
-            Count := Count + 1;
-            Result (Count) := (Vertex.X, Vertex.Y, Vertex.Z);
-         end loop;
-      end return;
+      for Vertex of
+        Harriet.Db.Sector_Vertex.Select_By_Sector
+          (Harriet.Db.World_Sector.Get (Sector).Reference)
+      loop
+         Count := Count + 1;
+         Result (Count) := (Vertex.X, Vertex.Y, Vertex.Z);
+      end loop;
+      return Result (1 .. Count);
    end Get_Vertices;
 
    ----------------
@@ -232,11 +230,9 @@ package body Harriet.Worlds is
         procedure (Sector : Harriet.Db.World_Sector_Reference))
    is
    begin
-      Ada.Text_IO.Put_Line (Name (World) & ": scanning surface");
       for Sector of Harriet.Db.World_Sector.Select_By_World (World) loop
          Process (Sector.Reference);
       end loop;
-      Ada.Text_IO.Put_Line (Name (World) & ": done");
    end Scan_Surface;
 
    -----------------

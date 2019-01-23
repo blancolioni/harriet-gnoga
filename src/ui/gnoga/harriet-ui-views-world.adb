@@ -1,3 +1,4 @@
+with Harriet.Color;
 with Harriet.Signals;
 
 with Harriet.Elementary_Functions;
@@ -8,6 +9,8 @@ with Harriet.Worlds;
 
 with Harriet.UI.Views.Model_Views;
 with Harriet.UI.Views.Picture;
+
+with Harriet.Db;
 
 package body Harriet.UI.Views.World is
 
@@ -21,7 +24,7 @@ package body Harriet.UI.Views.World is
    type Root_World_View is
      new Base_View.View_Type with
       record
-         View_Radius      : Non_Negative_Real := 1.0;
+         View_Radius      : Non_Negative_Real := 1.5;
          Clock_Handler_Id : Harriet.Signals.Handler_Id;
       end record;
 
@@ -122,6 +125,44 @@ package body Harriet.UI.Views.World is
       View.Font ("OpenSans", 10.0);
 
       Harriet.Worlds.Get_Ships (View.Model.World, Ships);
+
+      declare
+         procedure Draw_Sector
+           (Sector : Harriet.Db.World_Sector_Reference);
+
+         -----------------
+         -- Draw_Sector --
+         -----------------
+
+         procedure Draw_Sector
+           (Sector : Harriet.Db.World_Sector_Reference)
+         is
+         begin
+            if Harriet.Worlds.Get_Centre (Sector).Z > 0.0 then
+               declare
+                  Border : constant Harriet.Worlds.Sector_Vertex_Array :=
+                             Harriet.Worlds.Get_Vertices (Sector);
+                  First  : Boolean := True;
+               begin
+                  for Point of Border loop
+                     if First then
+                        View.Move_To ((Point.X, Point.Y));
+                        First := False;
+                     else
+                        View.Line_To ((Point.X, Point.Y));
+                     end if;
+                  end loop;
+                  View.Line_To ((Border (Border'First).X,
+                                Border (Border'First).Y));
+               end;
+            end if;
+         end Draw_Sector;
+
+      begin
+         View.Draw_Color (Harriet.Color.White);
+         Harriet.Worlds.Scan_Surface
+           (View.Model.World, Draw_Sector'Access);
+      end;
 
       for Ship of Ships loop
          declare

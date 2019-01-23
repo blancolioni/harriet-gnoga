@@ -92,20 +92,23 @@ package body Harriet.UI.Models.World is
             procedure Add_Sector
               (Sector : Harriet.Db.World_Sector_Reference);
 
+            ----------------
+            -- Add_Sector --
+            ----------------
+
             procedure Add_Sector
               (Sector : Harriet.Db.World_Sector_Reference)
             is
                Tiles : constant Harriet.Worlds.Sector_Vertex_Array :=
                          Harriet.Worlds.Get_Vertices (Sector);
-               Rec   : World_Sector_Type :=
+               Rec   : constant World_Sector_Type :=
                          World_Sector_Type'
                            (Reference => Sector,
-                            Boundary  => <>,
-                            Centre    => Harriet.Worlds.Get_Centre (Sector));
+                            Boundary  =>
+                              Sector_Boundary_Holders.To_Holder (Tiles),
+                            Centre    =>
+                              Harriet.Worlds.Get_Centre (Sector));
             begin
-               for Tile of Tiles loop
-                  Rec.Boundary.Append (Tile);
-               end loop;
                Model.Sectors.Append (Rec);
             end Add_Sector;
 
@@ -116,5 +119,22 @@ package body Harriet.UI.Models.World is
 
       end return;
    end Create;
+
+   ------------------
+   -- Scan_Surface --
+   ------------------
+
+   procedure Scan_Surface
+     (Model   : Root_World_Model'Class;
+      Process : not null access
+        procedure (Sector   : Harriet.Db.World_Sector_Reference;
+                   Centre_X : Harriet.Worlds.Sector_Vertex;
+                   Boundary : Harriet.Worlds.Sector_Vertex_Array))
+   is
+   begin
+      for Item of Model.Sectors loop
+         Process (Item.Reference, Item.Centre, Item.Boundary.Element);
+      end loop;
+   end Scan_Surface;
 
 end Harriet.UI.Models.World;
