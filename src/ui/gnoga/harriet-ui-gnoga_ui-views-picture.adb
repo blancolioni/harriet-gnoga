@@ -169,6 +169,42 @@ package body Harriet.UI.Gnoga_UI.Views.Picture is
                    To_Unbounded_String (Text)));
    end Label;
 
+   ----------
+   -- Line --
+   ----------
+
+   procedure Line
+     (Picture  : in out Root_Picture_View'Class;
+      From, To : Point_Type)
+   is
+   begin
+      Picture.Add ((Draw_Line, From, To));
+   end Line;
+
+   -------------
+   -- Line_To --
+   -------------
+
+   procedure Line_To
+     (Picture  : in out Root_Picture_View'Class;
+      Position : Point_Type)
+   is
+   begin
+      Picture.Add ((Draw_Line_To, False, Position));
+   end Line_To;
+
+   ----------------
+   -- Line_Width --
+   ----------------
+
+   procedure Line_Width
+     (Picture : in out Root_Picture_View'Class;
+      Width   : Non_Negative_Real)
+   is
+   begin
+      Picture.Add ((Set_Line_Width, Width));
+   end Line_Width;
+
    -------------------
    -- Move_Relative --
    -------------------
@@ -355,6 +391,11 @@ package body Harriet.UI.Gnoga_UI.Views.Picture is
       Current_Font_Size        : Non_Negative_Real;
       Current_Font_Changed     : Boolean := False;
 
+      Current_Line_Width       : Non_Negative_Real := 1.0;
+      Line_Width_Changed       : Boolean := False;
+
+      Drawing_Line             : Boolean := False;
+
       Count : Natural := 0;
 
       Context : Gnoga.Gui.Element.Canvas.Context_2D.Context_2D_Type renames
@@ -363,7 +404,21 @@ package body Harriet.UI.Gnoga_UI.Views.Picture is
       function Is_Visible (P : Point_Type) return Boolean
       is (Contains (View.Viewport, P));
 
+      procedure Check_Path;
+
       procedure Execute (Command : Draw_Command);
+
+      ----------------
+      -- Check_Path --
+      ----------------
+
+      procedure Check_Path is
+      begin
+         if Drawing_Line then
+            Drawing_Line := False;
+            Context.Stroke;
+         end if;
+      end Check_Path;
 
       -------------
       -- Execute --
@@ -375,6 +430,7 @@ package body Harriet.UI.Gnoga_UI.Views.Picture is
          use Harriet.Real_Images;
 
          procedure Check_Colors (Fill : Boolean);
+         procedure Check_Lines;
 
          ------------------
          -- Check_Colors --
@@ -390,6 +446,7 @@ package body Harriet.UI.Gnoga_UI.Views.Picture is
                end if;
             else
                if Draw_Color_Changed then
+                  Check_Path;
                   Context.Stroke_Color
                     (Harriet.Color.To_Html_String (Current_Draw_Color));
                   Draw_Color_Changed := False;
@@ -397,6 +454,18 @@ package body Harriet.UI.Gnoga_UI.Views.Picture is
             end if;
 
          end Check_Colors;
+
+         -----------------
+         -- Check_Lines --
+         -----------------
+
+         procedure Check_Lines is
+         begin
+            if Line_Width_Changed then
+               Context.Line_Width (Natural (Current_Line_Width));
+               Line_Width_Changed := False;
+            end if;
+         end Check_Lines;
 
       begin
          case Command.Primitive is
@@ -417,6 +486,52 @@ package body Harriet.UI.Gnoga_UI.Views.Picture is
                   Current_Font_Size := Command.Font_Size;
                   Current_Font_Changed := True;
                end if;
+            when Set_Line_Width =>
+               if Command.Line_Width /= Current_Line_Width then
+                  Current_Line_Width := Command.Line_Width;
+                  Line_Width_Changed := True;
+               end if;
+
+            when Draw_Line_To =>
+               Check_Colors (False);
+               Check_Lines;
+
+               Context.Move_To
+                 (To_Screen_X (Current_Position.X),
+                  To_Screen_Y (Current_Position.Y));
+
+               if not Drawing_Line then
+                  Context.Begin_Path;
+               end if;
+
+               Current_Position := Command.Position;
+
+               Context.Line_To
+                 (To_Screen_X (Current_Position.X),
+                  To_Screen_Y (Current_Position.Y));
+
+               Drawing_Line := True;
+
+            when Draw_Line =>
+               Check_Colors (False);
+               Check_Lines;
+
+               Current_Position := Command.Line_From;
+               Context.Move_To
+                 (To_Screen_X (Current_Position.X),
+                  To_Screen_Y (Current_Position.Y));
+
+               if not Drawing_Line then
+                  Context.Begin_Path;
+               end if;
+
+               Current_Position := Command.Line_To;
+
+               Context.Line_To
+                 (To_Screen_X (Current_Position.X),
+                  To_Screen_Y (Current_Position.Y));
+
+               Drawing_Line := True;
 
             when Move_To =>
                if Command.Relative then
@@ -433,6 +548,8 @@ package body Harriet.UI.Gnoga_UI.Views.Picture is
 
             when Draw_Circle =>
                if Is_Visible (Current_Position) then
+                  Check_Path;
+                  Check_Lines;
                   Check_Colors (Current_Fill);
                   Context.Begin_Path;
                   Context.Arc_Degrees
@@ -456,6 +573,8 @@ package body Harriet.UI.Gnoga_UI.Views.Picture is
                  or else Is_Visible ((Current_Position.X + Command.Width,
                                      Current_Position.Y + Command.Height))
                then
+                  Check_Path;
+                  Check_Lines;
                   Check_Colors (Current_Fill);
                   Context.Rectangle
                     (Rectangle => Gnoga.Types.Rectangle_Type'
@@ -480,6 +599,8 @@ package body Harriet.UI.Gnoga_UI.Views.Picture is
                           Approximate_Image (Current_Font_Size) & "pt");
                      Current_Font_Changed := False;
                   end if;
+                  Check_Path;
+                  Check_Lines;
                   Check_Colors (True);
                   Context.Fill_Text
                     (Text       => To_String (Command.Text),

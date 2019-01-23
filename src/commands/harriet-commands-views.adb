@@ -6,6 +6,7 @@ with Harriet.UI.Models.World;
 
 with Harriet.UI.Gnoga_UI.Views.Galaxy;
 with Harriet.UI.Gnoga_UI.Views.Star_System;
+with Harriet.UI.Gnoga_UI.Views.World;
 
 with Harriet.UI.Gnoga_UI.Views.Tables;
 
@@ -145,9 +146,8 @@ package body Harriet.Commands.Views is
               (Harriet.UI.Models.World.Create (Reference),
                Headings_Down => True);
          else
-            return Harriet.UI.Gnoga_UI.Views.Tables.Create_Table_View
-              (Harriet.UI.Models.World.Create (Reference),
-               Headings_Down => True);
+            return Harriet.UI.Gnoga_UI.Views.World.World_View
+              (Harriet.UI.Models.World.Create (Reference));
          end if;
       end;
 

@@ -11,6 +11,10 @@ package Harriet.UI.Models.World is
    type Root_World_Model is
      new Harriet.UI.Models.Tables.Root_Table_Model with private;
 
+   function World
+     (Model : Root_World_Model'Class)
+      return Harriet.Db.World_Reference;
+
    type World_Model is
      access all Root_World_Model'Class;
 
@@ -37,7 +41,13 @@ private
    type Root_World_Model is
      new Harriet.UI.Models.Tables.Root_Table_Model with
       record
+         Reference : Harriet.Db.World_Reference;
          Sectors : World_Sector_Lists.List;
       end record;
+
+   function World
+     (Model : Root_World_Model'Class)
+      return Harriet.Db.World_Reference
+   is (Model.Reference);
 
 end Harriet.UI.Models.World;

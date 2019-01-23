@@ -4,6 +4,7 @@ with Harriet.Configure.Worlds;
 
 with Harriet.Db.Generation;
 with Harriet.Db.Sector_Vertex;
+with Harriet.Db.Ship;
 with Harriet.Db.World;
 with Harriet.Db.World_Sector;
 
@@ -83,6 +84,20 @@ package body Harriet.Worlds is
       return Sector_Vertex'
         (Rec.X, Rec.Y, Rec.Z);
    end Get_Centre;
+
+   ---------------
+   -- Get_Ships --
+   ---------------
+
+   procedure Get_Ships
+     (World : Harriet.Db.World_Reference;
+      Ships : out Harriet.Ships.Lists.List)
+   is
+   begin
+      for Ship of Harriet.Db.Ship.Select_By_World (World) loop
+         Ships.Append (Harriet.Ships.Get (Ship.Reference));
+      end loop;
+   end Get_Ships;
 
    ------------------
    -- Get_Vertices --

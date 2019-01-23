@@ -53,6 +53,9 @@ package body Harriet.UI.Models.World is
       return Model : constant World_Model :=
         new Root_World_Model
       do
+
+         Model.Reference := World;
+
          Model.Add_Column ("name");
          Model.Add_Column ("category");
          Model.Add_Column ("climate");

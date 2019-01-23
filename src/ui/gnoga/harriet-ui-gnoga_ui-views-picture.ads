@@ -63,6 +63,10 @@ package Harriet.UI.Gnoga_UI.Views.Picture is
      (Picture : in out Root_Picture_View'Class;
       Color   : Harriet.Color.Harriet_Color);
 
+   procedure Line_Width
+     (Picture : in out Root_Picture_View'Class;
+      Width   : Non_Negative_Real);
+
    procedure Move_To
      (Picture  : in out Root_Picture_View'Class;
       Position : Point_Type);
@@ -70,6 +74,14 @@ package Harriet.UI.Gnoga_UI.Views.Picture is
    procedure Move_Relative
      (Picture : in out Root_Picture_View'Class;
       Offset  : Point_Type);
+
+   procedure Line_To
+     (Picture  : in out Root_Picture_View'Class;
+      Position : Point_Type);
+
+   procedure Line
+     (Picture  : in out Root_Picture_View'Class;
+      From, To : Point_Type);
 
    procedure Font
      (Picture : in out Root_Picture_View'Class;
@@ -106,8 +118,9 @@ package Harriet.UI.Gnoga_UI.Views.Picture is
 private
 
    type Draw_Primitive is
-     (Set_Draw_Color, Set_Fill_Color, Set_Font,
+     (Set_Draw_Color, Set_Fill_Color, Set_Font, Set_Line_Width,
       Move_To, Set_Fill,
+      Draw_Line, Draw_Line_To,
       Draw_Circle, Draw_Rectangle, Draw_Text);
 
    type Draw_Command (Primitive : Draw_Primitive) is
@@ -120,9 +133,14 @@ private
                Font_Size   : Non_Negative_Real;
                Font_Bold   : Boolean;
                Font_Italic : Boolean;
-            when Move_To =>
+            when Set_Line_Width =>
+               Line_Width  : Non_Negative_Real;
+            when Move_To | Draw_Line_To =>
                Relative    : Boolean;
                Position    : Point_Type;
+            when Draw_Line =>
+               Line_From   : Point_Type;
+               Line_To     : Point_Type;
             when Set_Fill =>
                Fill        : Boolean;
             when Draw_Circle =>
