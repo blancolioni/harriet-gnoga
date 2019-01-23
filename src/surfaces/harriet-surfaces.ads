@@ -1,6 +1,8 @@
 private with Ada.Containers.Doubly_Linked_Lists;
 private with Ada.Containers.Vectors;
 
+with Ada.Numerics.Generic_Real_Arrays;
+
 package Harriet.Surfaces is
 
    Max_Surface_Tiles : constant := 60_000;
@@ -52,7 +54,10 @@ package Harriet.Surfaces is
       Tile    : Surface_Tile_Index)
       return Real;
 
-   type Vector_3 is array (1 .. 3) of Real;
+   package Real_Arrays is
+     new Ada.Numerics.Generic_Real_Arrays (Real);
+
+   subtype Vector_3 is Real_Arrays.Real_Vector (1 .. 3);
 
    type Tile_Vertex_Array is
      array (Tile_Neighbour_Index range <>) of Vector_3;
@@ -60,24 +65,24 @@ package Harriet.Surfaces is
    function Tile_Centre
      (Surface : Root_Surface_Type'Class;
       Tile    : Surface_Tile_Index)
-      return Xi.Matrices.Vector_3;
+      return Vector_3;
 
    function Tile_Boundary
      (Surface : Root_Surface_Type'Class;
       Tile    : Surface_Tile_Index)
       return Tile_Vertex_Array;
 
-   type Surface_Type is access all Root_Surface_Type'Class;
+   procedure Create
+     (Surface        : in out Root_Surface_Type'Class;
+      Required_Depth : Positive);
 
-   function Create_Surface
-     (Tile_Area : Non_Negative_Real)
-      return Surface_Type;
+   subtype Surface_Type is Root_Surface_Type'Class;
 
 private
 
    type Vertex_Record is
       record
-         Position        : Xi.Matrices.Vector_3;
+         Position        : Vector_3;
          Neighbour_Count : Tile_Neighbour_Count;
          Neighbours      : Array_Of_Tile_Neighbours (Tile_Neighbour_Index);
       end record;
@@ -96,8 +101,8 @@ private
    type Tile_Vertex_Index is new Surface_Tile_Index;
 
    package Tile_Vertex_Vectors is
-     new Ada.Containers.Vectors (Tile_Vertex_Index, Xi.Matrices.Vector_3,
-                                 Xi.Float_Arrays."=");
+     new Ada.Containers.Vectors (Tile_Vertex_Index, Vector_3,
+                                 Real_Arrays."=");
 
    package Vertex_Lists is
      new Ada.Containers.Doubly_Linked_Lists (Tile_Vertex_Index);

@@ -1,14 +1,14 @@
 with Ada.Numerics;
 
-with Concorde.Elementary_Functions;
+with Harriet.Elementary_Functions;
 
-package body Concorde.Surfaces is
+package body Harriet.Surfaces is
 
    Max_Depth : constant := 5;
 
    function Cross
-     (Left, Right : Xi.Matrices.Vector_3)
-      return Xi.Matrices.Vector_3;
+     (Left, Right : Vector_3)
+      return Vector_3;
 
    type Vertex_Index_Map is
       record
@@ -24,23 +24,20 @@ package body Concorde.Surfaces is
    -- Create_Surface --
    --------------------
 
-   function Create_Surface
-     (Tile_Area : Non_Negative_Real)
-      return Surface_Type
+   procedure Create
+     (Surface        : in out Root_Surface_Type'Class;
+      Required_Depth : Positive)
    is
-      use Xi.Matrices, Xi.Float_Arrays;
+      use Real_Arrays;
 
-      Pi : constant := Ada.Numerics.Pi;
-
-      Surface : constant Surface_Type := new Root_Surface_Type;
       Vs      : Vertex_Vectors.Vector renames Surface.Vertices;
 
       X    : constant := 0.525731112119133606;
       Z    : constant := 0.850650808352039932;
 
-      Vertex_Data                                    : constant array
+      Vertex_Data : constant array
         (Surface_Tile_Index range 1 .. 12)
-        of Xi.Matrices.Vector_3 :=
+        of Vector_3 :=
         ((-X, 0.0, Z), (X, 0.0, Z), (-X, 0.0, -Z), (X, 0.0, -Z),
          (0.0, Z, X), (0.0, Z, -X), (0.0, -Z, X), (0.0, -Z, -X),
          (Z, X, 0.0), (-Z, X, 0.0), (Z, -X, 0.0), (-Z, -X, 0.0));
@@ -193,19 +190,9 @@ package body Concorde.Surfaces is
          end if;
       end Subdivide;
 
-      Required_Depth : Natural := 0;
-      Current_Area   : Non_Negative_Real :=
-                         4.0 / 3.0 * Pi ** 2 / 12.0;
-      Total_Tiles    : Positive := 12;
    begin
       for V of Vertex_Data loop
          Vs.Append ((V, 0, (others => 1)));
-      end loop;
-
-      while Current_Area > Tile_Area loop
-         Required_Depth := Required_Depth + 1;
-         Total_Tiles := Total_Tiles * 6;
-         Current_Area := Current_Area / 6.0;
       end loop;
 
       for I in Triangles'Range (1) loop
@@ -234,17 +221,15 @@ package body Concorde.Surfaces is
          end;
       end loop;
 
-      return Surface;
-
-   end Create_Surface;
+   end Create;
 
    -----------
    -- Cross --
    -----------
 
    function Cross
-     (Left, Right : Xi.Matrices.Vector_3)
-      return Xi.Matrices.Vector_3
+     (Left, Right : Vector_3)
+      return Vector_3
    is
    begin
       return (Left (2) * Right (3) - Left (3) * Right (2),
@@ -276,7 +261,7 @@ package body Concorde.Surfaces is
       Tile    : Surface_Tile_Index)
       return Real
    is
-      use Concorde.Elementary_Functions;
+      use Harriet.Elementary_Functions;
    begin
       return Arcsin (Surface.Vertices.Element (Tile).Position (2),
                      Cycle => 360.0);
@@ -291,8 +276,8 @@ package body Concorde.Surfaces is
       Tile    : Surface_Tile_Index)
       return Real
    is
-      use Concorde.Elementary_Functions;
-      V : constant Xi.Matrices.Vector_3 :=
+      use Harriet.Elementary_Functions;
+      V : constant Vector_3 :=
             Surface.Vertices.Element (Tile).Position;
    begin
       return Arctan (V (3), V (1), 360.0);
@@ -357,7 +342,7 @@ package body Concorde.Surfaces is
    function Tile_Centre
      (Surface : Root_Surface_Type'Class;
       Tile    : Surface_Tile_Index)
-      return Xi.Matrices.Vector_3
+      return Vector_3
    is
    begin
       return Surface.Vertices.Element (Tile).Position;
@@ -375,4 +360,4 @@ package body Concorde.Surfaces is
       return Surface.Vertices.Last_Index;
    end Tile_Count;
 
-end Concorde.Surfaces;
+end Harriet.Surfaces;
