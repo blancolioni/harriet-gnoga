@@ -7,7 +7,7 @@ with Harriet.Random;
 with Harriet.Roman_Images;
 
 with Harriet.Constants;
-with Harriet.Commodities;
+--  with Harriet.Commodities;
 with Harriet.Solar_System;
 
 with Harriet.Db.Atmosphere_Component;
