@@ -140,7 +140,7 @@ package body Harriet.UI.Gnoga_UI.Views.World is
             Z           : constant Real := Orbit * Sin (Longitude, 360.0);
 
          begin
-            if X in -1.0 .. 1.0 or else Z > 0.0 then
+            if X not in -1.0 .. 1.0 or else Z > 0.0 then
                View.Fill_Color
                  (Harriet.Factions.Get (Ship.Owner).Color);
                View.Circle ((X, Y), 0.02, True);
