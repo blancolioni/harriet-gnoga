@@ -5,7 +5,10 @@ with Harriet.Commands;
 with Harriet.Signals;
 
 with Harriet.Elementary_Functions;
+--  with Harriet.Solar_System;
 
+with Harriet.Factions;
+with Harriet.Ships.Lists;
 with Harriet.Star_Systems;
 
 with Harriet.UI.Gnoga_UI.Generic_Views;
@@ -115,9 +118,15 @@ package body Harriet.UI.Gnoga_UI.Views.Star_System is
      (View : in out Root_Star_System_View'Class)
    is
 
+      Ships : Harriet.Ships.Lists.List;
+
       procedure Set_World_Color
         (Category : Harriet.Db.World_Category;
          Climate  : Harriet.Db.Climate_Category);
+
+      ---------------------
+      -- Set_World_Color --
+      ---------------------
 
       procedure Set_World_Color
         (Category : Harriet.Db.World_Category;
@@ -155,9 +164,17 @@ package body Harriet.UI.Gnoga_UI.Views.Star_System is
 
    begin
       View.Clear;
+      View.Font ("OpenSans", 10.0);
+
+      Harriet.Star_Systems.Get_Ships
+        (Harriet.Star_Systems.Get (View.Model.Star_System),
+         Ships);
+
       for I in 1 .. View.Model.World_Count loop
          declare
             use Harriet.Elementary_Functions;
+            Reference : constant Harriet.Db.World_Reference :=
+                          View.Model.Reference (I);
             Orbit : constant Non_Negative_Real :=
                       View.Model.Orbit (I);
             Longitude : constant Non_Negative_Real :=
@@ -175,6 +192,22 @@ package body Harriet.UI.Gnoga_UI.Views.Star_System is
             Set_World_Color
               (View.Model.Category (I), View.Model.Climate (I));
             View.Circle ((X, Y), Radius / 10.0, True);
+
+            declare
+               use Harriet.Db;
+               Count : Natural := 0;
+            begin
+               for Ship of Ships loop
+                  if Ship.World = Reference then
+                     View.Fill_Color
+                       (Harriet.Factions.Get (Ship.Owner).Color);
+                     View.Label
+                       ((X, Y), 10, 20 + Count * 12, Ship.Name);
+                     Count := Count + 1;
+                  end if;
+               end loop;
+            end;
+
          end;
       end loop;
 
