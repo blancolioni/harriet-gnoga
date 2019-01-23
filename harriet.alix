@@ -1,21 +1,11 @@
 project_name = Harriet
 source_dir = src
-source_dir = src/agents
 source_dir = src/commands
 source_dir = src/configure
-source_dir = src/corporations
-source_dir = src/cultures
 source_dir = src/driver
 source_dir = src/factions
-source_dir = src/individuals
-source_dir = src/industries
 source_dir = src/kit
-source_dir = src/laws
 source_dir = src/library
-source_dir = src/logging
-source_dir = src/objects
-source_dir = src/pops
-source_dir = src/production
 source_dir = src/sessions
 source_dir = src/ships
 source_dir = src/stars
@@ -30,7 +20,7 @@ depend = { project = Tropos version = any }
 depend = { project = Wlib version = any }
 depend = { project = marlowe version = any }
 depend = { project = kit version = any }
-depend = { project = "c:/users/fwilson/Documents/software/gnoga/gnoga-1.4a/src/gnoga.gpr" external = yes }
+depend = { project = "gnoga" external = yes }
 main_unit = harriet-driver
 exec_name = harriet
 config_dir = config
