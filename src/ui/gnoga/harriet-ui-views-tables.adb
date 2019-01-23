@@ -3,12 +3,12 @@ with WL.Localisation;
 with Gnoga.Gui.Element.Common;
 with Gnoga.Gui.Element.Table;
 
-with Harriet.UI.Gnoga_UI.Generic_Views;
+with Harriet.UI.Views.Model_Views;
 
-package body Harriet.UI.Gnoga_UI.Views.Tables is
+package body Harriet.UI.Views.Tables is
 
    package Base_View is
-     new Harriet.UI.Gnoga_UI.Generic_Views
+     new Harriet.UI.Views.Model_Views
        (Base_View_Type  => Root_View_Type,
         View_Model_Type => Harriet.UI.Models.Tables.Root_Table_Model);
 
@@ -162,4 +162,4 @@ package body Harriet.UI.Gnoga_UI.Views.Tables is
 
    end Load_Table;
 
-end Harriet.UI.Gnoga_UI.Views.Tables;
+end Harriet.UI.Views.Tables;

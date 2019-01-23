@@ -4,7 +4,7 @@ with Gnoga.Gui.View;
 
 with Harriet.Sessions;
 
-package Harriet.UI.Gnoga_UI.Views is
+package Harriet.UI.Views is
 
    type Root_View_Type is abstract tagged limited private;
 
@@ -84,4 +84,4 @@ private
       return Gnoga.Gui.View.Pointer_To_View_Base_Class
    is (View.Gnoga_View);
 
-end Harriet.UI.Gnoga_UI.Views;
+end Harriet.UI.Views;

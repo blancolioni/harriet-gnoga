@@ -6,15 +6,15 @@ with Harriet.Factions;
 with Harriet.Ships.Lists;
 with Harriet.Worlds;
 
-with Harriet.UI.Gnoga_UI.Generic_Views;
-with Harriet.UI.Gnoga_UI.Views.Picture;
+with Harriet.UI.Views.Model_Views;
+with Harriet.UI.Views.Picture;
 
-package body Harriet.UI.Gnoga_UI.Views.World is
+package body Harriet.UI.Views.World is
 
    package Base_View is
-     new Harriet.UI.Gnoga_UI.Generic_Views
+     new Harriet.UI.Views.Model_Views
        (Base_View_Type  =>
-           Harriet.UI.Gnoga_UI.Views.Picture.Root_Picture_View,
+           Harriet.UI.Views.Picture.Root_Picture_View,
         View_Model_Type =>
            Harriet.UI.Models.World.Root_World_Model);
 
@@ -69,7 +69,7 @@ package body Harriet.UI.Gnoga_UI.Views.World is
       Parent  : in out Gnoga.Gui.Base.Base_Type'Class;
       Id      : String)
    is
-      use Harriet.UI.Gnoga_UI.Views.Picture;
+      use Harriet.UI.Views.Picture;
 
       Gnoga_View   : constant World_Gnoga_View_Access :=
                        new World_Gnoga_View;
@@ -188,4 +188,4 @@ package body Harriet.UI.Gnoga_UI.Views.World is
       return View_Type (View);
    end World_View;
 
-end Harriet.UI.Gnoga_UI.Views.World;
+end Harriet.UI.Views.World;

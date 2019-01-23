@@ -3,7 +3,7 @@ with Gnoga.Gui.Element.Common;
 with Harriet.Calendar;
 with Harriet.Signals;
 
-package body Harriet.UI.Gnoga_UI.Views.Toolbar.Clock is
+package body Harriet.UI.Views.Toolbar.Clock is
 
    type Root_Clock_Item;
 
@@ -93,4 +93,4 @@ package body Harriet.UI.Gnoga_UI.Views.Toolbar.Clock is
         (Harriet.Calendar.Image (Harriet.Calendar.Clock));
    end Handle_Clock_Tick;
 
-end Harriet.UI.Gnoga_UI.Views.Toolbar.Clock;
+end Harriet.UI.Views.Toolbar.Clock;

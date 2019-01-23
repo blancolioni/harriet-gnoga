@@ -5,14 +5,14 @@ with Ada.Containers.Vectors;
 with Gnoga.Gui.View;
 --  with Gnoga.Gui.Element.Common;
 
-with Harriet.UI.Gnoga_UI.Generic_Views;
+with Harriet.UI.Views.Model_Views;
 
-with Harriet.UI.Gnoga_UI.Views.Toolbar.Localised_Button;
+with Harriet.UI.Views.Toolbar.Localised_Button;
 
-package body Harriet.UI.Gnoga_UI.Views.Toolbar is
+package body Harriet.UI.Views.Toolbar is
 
    package Base_View is
-     new Harriet.UI.Gnoga_UI.Generic_Views
+     new Harriet.UI.Views.Model_Views
        (Base_View_Type  => Root_View_Type,
         View_Model_Type =>
            Harriet.UI.Models.Toolbar.Root_Toolbar_Model);
@@ -147,4 +147,4 @@ package body Harriet.UI.Gnoga_UI.Views.Toolbar is
       return View_Type (View);
    end Toolbar_View;
 
-end Harriet.UI.Gnoga_UI.Views.Toolbar;
+end Harriet.UI.Views.Toolbar;

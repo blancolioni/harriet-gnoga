@@ -4,7 +4,7 @@ with Gnoga.Gui.Element.Common;
 
 with Harriet.Sessions;
 
-private package Harriet.UI.Gnoga_UI.Views.Toolbar.Localised_Button is
+private package Harriet.UI.Views.Toolbar.Localised_Button is
 
    type Root_Localised_Button is
      limited new Toolbar_Item_Interface with private;
@@ -42,4 +42,4 @@ private
          Layout          : Toolbar_Item_Layout;
       end record;
 
-end Harriet.UI.Gnoga_UI.Views.Toolbar.Localised_Button;
+end Harriet.UI.Views.Toolbar.Localised_Button;

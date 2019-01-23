@@ -5,7 +5,7 @@ private with Gnoga.Gui.Element.Canvas.Context_2D;
 
 with Harriet.Color;
 
-package Harriet.UI.Gnoga_UI.Views.Picture is
+package Harriet.UI.Views.Picture is
 
    type Point_Type is
       record
@@ -190,4 +190,4 @@ private
    is (P.X in R.Left_Top.X .. R.Left_Top.X + R.Width
        and then P.Y in R.Left_Top.Y .. R.Left_Top.Y + R.Height);
 
-end Harriet.UI.Gnoga_UI.Views.Picture;
+end Harriet.UI.Views.Picture;

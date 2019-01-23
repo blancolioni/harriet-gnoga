@@ -6,7 +6,7 @@ with Gnoga.Types;
 
 with Harriet.Real_Images;
 
-package body Harriet.UI.Gnoga_UI.Views.Picture is
+package body Harriet.UI.Views.Picture is
 
    procedure On_Canvas_Click
      (Object : in out Gnoga.Gui.Base.Base_Type'Class;
@@ -720,4 +720,4 @@ package body Harriet.UI.Gnoga_UI.Views.Picture is
       Picture.Add ((Draw_Text, 0, 0, To_Unbounded_String (Text)));
    end Text;
 
-end Harriet.UI.Gnoga_UI.Views.Picture;
+end Harriet.UI.Views.Picture;

@@ -1,4 +1,4 @@
-package body Harriet.UI.Gnoga_UI.Generic_Views is
+package body Harriet.UI.Views.Model_Views is
 
    ---------------
    -- Set_Model --
@@ -12,4 +12,4 @@ package body Harriet.UI.Gnoga_UI.Generic_Views is
       View.Model := Model_Access (Model);
    end Set_Model;
 
-end Harriet.UI.Gnoga_UI.Generic_Views;
+end Harriet.UI.Views.Model_Views;

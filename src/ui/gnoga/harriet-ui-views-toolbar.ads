@@ -1,7 +1,7 @@
 with Harriet.UI.Models.Commands;
 with Harriet.UI.Models.Toolbar;
 
-package Harriet.UI.Gnoga_UI.Views.Toolbar is
+package Harriet.UI.Views.Toolbar is
 
    type Toolbar_Item_Layout is private;
 
@@ -117,4 +117,4 @@ private
 --            Command => Command,
 --            Layout  => Layout));
 
-end Harriet.UI.Gnoga_UI.Views.Toolbar;
+end Harriet.UI.Views.Toolbar;

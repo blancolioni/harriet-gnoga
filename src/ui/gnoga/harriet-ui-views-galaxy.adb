@@ -12,16 +12,16 @@ with Harriet.Commands;
 with Harriet.Factions;
 with Harriet.Star_Systems;
 
-with Harriet.UI.Gnoga_UI.Generic_Views;
-with Harriet.UI.Gnoga_UI.Views.Picture;
+with Harriet.UI.Views.Model_Views;
+with Harriet.UI.Views.Picture;
 
 with Harriet.Db;
 
-package body Harriet.UI.Gnoga_UI.Views.Galaxy is
+package body Harriet.UI.Views.Galaxy is
 
    package Base_View is
-     new Harriet.UI.Gnoga_UI.Generic_Views
-       (Base_View_Type  => Harriet.UI.Gnoga_UI.Views.Picture.Root_Picture_View,
+     new Harriet.UI.Views.Model_Views
+       (Base_View_Type  => Harriet.UI.Views.Picture.Root_Picture_View,
         View_Model_Type => Harriet.UI.Models.Galaxy.Root_Galaxy_Model);
 
    type Root_Galaxy_View is
@@ -71,7 +71,7 @@ package body Harriet.UI.Gnoga_UI.Views.Galaxy is
       Parent  : in out Gnoga.Gui.Base.Base_Type'Class;
       Id      : String)
    is
-      use Harriet.UI.Gnoga_UI.Views.Picture;
+      use Harriet.UI.Views.Picture;
 
       Gnoga_View : constant Galaxy_Gnoga_View_Access :=
                      new Galaxy_Gnoga_View;
@@ -275,4 +275,4 @@ package body Harriet.UI.Gnoga_UI.Views.Galaxy is
         (Value => Gnoga_Color);
    end Set_Fill_Color;
 
-end Harriet.UI.Gnoga_UI.Views.Galaxy;
+end Harriet.UI.Views.Galaxy;

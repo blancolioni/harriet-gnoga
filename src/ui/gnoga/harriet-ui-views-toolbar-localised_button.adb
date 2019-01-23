@@ -1,6 +1,6 @@
 with WL.Localisation;
 
-package body Harriet.UI.Gnoga_UI.Views.Toolbar.Localised_Button is
+package body Harriet.UI.Views.Toolbar.Localised_Button is
 
    procedure On_Button_Click
      (Object : in out Gnoga.Gui.Base.Base_Type'Class);
@@ -65,4 +65,4 @@ package body Harriet.UI.Gnoga_UI.Views.Toolbar.Localised_Button is
          To_String (Button.Toolbar_Item.Activation_Text));
    end On_Button_Click;
 
-end Harriet.UI.Gnoga_UI.Views.Toolbar.Localised_Button;
+end Harriet.UI.Views.Toolbar.Localised_Button;

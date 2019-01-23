@@ -1,6 +1,6 @@
 with Ada.Unchecked_Deallocation;
 
-package body Harriet.UI.Gnoga_UI.Views is
+package body Harriet.UI.Views is
 
    ------------------------
    -- Accepts_Text_Entry --
@@ -53,4 +53,4 @@ package body Harriet.UI.Gnoga_UI.Views is
       Free (View);
    end Destroy;
 
-end Harriet.UI.Gnoga_UI.Views;
+end Harriet.UI.Views;

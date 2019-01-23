@@ -1,4 +1,4 @@
-private with Harriet.UI.Gnoga_UI.Views;
+private with Harriet.UI.Views;
 
 private package Harriet.Commands.Views is
 
@@ -12,7 +12,7 @@ private
    function Create_View
      (Command   : Load_View_Command;
       Arguments : Argument_List)
-      return Harriet.UI.Gnoga_UI.Views.View_Type
+      return Harriet.UI.Views.View_Type
       is abstract;
 
    overriding procedure Execute

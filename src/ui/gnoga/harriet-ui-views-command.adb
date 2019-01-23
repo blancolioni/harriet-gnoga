@@ -7,7 +7,7 @@ with WL.Localisation;
 with Harriet.Commands;
 with Harriet.Sessions;
 
-package body Harriet.UI.Gnoga_UI.Views.Command is
+package body Harriet.UI.Views.Command is
 
    type Root_Command_View is new Root_View_Type with
       record
@@ -116,4 +116,4 @@ package body Harriet.UI.Gnoga_UI.Views.Command is
       null;
    end Render;
 
-end Harriet.UI.Gnoga_UI.Views.Command;
+end Harriet.UI.Views.Command;

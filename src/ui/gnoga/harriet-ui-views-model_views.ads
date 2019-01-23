@@ -1,12 +1,12 @@
 with Harriet.UI.Models;
-with Harriet.UI.Gnoga_UI.Views;
+with Harriet.UI.Views;
 
 generic
    type Base_View_Type is
-     abstract new Harriet.UI.Gnoga_UI.Views.Root_View_Type with private;
+     abstract new Harriet.UI.Views.Root_View_Type with private;
    type View_Model_Type is
      new Harriet.UI.Models.Root_Harriet_Model with private;
-package Harriet.UI.Gnoga_UI.Generic_Views is
+package Harriet.UI.Views.Model_Views is
 
    type View_Type is
      abstract new Base_View_Type
@@ -50,4 +50,4 @@ private
       return access View_Model_Type'Class
    is (View.Model);
 
-end Harriet.UI.Gnoga_UI.Generic_Views;
+end Harriet.UI.Views.Model_Views;

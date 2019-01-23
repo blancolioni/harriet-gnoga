@@ -4,11 +4,11 @@ with Harriet.UI.Models.Galaxy;
 with Harriet.UI.Models.Star_System;
 with Harriet.UI.Models.World;
 
-with Harriet.UI.Gnoga_UI.Views.Galaxy;
-with Harriet.UI.Gnoga_UI.Views.Star_System;
-with Harriet.UI.Gnoga_UI.Views.World;
+with Harriet.UI.Views.Galaxy;
+with Harriet.UI.Views.Star_System;
+with Harriet.UI.Views.World;
 
-with Harriet.UI.Gnoga_UI.Views.Tables;
+with Harriet.UI.Views.Tables;
 
 with Harriet.Db;
 with Harriet.Db.World;
@@ -21,7 +21,7 @@ package body Harriet.Commands.Views is
    overriding function Create_View
      (Command   : Load_Galaxy_Command;
       Arguments : Argument_List)
-      return Harriet.UI.Gnoga_UI.Views.View_Type;
+      return Harriet.UI.Views.View_Type;
 
    type Load_Star_System_Command is
      new Load_View_Command with null record;
@@ -29,7 +29,7 @@ package body Harriet.Commands.Views is
    overriding function Create_View
      (Command   : Load_Star_System_Command;
       Arguments : Argument_List)
-      return Harriet.UI.Gnoga_UI.Views.View_Type;
+      return Harriet.UI.Views.View_Type;
 
    type Load_World_Command is
      new Load_View_Command with null record;
@@ -37,7 +37,7 @@ package body Harriet.Commands.Views is
    overriding function Create_View
      (Command   : Load_World_Command;
       Arguments : Argument_List)
-      return Harriet.UI.Gnoga_UI.Views.View_Type;
+      return Harriet.UI.Views.View_Type;
 
    -----------------
    -- Create_View --
@@ -46,15 +46,15 @@ package body Harriet.Commands.Views is
    overriding function Create_View
      (Command   : Load_Galaxy_Command;
       Arguments : Argument_List)
-      return Harriet.UI.Gnoga_UI.Views.View_Type
+      return Harriet.UI.Views.View_Type
    is
       pragma Unreferenced (Command);
    begin
       if Contains (Arguments, "table") then
-         return Harriet.UI.Gnoga_UI.Views.Tables.Create_Table_View
+         return Harriet.UI.Views.Tables.Create_Table_View
            (Harriet.UI.Models.Galaxy.Create_Galaxy_Model);
       else
-         return Harriet.UI.Gnoga_UI.Views.Galaxy.Galaxy_View
+         return Harriet.UI.Views.Galaxy.Galaxy_View
            (Harriet.UI.Models.Galaxy.Create_Galaxy_Model);
       end if;
    end Create_View;
@@ -66,7 +66,7 @@ package body Harriet.Commands.Views is
    overriding function Create_View
      (Command   : Load_Star_System_Command;
       Arguments : Argument_List)
-      return Harriet.UI.Gnoga_UI.Views.View_Type
+      return Harriet.UI.Views.View_Type
    is
       pragma Unreferenced (Command);
    begin
@@ -85,10 +85,10 @@ package body Harriet.Commands.Views is
          end if;
 
          if Contains (Arguments, "table") then
-            return Harriet.UI.Gnoga_UI.Views.Tables.Create_Table_View
+            return Harriet.UI.Views.Tables.Create_Table_View
               (Harriet.UI.Models.Star_System.Create (Star_System));
          else
-            return Harriet.UI.Gnoga_UI.Views.Star_System.Star_System_View
+            return Harriet.UI.Views.Star_System.Star_System_View
               (Harriet.UI.Models.Star_System.Create (Star_System));
          end if;
       end;
@@ -101,7 +101,7 @@ package body Harriet.Commands.Views is
    overriding function Create_View
      (Command   : Load_World_Command;
       Arguments : Argument_List)
-      return Harriet.UI.Gnoga_UI.Views.View_Type
+      return Harriet.UI.Views.View_Type
    is
       pragma Unreferenced (Command);
    begin
@@ -142,11 +142,11 @@ package body Harriet.Commands.Views is
          end if;
 
          if Contains (Arguments, "table") then
-            return Harriet.UI.Gnoga_UI.Views.Tables.Create_Table_View
+            return Harriet.UI.Views.Tables.Create_Table_View
               (Harriet.UI.Models.World.Create (Reference),
                Headings_Down => True);
          else
-            return Harriet.UI.Gnoga_UI.Views.World.World_View
+            return Harriet.UI.Views.World.World_View
               (Harriet.UI.Models.World.Create (Reference));
          end if;
       end;
@@ -163,7 +163,7 @@ package body Harriet.Commands.Views is
       Writer    : Writer_Interface'Class;
       Arguments : Argument_List)
    is
-      use Harriet.UI.Gnoga_UI.Views;
+      use Harriet.UI.Views;
       View : constant View_Type :=
                Load_View_Command'Class (Command).Create_View (Arguments);
    begin

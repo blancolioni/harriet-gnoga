@@ -5,10 +5,10 @@ with WL.Guids.Maps;
 with Gnoga.Gui.Base;
 
 with Harriet.UI.Models.Dashboard;
-with Harriet.UI.Gnoga_UI.Views.Dashboard;
+with Harriet.UI.Views.Dashboard;
 
 with Harriet.UI.Models.Login;
-with Harriet.UI.Gnoga_UI.Views.Login;
+with Harriet.UI.Views.Login;
 
 with Harriet.Commands;
 
@@ -38,7 +38,7 @@ package body Harriet.Sessions is
 
    procedure Activate_View
      (Session : in out Root_Harriet_Session'Class;
-      View    : access Harriet.UI.Gnoga_UI.Views.Root_View_Type'Class)
+      View    : access Harriet.UI.Views.Root_View_Type'Class)
    is
    begin
       Session.Active_View := View;
@@ -134,8 +134,8 @@ package body Harriet.Sessions is
          Main_Model : constant Harriet.UI.Models.Dashboard.Dashboard_Model :=
                         Harriet.UI.Models.Dashboard.Create_Dashboard_Model
                           (Session);
-         Main_View  : constant Harriet.UI.Gnoga_UI.Views.View_Type :=
-                        Harriet.UI.Gnoga_UI.Views.Dashboard.Dashboard_View
+         Main_View  : constant Harriet.UI.Views.View_Type :=
+                        Harriet.UI.Views.Dashboard.Dashboard_View
                           (Main_Model);
       begin
          Session.Current_View.Gnoga_View.Visible (False);
@@ -257,8 +257,8 @@ package body Harriet.Sessions is
       Login_Model : constant Harriet.UI.Models.Login.Login_Model :=
                       Harriet.UI.Models.Login.Create_Login_Model
                         (Session);
-      Login_View  : constant Harriet.UI.Gnoga_UI.Views.View_Type :=
-                      Harriet.UI.Gnoga_UI.Views.Login.Login_View
+      Login_View  : constant Harriet.UI.Views.View_Type :=
+                      Harriet.UI.Views.Login.Login_View
                         (Login_Model);
    begin
       if Session.Current_View /= null then

@@ -11,17 +11,17 @@ with Harriet.Factions;
 with Harriet.Ships.Lists;
 with Harriet.Star_Systems;
 
-with Harriet.UI.Gnoga_UI.Generic_Views;
-with Harriet.UI.Gnoga_UI.Views.Picture;
+with Harriet.UI.Views.Model_Views;
+with Harriet.UI.Views.Picture;
 
 with Harriet.Db;
 
-package body Harriet.UI.Gnoga_UI.Views.Star_System is
+package body Harriet.UI.Views.Star_System is
 
    package Base_View is
-     new Harriet.UI.Gnoga_UI.Generic_Views
+     new Harriet.UI.Views.Model_Views
        (Base_View_Type  =>
-           Harriet.UI.Gnoga_UI.Views.Picture.Root_Picture_View,
+           Harriet.UI.Views.Picture.Root_Picture_View,
         View_Model_Type =>
            Harriet.UI.Models.Star_System.Root_Star_System_Model);
 
@@ -76,7 +76,7 @@ package body Harriet.UI.Gnoga_UI.Views.Star_System is
       Parent  : in out Gnoga.Gui.Base.Base_Type'Class;
       Id      : String)
    is
-      use Harriet.UI.Gnoga_UI.Views.Picture;
+      use Harriet.UI.Views.Picture;
 
       Gnoga_View   : constant Star_System_Gnoga_View_Access :=
                        new Star_System_Gnoga_View;
@@ -269,4 +269,4 @@ package body Harriet.UI.Gnoga_UI.Views.Star_System is
       return View_Type (View);
    end Star_System_View;
 
-end Harriet.UI.Gnoga_UI.Views.Star_System;
+end Harriet.UI.Views.Star_System;

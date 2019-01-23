@@ -1,6 +1,6 @@
 with Harriet.UI.Models.Tables;
 
-package Harriet.UI.Gnoga_UI.Views.Tables is
+package Harriet.UI.Views.Tables is
 
    function Create_Table_View
      (Model         : not null access
@@ -8,4 +8,4 @@ package Harriet.UI.Gnoga_UI.Views.Tables is
       Headings_Down : Boolean := False)
       return View_Type;
 
-end Harriet.UI.Gnoga_UI.Views.Tables;
+end Harriet.UI.Views.Tables;

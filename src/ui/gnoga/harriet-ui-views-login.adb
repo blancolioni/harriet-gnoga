@@ -5,12 +5,12 @@ with Gnoga.Gui.View.Console;
 
 with WL.Localisation;
 
-with Harriet.UI.Gnoga_UI.Generic_Views;
+with Harriet.UI.Views.Model_Views;
 
-package body Harriet.UI.Gnoga_UI.Views.Login is
+package body Harriet.UI.Views.Login is
 
    package Base_View is
-     new Harriet.UI.Gnoga_UI.Generic_Views
+     new Harriet.UI.Views.Model_Views
        (Base_View_Type  => Root_View_Type,
         View_Model_Type => Harriet.UI.Models.Login.Root_Login_Model);
 
@@ -159,4 +159,4 @@ package body Harriet.UI.Gnoga_UI.Views.Login is
       null;
    end Render;
 
-end Harriet.UI.Gnoga_UI.Views.Login;
+end Harriet.UI.Views.Login;

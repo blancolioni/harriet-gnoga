@@ -5,7 +5,7 @@ with Gnoga.Gui.Window;
 
 private with WL.Guids;
 
-limited with Harriet.UI.Gnoga_UI.Views;
+limited with Harriet.UI.Views;
 
 with Harriet.Signals;
 
@@ -57,15 +57,15 @@ package Harriet.Sessions is
 
    function Main_View
      (Session : Root_Harriet_Session'Class)
-      return access Harriet.UI.Gnoga_UI.Views.Root_View_Type'Class;
+      return access Harriet.UI.Views.Root_View_Type'Class;
 
    function Active_View
      (Session : Root_Harriet_Session'Class)
-      return access Harriet.UI.Gnoga_UI.Views.Root_View_Type'Class;
+      return access Harriet.UI.Views.Root_View_Type'Class;
 
    procedure Activate_View
      (Session : in out Root_Harriet_Session'Class;
-      View    : access Harriet.UI.Gnoga_UI.Views.Root_View_Type'Class);
+      View    : access Harriet.UI.Views.Root_View_Type'Class);
 
    type Harriet_Session is access all Root_Harriet_Session'Class;
 
@@ -86,8 +86,8 @@ private
                            Harriet.Db.Null_User_Reference;
          Faction       : Harriet.Db.Faction_Reference :=
                            Harriet.Db.Null_Faction_Reference;
-         Current_View  : access Harriet.UI.Gnoga_UI.Views.Root_View_Type'Class;
-         Active_View   : access Harriet.UI.Gnoga_UI.Views.Root_View_Type'Class;
+         Current_View  : access Harriet.UI.Views.Root_View_Type'Class;
+         Active_View   : access Harriet.UI.Views.Root_View_Type'Class;
          Dispatcher    : Harriet.Signals.Signal_Dispatcher;
       end record;
 
@@ -98,12 +98,12 @@ private
 
    function Main_View
      (Session : Root_Harriet_Session'Class)
-      return access Harriet.UI.Gnoga_UI.Views.Root_View_Type'Class
+      return access Harriet.UI.Views.Root_View_Type'Class
    is (Session.Current_View);
 
    function Active_View
      (Session : Root_Harriet_Session'Class)
-      return access Harriet.UI.Gnoga_UI.Views.Root_View_Type'Class
+      return access Harriet.UI.Views.Root_View_Type'Class
    is (Session.Active_View);
 
    function Find_Session

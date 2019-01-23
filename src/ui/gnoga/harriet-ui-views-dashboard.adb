@@ -11,11 +11,11 @@ with Harriet.UI.Layouts;
 with Harriet.UI.Models.Toolbar;
 with Harriet.UI.Models.Commands.Execute;
 
-with Harriet.UI.Gnoga_UI.Generic_Views;
-with Harriet.UI.Gnoga_UI.Views.Toolbar;
-with Harriet.UI.Gnoga_UI.Views.Toolbar.Clock;
+with Harriet.UI.Views.Model_Views;
+with Harriet.UI.Views.Toolbar;
+with Harriet.UI.Views.Toolbar.Clock;
 
-package body Harriet.UI.Gnoga_UI.Views.Dashboard is
+package body Harriet.UI.Views.Dashboard is
 
    type Root_Cell_View_Type is
      new Root_View_Type with
@@ -58,7 +58,7 @@ package body Harriet.UI.Gnoga_UI.Views.Dashboard is
    type Cell_Gnoga_View_Access is access all Cell_Gnoga_View'Class;
 
    package Base_View is
-     new Harriet.UI.Gnoga_UI.Generic_Views
+     new Harriet.UI.Views.Model_Views
        (Base_View_Type  => Root_View_Type,
         View_Model_Type => Harriet.UI.Models.Dashboard.Root_Dashboard_Model);
 
@@ -68,7 +68,7 @@ package body Harriet.UI.Gnoga_UI.Views.Dashboard is
    type Root_Dashboard_View is
      new Base_View.View_Type with
       record
-         Top_Toolbar : Harriet.UI.Gnoga_UI.Views.View_Type;
+         Top_Toolbar : Harriet.UI.Views.View_Type;
          Body_Div    : Gnoga.Gui.Element.Common.DIV_Access;
          Cells       : Cell_Lists.List;
          Active_Cell : Cell_View_Type := null;
@@ -272,7 +272,7 @@ package body Harriet.UI.Gnoga_UI.Views.Dashboard is
       use Harriet.UI.Models.Commands;
       use Harriet.UI.Models.Commands.Execute;
       use Harriet.UI.Models.Toolbar;
-      use Harriet.UI.Gnoga_UI.Views.Toolbar;
+      use Harriet.UI.Views.Toolbar;
       Model : constant Toolbar_Model := Create_Toolbar_Model;
       Exec_Command : constant Command_Type := Execute_Command_Line;
 --        Faction_Name : constant Toolbar_Item :=
@@ -508,4 +508,4 @@ package body Harriet.UI.Gnoga_UI.Views.Dashboard is
 
    end Set_Layout;
 
-end Harriet.UI.Gnoga_UI.Views.Dashboard;
+end Harriet.UI.Views.Dashboard;
