@@ -3,6 +3,7 @@ with Harriet.Configure.Star_Systems;
 with Harriet.Db.Faction;
 with Harriet.Db.Generation;
 with Harriet.Db.Scenario;
+with Harriet.Db.Ship;
 with Harriet.Db.Star;
 with Harriet.Db.Star_System;
 with Harriet.Db.World;
@@ -112,6 +113,22 @@ package body Harriet.Star_Systems is
    begin
       return Star_System_Type'(Reference => Reference);
    end Get;
+
+   ---------------
+   -- Get_Ships --
+   ---------------
+
+   procedure Get_Ships
+     (Star_System : Star_System_Type'Class;
+      List        : out Harriet.Ships.Lists.List)
+   is
+   begin
+      for Ship of
+        Harriet.Db.Ship.Select_By_Star_System (Star_System.Reference)
+      loop
+         List.Append (Harriet.Ships.Get (Ship));
+      end loop;
+   end Get_Ships;
 
    ---------------------
    -- Has_Star_System --

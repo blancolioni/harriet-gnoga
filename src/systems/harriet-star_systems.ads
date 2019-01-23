@@ -1,4 +1,5 @@
 with Harriet.Factions;
+with Harriet.Ships.Lists;
 with Harriet.Stars;
 with Harriet.Worlds;
 
@@ -36,6 +37,10 @@ package Harriet.Star_Systems is
    function Primary
      (Star_System : Star_System_Type'Class)
       return Harriet.Stars.Star_Type'Class;
+
+   procedure Get_Ships
+     (Star_System : Star_System_Type'Class;
+      List        : out Harriet.Ships.Lists.List);
 
    function First return Harriet.Db.Star_System_Reference;
    function Find_Exact
