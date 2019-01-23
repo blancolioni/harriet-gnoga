@@ -649,6 +649,8 @@ package body Harriet.UI.Views.Picture is
          Execute (Command);
       end loop;
 
+      Check_Path;
+
       Context.Restore;
 
       View.Render_Context.Draw_Image
