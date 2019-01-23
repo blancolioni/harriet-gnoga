@@ -1,0 +1,15 @@
+with Commodities;
+with Money;
+
+package Agents is
+
+   record Account is
+      Start_Cash : Money_Type;
+      Cash       : Money_Type;
+   end Account;
+   
+   record Agent : Has_Stock is
+      unique key Account;
+   end Agent;
+   
+end Agents;

@@ -1,0 +1,35 @@
+with Localisation;
+with Colors;
+with Money;
+with Quantities;
+
+package Commodities is
+
+   record Commodity_Group : Localised;
+
+   record Commodity : Localised, Has_Color with Vector, Map is
+      key Commodity_Group;
+      key Available : Boolean;
+      Tradeable     : Boolean;
+      Money         : Boolean;
+      Gas           : Boolean;
+      Liquid        : Boolean;
+      Cryo          : Boolean;
+      Cost          : Price_Type;
+   end Commodity;
+
+   record Resource : Commodity;
+   
+   record Has_Stock is
+      Capacity : Quantity_Type;
+   end Has_Stock;
+   
+   record Stock_Item is
+      key Has_Stock;
+      Commodity;
+      Quantity : Quantity_Type;
+      Value    : Money_Type;
+      unique key Stock_Item with Has_Stock, Commodity;
+   end Stock_Item;
+   
+end Commodities;

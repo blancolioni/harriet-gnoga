@@ -1,0 +1,17 @@
+with Ships;
+with Transport;
+with Worlds;
+
+package Pops is
+
+record Pop : Transportable is
+   key Empire;
+   key World;
+   key Ship;
+   Size      : Long_Float;
+   Happiness : Long_Float;
+   key Empire_World with Empire, World;
+   key Empire_Ship with Empire, Ship;
+end Pop;
+
+end Pops;

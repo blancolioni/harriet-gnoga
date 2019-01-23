@@ -1,0 +1,28 @@
+with Names;
+
+package Surfaces is
+
+record Surface;
+
+record Sector is
+   key Surface;
+end Sector;
+
+record Surface_Point is
+   X : Long_Float;
+   Y : Long_Float;
+   Z : Long_Float;
+end Surface_Point;
+
+record Sector_Vertex is
+   key Sector;
+   Surface_Point;
+end Sector_Vertex;
+
+record Sector_Neighbour is
+   key Sector;
+   key Neighbour : Sector;
+   unique key Neighbours with Sector, Neighbour;
+end Sector_Neighbour;
+
+end Surfaces;

@@ -1,0 +1,78 @@
+with Localisation;
+with Names;
+with Factions;
+with Technology;
+with Transport;
+with Worlds;
+
+package Ships is
+
+record Ship_Design : Has_Name;
+
+record Ship : Has_Name is
+   key Faction;
+   key World;
+   key Star_System;
+   Orbit           : Long_Float;
+   Inclination     : Long_Float;
+   Start_Time      : Time;
+   Start_Longitude : Long_Float;
+   Ship_Design;
+   key Alive       : Boolean;
+   Training        : Long_Float;
+   Fuel            : Long_Float;
+   key Destination : World;
+   Progress        : Float;
+   Current_Order   : Natural;
+   Cycle_Orders    : Boolean;
+   key Faction_And_World with Faction, World;
+end Ship;
+
+type Ship_Order_Class is (None, Buy, Sell, Load_Pop, Unload_Pop, Move);
+
+record Ship_Order is
+   key Ship;
+   Index : Positive;
+   Class : Ship_Order_Class;
+   World;
+   Transportable;
+   Quantity : Natural;
+   unique key Ship_Order with Ship, Index;
+end Ship_Order;
+
+record Cargo is
+   key Ship;
+   key Transportable;
+end Cargo;
+
+type Ship_Component_Class is
+  (Drive, Hyperdrive, Hold, Tank,
+   Energy_Bank, Power,
+   Life_Support,
+   Fighter_Bay, Missile_Tube, Beam_Weapon, Cannon,
+   Shield,
+   Cloak, Scanner);
+
+record Ship_Component : Localised, Technological is
+   Component_Class : Ship_Component_Class;
+   Mass            : Long_Float;
+   Size            : Natural;
+   Power           : Natural;
+end Ship_Component;
+
+record Ship_Module_Design is
+   key Ship_Design;
+   Ship_Component;
+   key Ship_Module_Design with Ship_Design, Ship_Component;
+end Ship_Module_Design;
+
+record Ship_Module is
+   key Ship;
+   Ship_Component;
+   Crew        : Natural;
+   Condition   : Long_Float;
+   Tec_Level   : Long_Float;
+   key Ship_Module with Ship, Ship_Component;
+end Ship_Module;
+
+end Ships;

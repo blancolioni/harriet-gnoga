@@ -1,0 +1,18 @@
+with Colors;
+with Generated;
+with Knowledge;
+with Names;
+with Orders;
+with Systems;
+with Users;
+with Worlds;
+
+package Factions is
+
+   record Faction : Has_Name, Has_Adjective, Has_Plural_Name, Has_Color, Has_Knowledge, Has_Orders, Order_Target is
+      key User;
+      key Capital_System : Star_System;
+      key Capital_World  : World;
+   end Faction;
+
+end Factions;

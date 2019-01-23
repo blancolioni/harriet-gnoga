@@ -1,0 +1,13 @@
+login-name,Login
+password,Password
+login,Login
+stop-server,Stop Server
+command-name,Command
+galaxy-map,Galaxy Map
+name,Name
+earth-radius,Radius
+earth-mass,Mass
+g,Surface g
+temperature,Temperature
+climate,Climate
+category,Category

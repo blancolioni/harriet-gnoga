@@ -1,0 +1,31 @@
+with Agents;
+with Money;
+with Colonies;
+
+package Markets is
+
+record Market with Map is
+   unique key Colony;
+end Market;
+   
+record Market_Activity is
+   key Market;
+   key Commodity;
+   Demand        : Float;
+   Supply        : Float;
+   Production    : Float;
+   Import        : Float;
+   Export        : Float;
+   unique key Market_Activity with Market, Commodity;
+end Market_Activity;
+
+record Market_Price is
+   key Market;
+   key Commodity;
+   Price : Price_Type;
+   unique key Market_Price with Market, Commodity;
+end Market_Price;
+
+type Offer_Type is (Buy, Sell);
+
+end Markets;

@@ -1,0 +1,8 @@
+syntax: glob
+bin
+build
+src/kit
+harriet.db.marlowe
+harriet.gpr
+options.txt
+test.txt

@@ -1,0 +1,16 @@
+package Harriet.Users is
+
+record User is
+   unique key Login : String (32);
+   Password : String (32);
+end User;
+
+record Has_Permission is
+   key User;
+   Find   : Boolean;
+   Read   : Boolean;
+   Write  : Boolean;
+   Delete : Boolean;
+end Has_Permission;
+
+end Harriet.Users;
