@@ -3,6 +3,8 @@ private with Ada.Strings.Unbounded;
 
 with Harriet.Db;
 
+with Harriet.Ships.Lists;
+
 with Harriet.UI.Models.Tables;
 
 package Harriet.UI.Models.Star_System is
@@ -17,6 +19,11 @@ package Harriet.UI.Models.Star_System is
    function World_Count
      (Model : Root_Star_System_Model'Class)
       return Natural;
+
+   function Reference
+     (Model : Root_Star_System_Model'Class;
+      Index : Positive)
+      return Harriet.Db.World_Reference;
 
    function Name
      (Model : Root_Star_System_Model'Class;
@@ -92,6 +99,7 @@ private
       record
          Star_System : Harriet.Db.Star_System_Reference;
          Vector      : World_Vectors.Vector;
+         Ships       : Harriet.Ships.Lists.List;
       end record;
 
    function Star_System
@@ -103,6 +111,12 @@ private
      (Model : Root_Star_System_Model'Class)
       return Natural
    is (Model.Vector.Last_Index);
+
+   function Reference
+     (Model : Root_Star_System_Model'Class;
+      Index : Positive)
+      return Harriet.Db.World_Reference
+   is (Model.Vector.Element (Index).Reference);
 
    function Name
      (Model : Root_Star_System_Model'Class;
