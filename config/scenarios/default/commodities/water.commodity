@@ -1,0 +1,5 @@
+class = resource
+name = Water
+mass = 1
+liquid = true
+npc-price = 1

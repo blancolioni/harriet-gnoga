@@ -1,0 +1,19 @@
+class = "service-facility"
+name = Gymnasium
+power = 1
+worker = { type = { 1 = worker
+                    2 = tech
+                  }
+           qty = { 1 = 10
+                   2 = 5
+                 }
+         }
+module = { type = { 1 = commercial
+                    2 = habitation
+                  }
+           qty = { 1 = 1
+                   2 = 1
+                 }
+         }
+quality = 1
+fitness = true

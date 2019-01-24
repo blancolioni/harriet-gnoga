@@ -1,0 +1,23 @@
+class = "service-facility"
+name = University
+power = 10
+worker = { type = { 1 = tech
+                    2 = exec
+                    3 = worker
+                  }
+           qty = { 1 = 80
+                   2 = 40
+                   3 = 200
+                 }
+         }
+module = { type = { 1 = commercial
+                    2 = industrial
+                    3 = habitation
+                  }
+           qty = { 1 = 40
+                   2 = 20
+                   3 = 50
+                 }
+         }
+quality = 3
+education = true

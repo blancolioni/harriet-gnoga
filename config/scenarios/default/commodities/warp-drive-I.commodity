@@ -1,0 +1,13 @@
+class = "starship-components"
+name = "Warp Drive I"
+mass = 100
+warp = 5
+component = { type = { 1 = "warp-core"
+                       2 = cpu
+                       3 = "electronic-component"
+                     }
+              qty = { 1 = 1
+                      2 = 5
+                      3 = 5
+                    }
+            }

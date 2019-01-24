@@ -1,0 +1,5 @@
+class = resource
+name = vegetables
+mass = 1
+organic = true
+npc-price = 10

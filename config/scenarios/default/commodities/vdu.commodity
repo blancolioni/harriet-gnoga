@@ -1,0 +1,13 @@
+class = "industrial-goods"
+name = "Visual Display"
+mass = 5
+electronic = true
+component = { type = { 1 = glass
+                       2 = silicon
+                       3 = pvc
+                     }
+              qty = { 1 = 2
+                      2 = 1
+                      3 = 2
+                    }
+            }

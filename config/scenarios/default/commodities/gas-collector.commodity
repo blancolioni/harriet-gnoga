@@ -1,0 +1,14 @@
+class = "starship-components"
+name = "Gas Field Collector"
+mass = 500
+mining = { gasfield = true
+         }
+component = { type = { 1 = aluminium
+                       2 = "electronic-component"
+                       3 = glass
+                     }
+              qty = { 1 = 50
+                      2 = 10
+                      3 = 200
+                    }
+            }

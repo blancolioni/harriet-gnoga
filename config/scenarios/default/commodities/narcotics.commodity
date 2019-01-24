@@ -1,0 +1,14 @@
+class = "consumer-goods"
+name = Narcotics
+mass = 10
+quality = 3
+intoxicant = true
+component = { type = { 1 = "rare-minerals"
+                       2 = carbonite
+                       3 = water
+                     }
+              qty = { 1 = 4
+                      2 = 4
+                      3 = 4
+                    }
+            }

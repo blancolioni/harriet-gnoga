@@ -1,0 +1,15 @@
+class = "industrial-goods"
+name = Computer
+mass = 20
+electronic = true
+component = { type = { 1 = cpu
+                       2 = vdu
+                       3 = datastorage
+                       3 = "electronic-component"
+                     }
+              qty = { 1 = 1
+                      2 = 1
+                      3 = 1
+                      3 = 1
+                    }
+            }

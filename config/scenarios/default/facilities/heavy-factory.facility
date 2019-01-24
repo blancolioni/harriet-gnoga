@@ -1,0 +1,22 @@
+class = factory
+name = "Heavy Factory"
+power = 20
+worker = { type = { 1 = exec
+                    2 = worker
+                    3 = tech
+                  }
+           qty = { 1 = 10
+                   2 = 160
+                   3 = 20
+                 }
+         }
+module = { type = { 1 = industrial
+                    2 = habitation
+                  }
+           qty = { 1 = 60
+                   2 = 40
+                 }
+         }
+industrial = true
+consumer = true
+capacity = 250

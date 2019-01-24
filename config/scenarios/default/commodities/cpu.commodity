@@ -1,0 +1,11 @@
+class = "industrial-goods"
+name = "Computer Processor"
+mass = 5
+electronic = true
+component = { type = { 1 = silicon
+                       2 = pvc
+                     }
+              qty = { 1 = 3
+                      2 = 2
+                    }
+            }

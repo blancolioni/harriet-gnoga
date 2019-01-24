@@ -1,0 +1,13 @@
+class = "industrial-goods"
+name = Explosives
+mass = 1
+plastic = true
+component = { type = { 1 = oil
+                       2 = noblegas
+                       3 = "rare-minerals"
+                     }
+              qty = { 1 = 2
+                      2 = 1
+                      3 = 1
+                    }
+            }

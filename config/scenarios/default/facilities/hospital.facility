@@ -1,0 +1,23 @@
+class = "service-facility"
+name = Hospital
+power = 10
+worker = { type = { 1 = exec
+                    2 = tech
+                    3 = worker
+                  }
+           qty = { 1 = 10
+                   2 = 40
+                   3 = 50
+                 }
+         }
+module = { type = { 1 = commercial
+                    2 = industrial
+                    3 = habitation
+                  }
+           qty = { 1 = 30
+                   2 = 10
+                   3 = 20
+                 }
+         }
+quality = 3
+medical = true

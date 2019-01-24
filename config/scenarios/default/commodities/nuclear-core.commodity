@@ -1,0 +1,15 @@
+class = "industrial-goods"
+name = "Nuclear Core"
+mass = 10
+engine = true
+component = { type = { 1 = "electronic-component"
+                       2 = fissile
+                       3 = steel
+                       4 = cement
+                     }
+              qty = { 1 = 1
+                      2 = 1
+                      3 = 1
+                      4 = 2
+                    }
+            }

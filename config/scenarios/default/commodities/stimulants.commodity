@@ -1,0 +1,14 @@
+class = "consumer-goods"
+name = Stimulants
+mass = 10
+quality = 2
+intoxicant = true
+component = { type = { 1 = funghi
+                       2 = carbonite
+                       3 = vegetables
+                     }
+              qty = { 1 = 4
+                      2 = 4
+                      3 = 4
+                    }
+            }

@@ -1,0 +1,14 @@
+class = "starship-components"
+name = "Reinforced Cargo Hold"
+mass = 250
+capacity = { industrial = 100
+           }
+component = { type = { 1 = steel
+                       2 = pvc
+                       3 = "electronic-component"
+                     }
+              qty = { 1 = 15
+                      2 = 75
+                      3 = 10
+                    }
+            }

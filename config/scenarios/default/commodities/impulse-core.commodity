@@ -1,0 +1,13 @@
+class = "industrial-goods"
+name = "Impulse Core"
+mass = 20
+engine = true
+component = { type = { 1 = "nuclear-core"
+                       2 = steel
+                       3 = "electronic-component"
+                     }
+              qty = { 1 = 1
+                      2 = 1
+                      3 = 1
+                    }
+            }

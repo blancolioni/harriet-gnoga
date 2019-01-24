@@ -1,0 +1,13 @@
+class = "starship-components"
+name = "Command Deck"
+mass = 500
+command = true
+component = { type = { 1 = computer
+                       5 = pvc
+                       6 = steel
+                     }
+              qty = { 1 = 10
+                      5 = 100
+                      6 = 10
+                    }
+            }

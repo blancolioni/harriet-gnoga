@@ -1,0 +1,16 @@
+class = "resource-generator"
+name = "Liquid Pump"
+power = 5
+worker = { type = { 1 = tech
+                  }
+           qty = { 1 = 5
+                 }
+         }
+module = { type = { 1 = industrial
+                    2 = habitation
+                  }
+           qty = { 1 = 4
+                   2 = 1
+                 }
+         }
+liquid = true

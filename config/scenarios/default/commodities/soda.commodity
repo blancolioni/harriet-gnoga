@@ -1,0 +1,12 @@
+class = "consumer-goods"
+name = Soda
+mass = 20
+quality = 2
+drink = true
+component = { type = { 1 = water
+                       2 = carbonite
+                     }
+              qty = { 1 = 15
+                      2 = 10
+                    }
+            }

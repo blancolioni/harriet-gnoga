@@ -1,0 +1,11 @@
+class = "industrial-goods"
+name = Cement
+mass = 1
+ceramic = true
+component = { type = { 1 = carbonite
+                       2 = coal
+                     }
+              qty = { 1 = 2
+                      2 = 1
+                    }
+            }

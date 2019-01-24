@@ -1,0 +1,12 @@
+class = "consumer-goods"
+name = "Luxury Clothes"
+mass = 20
+quality = 3
+clothes = true
+component = { type = { 1 = livestock
+                       2 = precious
+                     }
+              qty = { 1 = 10
+                      2 = 10
+                    }
+            }

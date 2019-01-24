@@ -1,0 +1,21 @@
+class = "service-facility"
+name = Multiplex
+power = 10
+worker = { type = { 1 = exec
+                    2 = tech
+                    3 = worker
+                  }
+           qty = { 1 = 5
+                   2 = 10
+                   3 = 30
+                 }
+         }
+module = { type = { 1 = commercial
+                    2 = habitation
+                  }
+           qty = { 1 = 50
+                   2 = 15
+                 }
+         }
+quality = 2
+entertainment = true

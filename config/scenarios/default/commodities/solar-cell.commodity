@@ -1,0 +1,13 @@
+class = "industrial-goods"
+name = "Solar Cell"
+mass = 10
+engine = true
+component = { type = { 1 = "electronic-component"
+                       2 = glass
+                       3 = bronze
+                     }
+              qty = { 1 = 1
+                      2 = 4
+                      3 = 1
+                    }
+            }

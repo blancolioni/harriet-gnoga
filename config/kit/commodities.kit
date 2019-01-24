@@ -5,20 +5,51 @@ with Quantities;
 
 package Commodities is
 
-   record Commodity_Group : Localised;
-
-   record Commodity : Localised, Has_Color with Vector, Map is
-      key Commodity_Group;
+   record Commodity : Localised with Vector, Map is
       key Available : Boolean;
-      Tradeable     : Boolean;
-      Money         : Boolean;
-      Gas           : Boolean;
-      Liquid        : Boolean;
-      Cryo          : Boolean;
-      Cost          : Price_Type;
+      Initial_Cost  : Price_Type;
+      Mass          : Long_Float;
    end Commodity;
 
+   record Recipe is
+      key Commodity;
+   end Recipe;
+   
+   record Recipe_Input is
+      key Recipe;
+      key Input : Commodity;
+   end Recipe_Input;
+
+   record Consumer_Good : Commodity is
+      Quality : Natural;
+   end Consumer_Good;
+
+   record Industrial_Good : Commodity;
+   
+   record Alloy : Industrial_Good;
+   
+   record Ceramic : Industrial_Good;
+   
+   record Electronics : Industrial_Good;
+   
+   record Drink_Commodity : Consumer_Good;
+   
+   record Food_Commodity : Consumer_Good;
+   
+   record Clothing_Commodity : Consumer_Good;
+         
    record Resource : Commodity;
+   
+   record Mineral : Resource;
+
+   record Metal : Resource;
+   
+   record Organic : Resource;
+   
+   record Building_Module : Commodity;
+
+   record Commercial_Module : Building_Module;
+
    
    record Has_Stock is
       Capacity : Quantity_Type;

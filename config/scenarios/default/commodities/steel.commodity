@@ -1,0 +1,11 @@
+class = "industrial-goods"
+name = Steel
+mass = 5
+alloy = true
+component = { type = { 1 = iron
+                       2 = coal
+                     }
+              qty = { 1 = 10
+                      2 = 10
+                    }
+            }

@@ -1,0 +1,21 @@
+class = "service-facility"
+name = "Sports Academy"
+power = 5
+worker = { type = { 1 = exec
+                    2 = tech
+                    3 = worker
+                  }
+           qty = { 1 = 15
+                   2 = 15
+                   3 = 50
+                 }
+         }
+module = { type = { 1 = commercial
+                    2 = habitation
+                  }
+           qty = { 1 = 40
+                   2 = 15
+                 }
+         }
+quality = 3
+fitness = true

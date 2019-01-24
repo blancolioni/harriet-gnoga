@@ -1,0 +1,5 @@
+class = resource
+name = Aluminium
+mass = 1
+metal = true
+npc-price = 5

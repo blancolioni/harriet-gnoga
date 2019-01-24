@@ -1,0 +1,19 @@
+class = "resource-generator"
+name = Mine
+power = 5
+worker = { type = { 1 = tech
+                    2 = worker
+                  }
+           qty = { 1 = 1
+                   2 = 19
+                 }
+         }
+module = { type = { 1 = industrial
+                    2 = habitation
+                  }
+           qty = { 1 = 6
+                   2 = 4
+                 }
+         }
+metal = true
+fissile = true

@@ -1,0 +1,18 @@
+class = "consumer-goods"
+name = "Ready Meal"
+mass = 10
+quality = 2
+food = true
+component = { type = { 1 = grains
+                       2 = herb
+                       3 = livestock
+                       4 = salt
+                       5 = vegetables
+                     }
+              qty = { 1 = 4
+                      2 = 1
+                      3 = 4
+                      4 = 1
+                      5 = 3
+                    }
+            }

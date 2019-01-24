@@ -1,0 +1,18 @@
+class = "starship-components"
+name = "Science Lab"
+mass = 250
+lab = { bio = true
+        physics = true
+        geo = true
+      }
+component = { type = { 1 = computer
+                       2 = "electronic-component"
+                       3 = pvc
+                       4 = datastorage
+                     }
+              qty = { 1 = 5
+                      2 = 10
+                      3 = 50
+                      4 = 10
+                    }
+            }

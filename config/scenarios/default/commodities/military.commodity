@@ -1,0 +1,13 @@
+class = "building-modules"
+name = Military
+mass = 60
+military = true
+component = { type = { 1 = structural
+                       2 = "electronic-component"
+                       3 = computer
+                     }
+              qty = { 1 = 1
+                      2 = 2
+                      3 = 2
+                    }
+            }

@@ -1,0 +1,14 @@
+class = "consumer-goods"
+name = "Regular Clothes"
+mass = 20
+quality = 2
+clothes = true
+component = { type = { 1 = livestock
+                       2 = bronze
+                       3 = nylon
+                     }
+              qty = { 1 = 10
+                      2 = 2
+                      3 = 2
+                    }
+            }

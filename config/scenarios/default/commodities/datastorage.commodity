@@ -1,0 +1,13 @@
+class = "industrial-goods"
+name = "Data Storage"
+mass = 5
+electronic = true
+component = { type = { 1 = silicon
+                       2 = aluminium
+                       3 = pvc
+                     }
+              qty = { 1 = 2
+                      2 = 2
+                      3 = 1
+                    }
+            }

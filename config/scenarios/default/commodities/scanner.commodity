@@ -1,0 +1,15 @@
+class = "starship-components"
+name = Scanner
+mass = 50
+scan = { short = true
+         long = 25
+       }
+component = { type = { 1 = computer
+                       2 = "electronic-component"
+                       3 = datastorage
+                     }
+              qty = { 1 = 1
+                      2 = 4
+                      3 = 2
+                    }
+            }

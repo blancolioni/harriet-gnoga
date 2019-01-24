@@ -1,0 +1,5 @@
+name = Executives
+quality = { service = 3
+            consumer = 3
+          }
+salary = 10000

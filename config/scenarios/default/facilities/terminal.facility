@@ -1,0 +1,19 @@
+class = "service-facility"
+name = "Neural Network Terminal"
+power = 2
+worker = { type = { 1 = tech
+                    2 = worker
+                  }
+           qty = { 1 = 5
+                   2 = 5
+                 }
+         }
+module = { type = { 1 = commercial
+                    2 = habitation
+                  }
+           qty = { 1 = 1
+                   2 = 1
+                 }
+         }
+quality = 1
+education = true

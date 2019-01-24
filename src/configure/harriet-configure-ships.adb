@@ -1,3 +1,5 @@
+with Harriet.Money;
+
 with Harriet.Db.Ship_Component;
 with Harriet.Db.Ship_Design;
 with Harriet.Db.Ship_Module_Design;
@@ -20,6 +22,8 @@ package body Harriet.Configure.Ships is
    begin
       Harriet.Db.Ship_Component.Create
         (Tag             => Component_Config.Config_Name,
+         Available       => True,
+         Initial_Cost    => Harriet.Money.Zero,
          Enabled_By      => Harriet.Db.Null_Technology_Reference,
          Component_Class =>
            Harriet.Db.Ship_Component_Class'Value

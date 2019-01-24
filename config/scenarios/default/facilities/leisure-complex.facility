@@ -1,0 +1,21 @@
+class = "service-facility"
+name = "Leisure Complex"
+power = 2
+worker = { type = { 1 = exec
+                    2 = tech
+                    3 = worker
+                  }
+           qty = { 1 = 10
+                   2 = 20
+                   3 = 40
+                 }
+         }
+module = { type = { 1 = commercial
+                    2 = habitation
+                  }
+           qty = { 1 = 30
+                   2 = 10
+                 }
+         }
+quality = 2
+fitness = true

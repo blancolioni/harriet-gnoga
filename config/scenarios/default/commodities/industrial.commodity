@@ -1,0 +1,13 @@
+class = "building-modules"
+name = Industrial
+mass = 80
+industrial = true
+component = { type = { 1 = structural
+                       2 = "electronic-component"
+                       3 = computer
+                     }
+              qty = { 1 = 4
+                      2 = 4
+                      3 = 1
+                    }
+            }

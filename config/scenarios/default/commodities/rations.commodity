@@ -1,0 +1,12 @@
+class = "consumer-goods"
+name = Rations
+mass = 10
+quality = 1
+food = true
+component = { type = { 1 = grains
+                       2 = salt
+                     }
+              qty = { 1 = 9
+                      2 = 1
+                    }
+            }

@@ -1,0 +1,19 @@
+class = "service-facility"
+name = School
+power = 5
+worker = { type = { 1 = tech
+                    2 = worker
+                  }
+           qty = { 1 = 10
+                   2 = 30
+                 }
+         }
+module = { type = { 1 = commercial
+                    2 = habitation
+                  }
+           qty = { 1 = 20
+                   2 = 10
+                 }
+         }
+quality = 2
+education = true

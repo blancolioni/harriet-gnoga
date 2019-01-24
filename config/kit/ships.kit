@@ -1,3 +1,4 @@
+with Commodities;
 with Localisation;
 with Names;
 with Factions;
@@ -53,9 +54,8 @@ type Ship_Component_Class is
    Shield,
    Cloak, Scanner);
 
-record Ship_Component : Localised, Technological is
+record Ship_Component : Localised, Technological, Commodity is
    Component_Class : Ship_Component_Class;
-   Mass            : Long_Float;
    Size            : Natural;
    Power           : Natural;
 end Ship_Component;

@@ -1,0 +1,5 @@
+class = resource
+name = Grains
+mass = 1
+organic = true
+npc-price = 10

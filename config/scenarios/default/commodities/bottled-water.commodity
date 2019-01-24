@@ -1,0 +1,10 @@
+class = "consumer-goods"
+name = "Bottled Water"
+mass = 20
+quality = 1
+drink = true
+component = { type = { 1 = water
+                     }
+              qty = { 1 = 20
+                    }
+            }

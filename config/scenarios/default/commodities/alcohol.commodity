@@ -1,0 +1,14 @@
+class = "consumer-goods"
+name = Alcohol
+mass = 20
+quality = 1
+intoxicant = true
+component = { type = { 1 = grains
+                       2 = water
+                       3 = funghi
+                     }
+              qty = { 1 = 5
+                      2 = 20
+                      3 = 2
+                    }
+            }

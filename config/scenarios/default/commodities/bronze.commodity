@@ -1,0 +1,11 @@
+class = "industrial-goods"
+name = Bronze
+mass = 5
+alloy = true
+component = { type = { 1 = copper
+                       2 = coal
+                     }
+              qty = { 1 = 10
+                      2 = 10
+                    }
+            }

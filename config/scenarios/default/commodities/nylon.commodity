@@ -1,0 +1,9 @@
+class = "industrial-goods"
+name = Nylon
+mass = 1
+plastic = true
+component = { type = { 1 = oil
+                     }
+              qty = { 1 = 2
+                    }
+            }

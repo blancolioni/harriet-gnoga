@@ -1,0 +1,9 @@
+class = "industrial-goods"
+name = "Nuclear Power"
+mass = 10
+power = true
+component = { type = { 1 = fissile
+                     }
+              qty = { 1 = 1
+                    }
+            }

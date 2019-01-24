@@ -1,0 +1,5 @@
+class = resource
+name = Oil
+mass = 1
+fuel = true
+npc-price = 10

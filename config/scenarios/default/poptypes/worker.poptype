@@ -1,0 +1,5 @@
+name = Workers
+quality = { service = 1
+            consumer = 1
+          }
+salary = 1500

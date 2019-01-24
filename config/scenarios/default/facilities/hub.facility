@@ -1,0 +1,23 @@
+class = starcorp.common.types.ColonyHub
+name = "Colony Hub"
+power = 10
+worker = { type = { 1 = exec
+                    2 = worker
+                    3 = tech
+                  }
+           qty = { 1 = 5
+                   2 = 10
+                   3 = 5
+                 }
+         }
+module = { type = { 1 = commercial
+                    2 = industrial
+                    3 = habitation
+                    4 = military
+                  }
+           qty = { 1 = 5
+                   2 = 5
+                   3 = 10
+                   4 = 5
+                 }
+         }

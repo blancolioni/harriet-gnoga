@@ -1,0 +1,14 @@
+class = "starship-components"
+name = "Light Cargo Hold"
+mass = 250
+capacity = { consumer = 100
+           }
+component = { type = { 1 = aluminium
+                       2 = pvc
+                       3 = "electronic-component"
+                     }
+              qty = { 1 = 100
+                      2 = 100
+                      3 = 10
+                    }
+            }
