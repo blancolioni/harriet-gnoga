@@ -145,7 +145,6 @@ package body Harriet.Worlds is
       return Unit_Real
    is
    begin
-      Check_Surface (World);
       return Harriet.Db.World.Get (World).Habitability;
    end Habitability;
 
@@ -230,6 +229,7 @@ package body Harriet.Worlds is
         procedure (Sector : Harriet.Db.World_Sector_Reference))
    is
    begin
+      Check_Surface (World);
       for Sector of Harriet.Db.World_Sector.Select_By_World (World) loop
          Process (Sector.Reference);
       end loop;
