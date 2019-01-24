@@ -40,8 +40,13 @@ package body Harriet.Sessions is
      (Session : in out Root_Harriet_Session'Class;
       View    : access Harriet.UI.Views.Root_View_Type'Class)
    is
+      Acc : constant View_Access := View_Access (View);
    begin
-      Session.Active_View := View;
+      if not Session.Views.Contains (Acc) then
+         Session.Views.Insert (Session.Views.First, Acc);
+      end if;
+
+      Session.Active_View := Acc;
    end Activate_View;
 
    -----------------
@@ -84,6 +89,22 @@ package body Harriet.Sessions is
       Session.Show_Login_View;
    end Connect;
 
+   ----------------------
+   -- End_All_Sessions --
+   ----------------------
+
+   procedure End_All_Sessions is
+   begin
+      while not Map.Is_Empty loop
+         declare
+            Session : Harriet_Session :=
+                        Session_Maps.Element (Map.First);
+         begin
+            End_Session (Session);
+         end;
+      end loop;
+   end End_All_Sessions;
+
    -----------------
    -- End_Session --
    -----------------
@@ -94,6 +115,16 @@ package body Harriet.Sessions is
         ("ending session: "
          & WL.Guids.To_String (Session.Id));
       Map.Delete (Session.Id);
+      while not Session.Views.Is_Empty loop
+         declare
+            V : Harriet.UI.Views.View_Type :=
+                  Harriet.UI.Views.View_Type (Session.Views.First_Element);
+         begin
+            Harriet.UI.Views.Destroy (V);
+            Session.Views.Delete_First;
+         end;
+      end loop;
+
       Session := null;
    end End_Session;
 
@@ -139,9 +170,12 @@ package body Harriet.Sessions is
                           (Main_Model);
       begin
          Session.Current_View.Gnoga_View.Visible (False);
+         Harriet.UI.Views.Destroy
+           (Harriet.UI.Views.View_Type (Session.Current_View));
          Main_View.Create (Session, Session.Main_Window.all, "dashboard");
          Session.Main_Window.Set_View (Main_View.Gnoga_View.all);
-         Session.Current_View := Main_View;
+         Session.Current_View := View_Access (Main_View);
+         Session.Views.Append (View_Access (Main_View));
          Main_View.Gnoga_View.On_Destroy_Handler
            (On_Main_View_Destroyed'Access);
          Main_View.Gnoga_View.Focus;
@@ -266,7 +300,7 @@ package body Harriet.Sessions is
       end if;
       Login_View.Create (Session, Session.Main_Window.all, "");
       Session.Main_Window.Set_View (Login_View.Gnoga_View.all);
-      Session.Current_View := Login_View;
+      Session.Current_View := View_Access (Login_View);
    end Show_Login_View;
 
    ---------------

@@ -34,6 +34,7 @@ package body Harriet.UI.Gnoga_UI is
         ("stopping server"
          & (if Message = "" then ""
            else ": " & Message));
+      Harriet.Sessions.End_All_Sessions;
       Gnoga.Application.Multi_Connect.End_Application;
    end Stop_Server;
 

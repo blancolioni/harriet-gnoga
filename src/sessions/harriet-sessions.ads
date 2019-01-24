@@ -1,3 +1,5 @@
+private with Ada.Containers.Doubly_Linked_Lists;
+
 with Gnoga.Types;
 
 private with Gnoga.Gui.View;
@@ -72,9 +74,17 @@ package Harriet.Sessions is
    function New_Session return Harriet_Session;
    procedure End_Session (Session : in out Harriet_Session);
 
+   procedure End_All_Sessions;
+
    procedure Broadcast (Signal : Harriet.Signals.Signal_Type);
 
 private
+
+   type View_Access is access all Harriet.UI.Views.Root_View_Type'Class;
+
+   package View_Lists is
+     new Ada.Containers.Doubly_Linked_Lists
+       (View_Access);
 
    type Root_Harriet_Session is
      new Gnoga.Types.Connection_Data_Type
@@ -86,8 +96,9 @@ private
                            Harriet.Db.Null_User_Reference;
          Faction       : Harriet.Db.Faction_Reference :=
                            Harriet.Db.Null_Faction_Reference;
-         Current_View  : access Harriet.UI.Views.Root_View_Type'Class;
-         Active_View   : access Harriet.UI.Views.Root_View_Type'Class;
+         Current_View  : View_Access;
+         Active_View   : View_Access;
+         Views         : View_Lists.List;
          Dispatcher    : Harriet.Signals.Signal_Dispatcher;
       end record;
 

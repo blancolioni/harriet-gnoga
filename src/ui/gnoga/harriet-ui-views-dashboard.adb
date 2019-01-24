@@ -30,6 +30,9 @@ package body Harriet.UI.Views.Dashboard is
       Parent  : in out Gnoga.Gui.Base.Base_Type'Class;
       Id      : String);
 
+   overriding procedure Close
+     (View : in out Root_Cell_View_Type);
+
    overriding procedure Render
      (View : in out Root_Cell_View_Type)
    is null;
@@ -40,7 +43,7 @@ package body Harriet.UI.Views.Dashboard is
    overriding function Title
      (View : Root_Cell_View_Type)
       return String
-   is ("");
+   is ("dashboard");
 
    procedure Set_Layout
      (View          : not null access Root_Cell_View_Type'Class;
@@ -79,6 +82,9 @@ package body Harriet.UI.Views.Dashboard is
       Session : not null access Harriet.Sessions.Root_Harriet_Session'Class;
       Parent  : in out Gnoga.Gui.Base.Base_Type'Class;
       Id      : String);
+
+   overriding procedure Close
+     (View : in out Root_Dashboard_View);
 
    overriding procedure Render
      (View : in out Root_Dashboard_View);
@@ -203,6 +209,48 @@ package body Harriet.UI.Views.Dashboard is
       end loop;
       return null;
    end Cell;
+
+   -----------
+   -- Close --
+   -----------
+
+   overriding procedure Close
+     (View : in out Root_Dashboard_View)
+   is
+      procedure Close_Cell
+        (Index  : Harriet.UI.Layouts.Tile_Index;
+         Layout : Harriet.UI.Layouts.Layout_Tile);
+
+      ----------------
+      -- Close_Cell --
+      ----------------
+
+      procedure Close_Cell
+        (Index  : Harriet.UI.Layouts.Tile_Index;
+         Layout : Harriet.UI.Layouts.Layout_Tile)
+      is
+         pragma Unreferenced (Layout);
+         Cell : Cell_View_Type :=
+                  View.Cell (Index);
+      begin
+         Destroy (View_Type (Cell));
+      end Close_Cell;
+
+   begin
+      View.Top_Toolbar.Close;
+      View.Model.Layout.Iterate (Close_Cell'Access);
+   end Close;
+
+   -----------
+   -- Close --
+   -----------
+
+   overriding procedure Close
+     (View : in out Root_Cell_View_Type)
+   is
+   begin
+      Destroy (View.Cell_Contents);
+   end Close;
 
    ------------
    -- Create --

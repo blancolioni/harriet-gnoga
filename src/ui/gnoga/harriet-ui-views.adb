@@ -49,8 +49,10 @@ package body Harriet.UI.Views is
         new Ada.Unchecked_Deallocation
           (Root_View_Type'Class, View_Type);
    begin
-      View.Close;
-      Free (View);
+      if View /= null then
+         View.Close;
+         Free (View);
+      end if;
    end Destroy;
 
 end Harriet.UI.Views;
