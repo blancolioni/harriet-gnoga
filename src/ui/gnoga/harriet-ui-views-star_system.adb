@@ -44,8 +44,12 @@ package body Harriet.UI.Views.Star_System is
      (View : in out Root_Star_System_View;
       X, Y : Real);
 
-   procedure Create_Picture
-     (View : in out Root_Star_System_View'Class);
+   overriding procedure Close
+     (View : in out Root_Star_System_View);
+
+   overriding procedure Draw_Picture
+     (View : in out Root_Star_System_View;
+      Layer : Harriet.UI.Views.Picture.Layer_Index);
 
    type Star_System_Gnoga_View is
      new Gnoga.Gui.View.View_Type with
@@ -65,6 +69,21 @@ package body Harriet.UI.Views.Star_System is
    procedure Handle_Clock_Tick
      (Object : Harriet.Signals.Signaler'Class;
       Data   : Harriet.Signals.Signal_Data_Interface'Class);
+
+   -----------
+   -- Close --
+   -----------
+
+   overriding procedure Close
+     (View : in out Root_Star_System_View)
+   is
+   begin
+      View.Session.Remove_Handler
+        (Harriet.Sessions.Signal_Clock_Tick,
+         View.Clock_Handler_Id);
+      View.Gnoga_View.Remove;
+      Harriet.UI.Views.Picture.Root_Picture_View (View).Close;
+   end Close;
 
    ------------
    -- Create --
@@ -95,8 +114,6 @@ package body Harriet.UI.Views.Star_System is
          View.View_Radius * 2.0,
          View.View_Radius * 2.0);
 
-      View.Create_Picture;
-
       declare
          Data : constant Star_System_Signal_Data :=
                   (View => Gnoga_View);
@@ -110,13 +127,15 @@ package body Harriet.UI.Views.Star_System is
 
    end Create;
 
-   --------------------
-   -- Create_Picture --
-   --------------------
+   ------------------
+   -- Draw_Picture --
+   ------------------
 
-   procedure Create_Picture
-     (View : in out Root_Star_System_View'Class)
+   overriding procedure Draw_Picture
+     (View  : in out Root_Star_System_View;
+      Layer : Harriet.UI.Views.Picture.Layer_Index)
    is
+      pragma Unreferenced (Layer);
 
       Ships : Harriet.Ships.Lists.List;
 
@@ -211,7 +230,7 @@ package body Harriet.UI.Views.Star_System is
          end;
       end loop;
 
-   end Create_Picture;
+   end Draw_Picture;
 
    -----------------------
    -- Handle_Clock_Tick --
@@ -223,8 +242,7 @@ package body Harriet.UI.Views.Star_System is
    is
       pragma Unreferenced (Object);
    begin
-      Star_System_Signal_Data (Data).View.Star_System.Create_Picture;
-      Star_System_Signal_Data (Data).View.Star_System.Render;
+      Star_System_Signal_Data (Data).View.Star_System.Queue_Render;
    end Handle_Clock_Tick;
 
    --------------------

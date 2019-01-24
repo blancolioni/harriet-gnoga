@@ -1,6 +1,7 @@
 with Ada.Calendar;
 with Ada.Strings.Fixed;
 with Ada.Text_IO;
+with Ada.Unchecked_Deallocation;
 
 with Gnoga.Types;
 
@@ -75,13 +76,30 @@ package body Harriet.UI.Views.Picture is
       Picture.Commands.Clear;
    end Clear;
 
+   -----------
+   -- Close --
+   -----------
+
+   overriding procedure Close
+     (View : in out Root_Picture_View)
+   is
+      procedure Free_Task is
+        new Ada.Unchecked_Deallocation (Render_Task, Render_Task_Access);
+      procedure Free_Queue is
+        new Ada.Unchecked_Deallocation (Update_Queue, Update_Queue_Access);
+   begin
+      Free_Task (View.Renderer);
+      Free_Queue (View.Update);
+   end Close;
+
    -------------------------
    -- Create_Picture_View --
    -------------------------
 
    procedure Create_Picture_View
-     (View       : not null access Root_Picture_View'Class;
-      Gnoga_View : in out Gnoga.Gui.View.View_Type'Class)
+     (View        : not null access Root_Picture_View'Class;
+      Gnoga_View  : in out Gnoga.Gui.View.View_Type'Class;
+      Layers      : Layer_Count := 1)
    is
    begin
       View.Render_Canvas.View := View;
@@ -99,14 +117,25 @@ package body Harriet.UI.Views.Picture is
       View.Render_Canvas.On_Mouse_Move_Handler
         (On_Canvas_Mouse_Move'Access);
 
-      View.Draw_Canvas.Create
-        (Parent => Gnoga_View,
-         Width  => Gnoga_View.Width,
-         Height => Gnoga_View.Height);
-      View.Draw_Canvas.Hidden (True);
-
       View.Render_Context.Get_Drawing_Context_2D (View.Render_Canvas);
-      View.Draw_Context.Get_Drawing_Context_2D (View.Draw_Canvas);
+
+      for I in 1 .. Layers loop
+         declare
+            Layer : constant Draw_Layer := new Draw_Layer_Record;
+         begin
+            Layer.Canvas.Create
+              (Parent => Gnoga_View,
+               Width  => Gnoga_View.Width,
+               Height => Gnoga_View.Height);
+            Layer.Canvas.Hidden (True);
+            Layer.Context.Get_Drawing_Context_2D (Layer.Canvas);
+            View.Layers.Append (Layer);
+         end;
+      end loop;
+
+      View.Update := new Update_Queue;
+      View.Renderer := new Render_Task;
+      View.Renderer.Start (Picture_View (View));
 
    end Create_Picture_View;
 
@@ -329,6 +358,48 @@ package body Harriet.UI.Views.Picture is
       end if;
    end On_Canvas_Mouse_Move;
 
+   ------------------
+   -- Queue_Render --
+   ------------------
+
+   overriding procedure Queue_Render
+     (View : in out Root_Picture_View)
+   is
+      All_Layers : constant Layer_Flags (1 .. View.Layers.Last_Index) :=
+                     (others => True);
+   begin
+      View.Update.Queue_Update (All_Layers);
+   end Queue_Render;
+
+   ------------------------
+   -- Queue_Render_Layer --
+   ------------------------
+
+   procedure Queue_Render_Layer
+     (View   : in out Root_Picture_View'Class;
+      Layers : Layer_Array)
+   is
+      Flags : Layer_Flags (1 .. View.Layers.Last_Index) :=
+                (others => False);
+   begin
+      for Layer of Layers loop
+         Flags (Layer) := True;
+      end loop;
+      View.Update.Queue_Update (Flags);
+   end Queue_Render_Layer;
+
+   ------------------------
+   -- Queue_Render_Layer --
+   ------------------------
+
+   procedure Queue_Render_Layer
+     (View   : in out Root_Picture_View'Class;
+      Layer  : Layer_Index)
+   is
+   begin
+      View.Queue_Render_Layer ((1 => Layer));
+   end Queue_Render_Layer;
+
    ---------------
    -- Rectangle --
    ---------------
@@ -352,6 +423,17 @@ package body Harriet.UI.Views.Picture is
 
    overriding procedure Render
      (View : in out Root_Picture_View)
+   is
+   begin
+      for Layer in 1 .. View.Layers.Last_Index loop
+         View.Render_Context.Draw_Image
+           (View.Layers.Element (Layer).Canvas, 0, 0);
+      end loop;
+   end Render;
+
+   procedure Render_Layer
+     (View  : in out Root_Picture_View'Class;
+      Layer : Layer_Index)
    is
       View_Size : constant Non_Negative_Real :=
                     Real'Min (View.Viewport.Width, View.Viewport.Height);
@@ -399,7 +481,7 @@ package body Harriet.UI.Views.Picture is
       Count : Natural := 0;
 
       Context : Gnoga.Gui.Element.Canvas.Context_2D.Context_2D_Type renames
-                  View.Draw_Context;
+                  View.Layers.Element (Layer).Context;
 
       function Is_Visible (P : Point_Type) return Boolean
       is (Contains (View.Viewport, P));
@@ -631,15 +713,23 @@ package body Harriet.UI.Views.Picture is
 --           & "x"
 --           & Harriet.Real_Images.Approximate_Image (View.Viewport.Height));
 
-      Context.Fill_Color
-        (Harriet.Color.To_Html_String (View.Background));
-
-      Context.Fill_Rectangle
-        (Gnoga.Types.Rectangle_Type'
-           (X      => 0,
-            Y      => 0,
-            Width  => Screen_Width,
-            Height => Screen_Height));
+      if Layer = 1 then
+         Context.Fill_Color
+           (Harriet.Color.To_Html_String (View.Background));
+         Context.Fill_Rectangle
+           (Gnoga.Types.Rectangle_Type'
+              (X      => 0,
+               Y      => 0,
+               Width  => Screen_Width,
+               Height => Screen_Height));
+      else
+         Context.Clear_Rectangle
+           (Gnoga.Types.Rectangle_Type'
+              (X      => 0,
+               Y      => 0,
+               Width  => Screen_Width,
+               Height => Screen_Height));
+      end if;
 
       Context.Save;
 
@@ -652,9 +742,6 @@ package body Harriet.UI.Views.Picture is
       Check_Path;
 
       Context.Restore;
-
-      View.Render_Context.Draw_Image
-        (View.Draw_Canvas, 0, 0);
 
       declare
          use type Ada.Calendar.Time;
@@ -672,7 +759,39 @@ package body Harriet.UI.Views.Picture is
          end if;
       end;
 
-   end Render;
+   end Render_Layer;
+
+   -----------------
+   -- Render_Task --
+   -----------------
+
+   task body Render_Task is
+      Target : Picture_View;
+   begin
+      select
+         accept Start (View   : Picture_View)
+         do
+            Target := View;
+         end Start;
+      or
+         terminate;
+      end select;
+
+      loop
+         declare
+            Layers : Layer_Flags (1 .. Target.Layers.Last_Index);
+         begin
+            Target.Update.Wait_For_Queued_Update (Layers);
+            for Layer in Layers'Range loop
+               if Layers (Layer) then
+                  Target.Draw_Picture (Layer);
+                  Target.Render_Layer (Layer);
+               end if;
+            end loop;
+            Target.Render;
+         end;
+      end loop;
+   end Render_Task;
 
    ------------
    -- Resize --
@@ -687,9 +806,13 @@ package body Harriet.UI.Views.Picture is
    begin
       View.Render_Canvas.Attribute ("width", Image (View.Gnoga_View.Width));
       View.Render_Canvas.Attribute ("height", Image (View.Gnoga_View.Height));
-      View.Draw_Canvas.Attribute ("width", Image (View.Gnoga_View.Width));
-      View.Draw_Canvas.Attribute ("height", Image (View.Gnoga_View.Height));
-      View.Render;
+
+      for Layer of View.Layers loop
+         Layer.Canvas.Attribute ("width", Image (View.Gnoga_View.Width));
+         Layer.Canvas.Attribute ("height", Image (View.Gnoga_View.Height));
+      end loop;
+
+      View.Queue_Render;
    end Resize;
 
    ------------------
@@ -721,5 +844,37 @@ package body Harriet.UI.Views.Picture is
       Picture.Move_To (Position);
       Picture.Add ((Draw_Text, 0, 0, To_Unbounded_String (Text)));
    end Text;
+
+   ------------------
+   -- Update_Queue --
+   ------------------
+
+   protected body Update_Queue is
+
+      ------------------
+      -- Queue_Update --
+      ------------------
+
+      procedure Queue_Update (Layers : Layer_Flags) is
+      begin
+         Queued := True;
+         Queued_Layers (1 .. Layers'Length) := Layers;
+      end Queue_Update;
+
+      ----------------------------
+      -- Wait_For_Queued_Update --
+      ----------------------------
+
+      entry Wait_For_Queued_Update
+        (Layers : out Layer_Flags)
+        when Queued
+      is
+      begin
+         Queued := False;
+         Layers := Queued_Layers (1 .. Layers'Length);
+         Queued_Layers := (others => False);
+      end Wait_For_Queued_Update;
+
+   end Update_Queue;
 
 end Harriet.UI.Views.Picture;

@@ -34,6 +34,10 @@ package Harriet.UI.Views is
       Key     : Natural)
    is null;
 
+   procedure Queue_Render
+     (View : in out Root_View_Type)
+   is null;
+
    procedure Render
      (View : in out Root_View_Type)
    is null;

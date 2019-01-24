@@ -36,12 +36,16 @@ package body Harriet.UI.Views.World is
       Parent  : in out Gnoga.Gui.Base.Base_Type'Class;
       Id      : String);
 
+   overriding procedure Close
+     (View : in out Root_World_View);
+
    overriding procedure On_Mouse_Click
      (View : in out Root_World_View;
       X, Y : Real);
 
-   procedure Create_Picture
-     (View : in out Root_World_View'Class);
+   overriding procedure Draw_Picture
+     (View  : in out Root_World_View;
+      Layer : Harriet.UI.Views.Picture.Layer_Index);
 
    type World_Gnoga_View is
      new Gnoga.Gui.View.View_Type with
@@ -61,6 +65,21 @@ package body Harriet.UI.Views.World is
    procedure Handle_Clock_Tick
      (Object : Harriet.Signals.Signaler'Class;
       Data   : Harriet.Signals.Signal_Data_Interface'Class);
+
+   -----------
+   -- Close --
+   -----------
+
+   overriding procedure Close
+     (View : in out Root_World_View)
+   is
+   begin
+      View.Session.Remove_Handler
+        (Harriet.Sessions.Signal_Clock_Tick,
+         View.Clock_Handler_Id);
+      View.Gnoga_View.Remove;
+      Harriet.UI.Views.Picture.Root_Picture_View (View).Close;
+   end Close;
 
    ------------
    -- Create --
@@ -91,8 +110,6 @@ package body Harriet.UI.Views.World is
          View.View_Radius * 2.0,
          View.View_Radius * 2.0);
 
-      View.Create_Picture;
-
       declare
          Data : constant World_Signal_Data :=
                   (View => Gnoga_View);
@@ -110,9 +127,11 @@ package body Harriet.UI.Views.World is
    -- Create_Picture --
    --------------------
 
-   procedure Create_Picture
-     (View : in out Root_World_View'Class)
+   overriding procedure Draw_Picture
+     (View  : in out Root_World_View;
+      Layer : Harriet.UI.Views.Picture.Layer_Index)
    is
+      pragma Unreferenced (Layer);
 
       Radius : constant Non_Negative_Real :=
                  Harriet.Worlds.Radius
@@ -189,7 +208,7 @@ package body Harriet.UI.Views.World is
          end;
       end loop;
 
-   end Create_Picture;
+   end Draw_Picture;
 
    -----------------------
    -- Handle_Clock_Tick --
@@ -201,8 +220,7 @@ package body Harriet.UI.Views.World is
    is
       pragma Unreferenced (Object);
    begin
-      World_Signal_Data (Data).View.World.Create_Picture;
-      World_Signal_Data (Data).View.World.Render;
+      World_Signal_Data (Data).View.World.Queue_Render;
    end Handle_Clock_Tick;
 
    --------------------

@@ -43,8 +43,9 @@ package body Harriet.UI.Views.Galaxy is
      (View : in out Root_Galaxy_View;
       X, Y : Real);
 
-   procedure Create_Picture
-     (View : in out Root_Galaxy_View'Class);
+   overriding procedure Draw_Picture
+     (View  : in out Root_Galaxy_View;
+      Layer : Harriet.UI.Views.Picture.Layer_Index);
 
    type Galaxy_Access is access all Root_Galaxy_View;
 
@@ -111,17 +112,20 @@ package body Harriet.UI.Views.Galaxy is
          View.View_Radius * 2.0,
          View.View_Radius * 2.0);
 
-      View.Create_Picture;
+      View.Queue_Render;
 
    end Create;
 
-   --------------------
-   -- Create_Picture --
-   --------------------
+   ------------------
+   -- Draw_Picture --
+   ------------------
 
-   procedure Create_Picture
-     (View : in out Root_Galaxy_View'Class)
+   overriding procedure Draw_Picture
+     (View  : in out Root_Galaxy_View;
+      Layer : Harriet.UI.Views.Picture.Layer_Index)
    is
+      pragma Unreferenced (Layer);
+
       procedure Render_Star_System
         (Star_System : Harriet.Star_Systems.Star_System_Type'Class);
 
@@ -162,7 +166,7 @@ package body Harriet.UI.Views.Galaxy is
       View.Font ("OpenSans", 12.0);
       View.Background_Color (Harriet.Color.Black);
       View.Model.Scan_Star_Systems (Render_Star_System'Access);
-   end Create_Picture;
+   end Draw_Picture;
 
    -----------------
    -- Galaxy_View --

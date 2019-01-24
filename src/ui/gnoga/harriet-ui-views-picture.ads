@@ -1,4 +1,5 @@
 private with Ada.Containers.Indefinite_Doubly_Linked_Lists;
+private with Ada.Containers.Vectors;
 private with Ada.Strings.Unbounded;
 
 private with Gnoga.Gui.Element.Canvas.Context_2D;
@@ -6,6 +7,14 @@ private with Gnoga.Gui.Element.Canvas.Context_2D;
 with Harriet.Color;
 
 package Harriet.UI.Views.Picture is
+
+   Max_Picture_Layers : constant := 16;
+   type Layer_Count is range 0 .. Max_Picture_Layers;
+   subtype Layer_Index is Layer_Count range 1 .. Layer_Count'Last;
+
+   type Layer_Flags is array (Layer_Index range <>) of Boolean;
+
+   type Layer_Array is array (Positive range <>) of Layer_Index;
 
    type Point_Type is
       record
@@ -26,12 +35,34 @@ package Harriet.UI.Views.Picture is
 
    type Root_Picture_View is abstract new Root_View_Type with private;
 
+   type Picture_View is access all Root_Picture_View'Class;
+
    procedure Create_Picture_View
-     (View       : not null access Root_Picture_View'Class;
-      Gnoga_View : in out Gnoga.Gui.View.View_Type'Class);
+     (View        : not null access Root_Picture_View'Class;
+      Gnoga_View  : in out Gnoga.Gui.View.View_Type'Class;
+      Layers      : Layer_Count := 1);
+
+   procedure Draw_Picture
+     (View : in out Root_Picture_View;
+      Layer : Layer_Index)
+   is abstract;
+
+   overriding procedure Close
+     (View : in out Root_Picture_View);
 
    overriding procedure Render
      (View : in out Root_Picture_View);
+
+   overriding procedure Queue_Render
+     (View   : in out Root_Picture_View);
+
+   procedure Queue_Render_Layer
+     (View   : in out Root_Picture_View'Class;
+      Layers : Layer_Array);
+
+   procedure Queue_Render_Layer
+     (View   : in out Root_Picture_View'Class;
+      Layer  : Layer_Index);
 
    overriding procedure Resize
      (View : in out Root_Picture_View);
@@ -164,19 +195,48 @@ private
          View : access Root_Picture_View'Class;
       end record;
 
+   protected type Update_Queue is
+      procedure Queue_Update (Layers : Layer_Flags);
+      entry Wait_For_Queued_Update
+        (Layers : out Layer_Flags);
+   private
+      Queued        : Boolean := False;
+      Queued_Layers : Layer_Flags (1 .. Max_Picture_Layers);
+   end Update_Queue;
+
+   type Update_Queue_Access is access Update_Queue;
+
+   task type Render_Task is
+      entry Start (View   : Picture_View);
+   end Render_Task;
+
+   type Render_Task_Access is access Render_Task;
+
+   type Draw_Layer_Record is
+      record
+         Canvas  : Gnoga.Gui.Element.Canvas.Canvas_Type;
+         Context : Gnoga.Gui.Element.Canvas.Context_2D.Context_2D_Type;
+      end record;
+
+   type Draw_Layer is access Draw_Layer_Record;
+
+   package Draw_Layer_Vectors is
+     new Ada.Containers.Vectors (Layer_Index, Draw_Layer);
+
    type Root_Picture_View is abstract new Root_View_Type with
       record
          Background      : Harriet.Color.Harriet_Color := Harriet.Color.Black;
          Commands        : Draw_Command_Lists.List;
          Render_Canvas   : Picture_Canvas;
-         Draw_Canvas     : Gnoga.Gui.Element.Canvas.Canvas_Type;
          Render_Context  : Gnoga.Gui.Element.Canvas.Context_2D.Context_2D_Type;
-         Draw_Context    : Gnoga.Gui.Element.Canvas.Context_2D.Context_2D_Type;
+         Layers          : Draw_Layer_Vectors.Vector;
          Viewport        : Rectangle_Type := ((0.0, 0.0), 1.0, 1.0);
          X_Axis_Rotation : Real := 45.0;
          Dragging        : Boolean := False;
          Previous_X      : Integer;
          Previous_Y      : Integer;
+         Update          : Update_Queue_Access;
+         Renderer        : Render_Task_Access;
       end record;
 
    procedure Add
@@ -189,5 +249,9 @@ private
       return Boolean
    is (P.X in R.Left_Top.X .. R.Left_Top.X + R.Width
        and then P.Y in R.Left_Top.Y .. R.Left_Top.Y + R.Height);
+
+   procedure Render_Layer
+     (View  : in out Root_Picture_View'Class;
+      Layer : Layer_Index);
 
 end Harriet.UI.Views.Picture;
