@@ -2,7 +2,7 @@ class = "consumer-goods"
 name = "Regular Clothes"
 mass = 20
 quality = 2
-clothes = true
+clothing = true
 component = { type = { 1 = livestock
                        2 = bronze
                        3 = nylon
