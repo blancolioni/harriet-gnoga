@@ -38,24 +38,29 @@ package body Harriet.Signals is
       Object     : Signaler'Class;
       Signal     : Signal_Type)
    is
-      S : constant String := String (Signal);
+      S        : constant String := String (Signal);
    begin
       if Dispatcher.Map.Contains (S) then
-         for Handler of Dispatcher.Map (S) loop
-            begin
-               Handler.Handler (Object, Handler.Data.Element);
-            exception
-               when E : others =>
-                  Ada.Text_IO.Put_Line
-                    (Ada.Text_IO.Standard_Error,
-                     "exception while calling handler"
-                     & Handler.Id'Image
-                     & " for "
-                     & String (Signal)
-                     & ": "
-                     & Ada.Exceptions.Exception_Message (E));
-            end;
-         end loop;
+         declare
+            List : constant Handler_Lists.List :=
+                     Dispatcher.Map.Element (S);
+         begin
+            for Handler of List loop
+               begin
+                  Handler.Handler (Object, Handler.Data.Element);
+               exception
+                  when E : others =>
+                     Ada.Text_IO.Put_Line
+                       (Ada.Text_IO.Standard_Error,
+                        "exception while calling handler"
+                        & Handler.Id'Image
+                        & " for "
+                        & String (Signal)
+                        & ": "
+                        & Ada.Exceptions.Exception_Message (E));
+               end;
+            end loop;
+         end;
       end if;
    end Call_Handlers;
 
