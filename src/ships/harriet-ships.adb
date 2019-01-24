@@ -34,7 +34,10 @@ package body Harriet.Ships is
                        Faction         => Owner,
                        World           => World,
                        Star_System     => World_Rec.Star_System,
-                       Orbit           => World_Rec.Radius + 300.0 * 1000.0,
+                       Orbit           =>
+                         World_Rec.Radius
+                       + (300.0 + 100.0 * Harriet.Random.Unit_Random)
+                       * 1000.0,
                        Inclination     =>
                          Harriet.Random.Unit_Random * 10.0 - 5.0,
                        Start_Time      => Harriet.Calendar.Clock,
