@@ -102,7 +102,9 @@ package body Harriet.UI.Views.World is
       Gnoga_View.World := World_Access (View);
       View.Create_With_Gnoga_View (Session, Gnoga_View);
 
-      Picture_View.Create_Picture_View (Gnoga_View.all);
+      Picture_View.Create_Picture_View
+        (Gnoga_View => Gnoga_View.all,
+         Layers     => 2);
 
       View.Set_Viewport
         (-View.View_Radius,
@@ -121,6 +123,8 @@ package body Harriet.UI.Views.World is
               Data    => Data);
       end;
 
+      View.Queue_Render;
+
    end Create;
 
    --------------------
@@ -131,8 +135,6 @@ package body Harriet.UI.Views.World is
      (View  : in out Root_World_View;
       Layer : Harriet.UI.Views.Picture.Layer_Index)
    is
-      pragma Unreferenced (Layer);
-
       Radius : constant Non_Negative_Real :=
                  Harriet.Worlds.Radius
                    (View.Model.World);
@@ -143,71 +145,78 @@ package body Harriet.UI.Views.World is
       View.Clear;
       View.Font ("OpenSans", 10.0);
 
-      Harriet.Worlds.Get_Ships (View.Model.World, Ships);
+      case Layer is
+         when 1 =>
+            declare
+               procedure Draw_Sector
+                 (Sector : Harriet.Db.World_Sector_Reference);
 
-      declare
-         procedure Draw_Sector
-           (Sector : Harriet.Db.World_Sector_Reference);
+               -----------------
+               -- Draw_Sector --
+               -----------------
 
-         -----------------
-         -- Draw_Sector --
-         -----------------
-
-         procedure Draw_Sector
-           (Sector : Harriet.Db.World_Sector_Reference)
-         is
-         begin
-            if Harriet.Worlds.Get_Centre (Sector).Z > 0.0 then
-               declare
-                  Border : constant Harriet.Worlds.Sector_Vertex_Array :=
-                             Harriet.Worlds.Get_Vertices (Sector);
-                  First  : Boolean := True;
+               procedure Draw_Sector
+                 (Sector : Harriet.Db.World_Sector_Reference)
+               is
                begin
-                  for Point of Border loop
-                     if First then
-                        View.Move_To ((Point.X, Point.Y));
-                        First := False;
-                     else
-                        View.Line_To ((Point.X, Point.Y));
-                     end if;
-                  end loop;
-                  View.Line_To ((Border (Border'First).X,
-                                Border (Border'First).Y));
+                  if Harriet.Worlds.Get_Centre (Sector).Z > 0.0 then
+                     declare
+                        Border : constant Harriet.Worlds.Sector_Vertex_Array :=
+                                   Harriet.Worlds.Get_Vertices (Sector);
+                        First  : Boolean := True;
+                     begin
+                        for Point of Border loop
+                           if First then
+                              View.Move_To ((Point.X, Point.Y));
+                              First := False;
+                           else
+                              View.Line_To ((Point.X, Point.Y));
+                           end if;
+                        end loop;
+                        View.Line_To ((Border (Border'First).X,
+                                      Border (Border'First).Y));
+                     end;
+                  end if;
+               end Draw_Sector;
+
+            begin
+               View.Draw_Color (Harriet.Color.White);
+               Harriet.Worlds.Scan_Surface
+                 (View.Model.World, Draw_Sector'Access);
+            end;
+
+         when 2 =>
+            Harriet.Worlds.Get_Ships (View.Model.World, Ships);
+
+            for Ship of Ships loop
+               declare
+                  use Harriet.Elementary_Functions;
+                  Orbit       : constant Non_Negative_Real :=
+                                  Ship.Orbit / Radius;
+                  Longitude   : constant Non_Negative_Real :=
+                                  Ship.Current_Longitude;
+                  Inclination : constant Real := Ship.Inclination;
+                  X           : constant Real :=
+                                  Orbit * Cos (Longitude, 360.0)
+                                  * Cos (Inclination, 360.0);
+                  Y           : constant Real :=
+                                  Orbit * Cos (Longitude, 360.0)
+                                  * Sin (Inclination, 360.0);
+                  Z           : constant Real :=
+                                  Orbit * Sin (Longitude, 360.0);
+
+               begin
+                  if X not in -1.0 .. 1.0 or else Z > 0.0 then
+                     View.Fill_Color
+                       (Harriet.Factions.Get (Ship.Owner).Color);
+                     View.Circle ((X, Y), 0.02, True);
+                  end if;
                end;
-            end if;
-         end Draw_Sector;
+            end loop;
 
-      begin
-         View.Draw_Color (Harriet.Color.White);
-         Harriet.Worlds.Scan_Surface
-           (View.Model.World, Draw_Sector'Access);
-      end;
-
-      for Ship of Ships loop
-         declare
-            use Harriet.Elementary_Functions;
-            Orbit : constant Non_Negative_Real :=
-                      Ship.Orbit / Radius;
-            Longitude : constant Non_Negative_Real :=
-                          Ship.Current_Longitude;
-            Inclination : constant Real := Ship.Inclination;
-            X           : constant Real :=
-                            Orbit * Cos (Longitude, 360.0)
-                            * Cos (Inclination, 360.0);
-            Y           : constant Real :=
-                            Orbit * Cos (Longitude, 360.0)
-                            * Sin (Inclination, 360.0);
-            Z           : constant Real := Orbit * Sin (Longitude, 360.0);
-
-         begin
-            if X not in -1.0 .. 1.0 or else Z > 0.0 then
-               View.Fill_Color
-                 (Harriet.Factions.Get (Ship.Owner).Color);
-               View.Circle ((X, Y), 0.02, True);
-            end if;
-         end;
-      end loop;
-
+         when others =>
+            null;
+      end case;
    end Draw_Picture;
 
    -----------------------
@@ -220,7 +229,7 @@ package body Harriet.UI.Views.World is
    is
       pragma Unreferenced (Object);
    begin
-      World_Signal_Data (Data).View.World.Queue_Render;
+      World_Signal_Data (Data).View.World.Queue_Render_Layer (2);
    end Handle_Clock_Tick;
 
    --------------------
