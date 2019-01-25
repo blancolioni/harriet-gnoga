@@ -1,17 +1,27 @@
+with Commodities;
 with Ships;
 with Transport;
 with Worlds;
 
 package Pops is
 
+record Pop_Group : Commodity is
+   Consumer_Quality : Positive;
+   Service_Quality  : Positive;
+   Salary           : Price_Type;
+end Pop_Group;
+
 record Pop : Transportable is
-   key Empire;
+   key Faction;
    key World;
+   key World_Sector;
    key Ship;
+   key Pop_Group;
    Size      : Long_Float;
    Happiness : Long_Float;
-   key Empire_World with Empire, World;
-   key Empire_Ship with Empire, Ship;
+   key Faction_World with Faction, World;
+   key Faction_World_Sector with Faction, World_Sector;
+   key Faction_Ship with Faction, Ship;
 end Pop;
 
 end Pops;

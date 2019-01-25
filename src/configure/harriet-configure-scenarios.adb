@@ -5,6 +5,7 @@ with Harriet.Options;
 
 with Harriet.Configure.Climates;
 with Harriet.Configure.Commodities;
+with Harriet.Configure.Facilities;
 with Harriet.Configure.Galaxies;
 with Harriet.Configure.Ships;
 with Harriet.Configure.Terrain;
@@ -94,8 +95,11 @@ package body Harriet.Configure.Scenarios is
 
       Harriet.Configure.Commodities.Configure_Commodities
         (Scenario_Name);
+      Harriet.Configure.Ships.Configure_Ship_Components (Scenario_Name);
+
       Harriet.Configure.Terrain.Configure_Terrain (Scenario_Name);
       Harriet.Configure.Climates.Configure_Climates (Scenario_Name);
+      Harriet.Configure.Facilities.Configure_Facilities (Scenario_Name);
 
       Harriet.Configure.Galaxies.Generate_Galaxy
         (Number_Of_Systems  => Harriet.Options.System_Count,
@@ -108,7 +112,7 @@ package body Harriet.Configure.Scenarios is
            Harriet.Configure.Galaxies.Random_Sphere_Distribution'Access,
          Names              => Name_Generator);
 
-      Harriet.Configure.Ships.Configure_Ships (Scenario_Name);
+      Harriet.Configure.Ships.Configure_Ship_Designs (Scenario_Name);
 
    end Load_Scenario;
 

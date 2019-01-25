@@ -1,0 +1,54 @@
+with Commodities;
+with Pops;
+with Quantities;
+
+package Facilities is
+
+   record Facility : Localised is
+      Power : Long_Float;
+   end Facility;
+   
+   record Facility_Worker is
+      key Facility;
+      key Pop_Group;
+      Quantity : Quantity_Type;
+   end Facility_Worker;
+   
+   record Facility_Module is
+      key Facility;
+      key Building_Module;
+      Quantity : Quantity_Type;
+   end Facility_Module;
+   
+   record Colony_Hub : Facility;
+   
+   record Shipyard : Facility;
+   
+   record Resource_Generator : Facility is
+   end Resource_Generator;
+   
+   record Generated_Resource is
+      key Resource_Generator;
+      key Resource;
+   end Generated_Resource;
+   
+   record Factory : Facility;
+   
+   record Produced_Commodity is
+      key Factory;
+      key Commodity;
+   end Produced_Commodity;
+   
+   record Service_Facility : Facility is
+      Quality : Positive;
+   end Service_Facility;
+   
+   record Fitness_Facility : Service_Facility;
+   
+   record Medical_Facility : Service_Facility;
+   
+   record Educational_Facility : Service_Facility;
+   
+   record Entertainment_Facility : Service_Facility;
+   
+end Facilities;

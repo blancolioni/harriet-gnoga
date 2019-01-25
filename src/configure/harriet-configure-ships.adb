@@ -68,11 +68,11 @@ package body Harriet.Configure.Ships is
       end loop;
    end Configure_Design;
 
-   ---------------------
-   -- Configure_Ships --
-   ---------------------
+   -------------------------------
+   -- Configure_Ship_Components --
+   -------------------------------
 
-   procedure Configure_Ships
+   procedure Configure_Ship_Components
      (Scenario_Name : String)
    is
    begin
@@ -81,11 +81,21 @@ package body Harriet.Configure.Ships is
          Directory_Name  => "components",
          File_Class_Name => "component",
          Process         => Configure_Component'Access);
+   end Configure_Ship_Components;
+
+   ----------------------------
+   -- Configure_Ship_Designs --
+   ----------------------------
+
+   procedure Configure_Ship_Designs
+     (Scenario_Name : String)
+   is
+   begin
       Load_Scenario_Files
         (Scenario_Name   => Scenario_Name,
          Directory_Name  => "ships",
          File_Class_Name => "design",
          Process         => Configure_Design'Access);
-   end Configure_Ships;
+   end Configure_Ship_Designs;
 
 end Harriet.Configure.Ships;

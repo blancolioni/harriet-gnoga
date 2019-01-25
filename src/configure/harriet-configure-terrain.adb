@@ -65,7 +65,6 @@ package body Harriet.Configure.Terrain is
 
                Harriet.Db.Terrain_Resource.Create
                  (Terrain  => Terrain,
-                  Index    => Positive'Value (Index),
                   Resource => Resource,
                   Chance   => Real (Chance) / 100.0);
             end;

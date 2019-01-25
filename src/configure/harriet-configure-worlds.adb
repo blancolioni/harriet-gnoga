@@ -6,8 +6,10 @@ with Harriet.Climates;
 with Harriet.Surfaces;
 
 with Harriet.Db.Climate_Terrain;
+with Harriet.Db.Deposit;
 with Harriet.Db.Sector_Neighbour;
 with Harriet.Db.Sector_Vertex;
+with Harriet.Db.Terrain_Resource;
 with Harriet.Db.World;
 with Harriet.Db.World_Sector;
 
@@ -95,6 +97,10 @@ package body Harriet.Configure.Worlds is
             function Get_Neighbour_Terrain
               return Terrain_Array;
 
+            ---------------------------
+            -- Get_Neighbour_Terrain --
+            ---------------------------
+
             function Get_Neighbour_Terrain
               return Terrain_Array
             is
@@ -168,6 +174,21 @@ package body Harriet.Configure.Worlds is
             Sector.Set_Y (Centre (2));
             Sector.Set_Z (Centre (3));
             Sector.Set_Terrain (Terrain_Refs (Tile_Index));
+
+            for Terrain_Resource of
+              Harriet.Db.Terrain_Resource.Select_By_Terrain
+                (Terrain_Refs (Tile_Index))
+            loop
+               if Harriet.Random.Unit_Random < Terrain_Resource.Chance then
+                  Harriet.Db.Deposit.Create
+                    (World_Sector  => Sector.Reference,
+                     Resource      => Terrain_Resource.Resource,
+                     Accessibility => Harriet.Random.Unit_Random,
+                     Abundance     =>
+                       (Harriet.Random.Unit_Random + 0.5)
+                     * 1.0e6);
+               end if;
+            end loop;
 
             for Point of Surface.Tile_Boundary (Tile_Index) loop
                Harriet.Db.Sector_Vertex.Create

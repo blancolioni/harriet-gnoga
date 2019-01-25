@@ -4,12 +4,15 @@ with Ada.Text_IO;
 
 with WL.String_Sets;
 
+with Harriet.Money;
+with Harriet.Quantities;
 with Harriet.Roman_Images;
 
 with Harriet.Ships;
 with Harriet.Star_Systems;
 with Harriet.Worlds;
 
+with Harriet.Db.Account;
 with Harriet.Db.Faction;
 with Harriet.Db.Ship_Design;
 with Harriet.Db.Star_System_Distance;
@@ -42,6 +45,10 @@ package body Harriet.Factions.Create is
       end if;
 
       declare
+         Account : constant Harriet.Db.Account_Reference :=
+                     Harriet.Db.Account.Create
+                       (Start_Cash => Harriet.Money.To_Money (1.0e6),
+                        Cash       => Harriet.Money.To_Money (1.0e6));
          Faction : constant Harriet.Db.Faction_Reference :=
                      Harriet.Db.Faction.Create
                        (Name          => Name,
@@ -49,6 +56,8 @@ package body Harriet.Factions.Create is
                           (if Adjective = "" then Name else Adjective),
                         Plural_Name   =>
                           (if Plural_Name = "" then Name else Plural_Name),
+                        Account       => Account,
+                        Capacity      => Harriet.Quantities.Zero,
                         Red           => Color.Red,
                         Green         => Color.Green,
                         Blue          => Color.Blue,

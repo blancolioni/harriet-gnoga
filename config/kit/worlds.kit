@@ -63,11 +63,9 @@ package Worlds is
    end Atmosphere;
 
 record Terrain_Resource is
-   Terrain;
-   Index     : Positive;
+   key Terrain;
    Resource;
    Chance    : Long_Float;
-   unique key Terrain_Resource with Terrain, Index;
 end Terrain_Resource;
 
 record Feature : Has_Name, Has_Color is
