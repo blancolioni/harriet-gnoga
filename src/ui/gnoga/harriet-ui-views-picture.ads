@@ -21,6 +21,8 @@ package Harriet.UI.Views.Picture is
          X, Y : Real;
       end record;
 
+   type Point_Array is array (Positive range <>) of Point_Type;
+
    type Rectangle_Type is
       record
          Left_Top : Point_Type;
@@ -114,6 +116,11 @@ package Harriet.UI.Views.Picture is
      (Picture  : in out Root_Picture_View'Class;
       From, To : Point_Type);
 
+   procedure Polygon
+     (Picture  : in out Root_Picture_View'Class;
+      Points   : Point_Array;
+      Filled   : Boolean);
+
    procedure Font
      (Picture : in out Root_Picture_View'Class;
       Family  : String;
@@ -151,8 +158,11 @@ private
    type Draw_Primitive is
      (Set_Draw_Color, Set_Fill_Color, Set_Font, Set_Line_Width,
       Move_To, Set_Fill,
-      Draw_Line, Draw_Line_To,
+      Draw_Line, Draw_Line_To, Draw_Polygon,
       Draw_Circle, Draw_Rectangle, Draw_Text);
+
+   package Point_Vectors is
+     new Ada.Containers.Vectors (Positive, Point_Type);
 
    type Draw_Command (Primitive : Draw_Primitive) is
       record
@@ -172,6 +182,8 @@ private
             when Draw_Line =>
                Line_From   : Point_Type;
                Line_To     : Point_Type;
+            when Draw_Polygon =>
+               Polygon     : Point_Vectors.Vector;
             when Set_Fill =>
                Fill        : Boolean;
             when Draw_Circle =>

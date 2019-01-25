@@ -358,6 +358,24 @@ package body Harriet.UI.Views.Picture is
       end if;
    end On_Canvas_Mouse_Move;
 
+   -------------
+   -- Polygon --
+   -------------
+
+   procedure Polygon
+     (Picture  : in out Root_Picture_View'Class;
+      Points   : Point_Array;
+      Filled   : Boolean)
+   is
+      V : Point_Vectors.Vector;
+   begin
+      for P of Points loop
+         V.Append (P);
+      end loop;
+      Picture.Add ((Set_Fill, Filled));
+      Picture.Add ((Draw_Polygon, V));
+   end Polygon;
+
    ------------------
    -- Queue_Render --
    ------------------
@@ -615,6 +633,38 @@ package body Harriet.UI.Views.Picture is
 
                Drawing_Line := True;
 
+            when Draw_Polygon =>
+               Check_Path;
+               Check_Colors (Current_Fill);
+               Check_Lines;
+
+               Context.Begin_Path;
+               declare
+                  First : Boolean := True;
+               begin
+                  for P of Command.Polygon loop
+                     if First then
+                        Context.Move_To
+                          (To_Screen_X (P.X),
+                           To_Screen_Y (P.Y));
+                        First := False;
+                     else
+                        Context.Line_To
+                          (To_Screen_X (P.X),
+                           To_Screen_Y (P.Y));
+                     end if;
+                  end loop;
+               end;
+
+               Context.Close_Path;
+               if Current_Fill then
+                  Context.Fill;
+               else
+                  Context.Stroke;
+               end if;
+
+               Current_Position := Command.Polygon.Last_Element;
+
             when Move_To =>
                if Command.Relative then
                   Current_Position.X :=
@@ -640,7 +690,6 @@ package body Harriet.UI.Views.Picture is
                      Radius            => To_Screen_Distance (Command.Radius),
                      Starting_Angle    => 0.0,
                      Ending_Angle      => 360.0);
-                  Context.Close_Path;
                   if Current_Fill then
                      Context.Fill;
                   else
