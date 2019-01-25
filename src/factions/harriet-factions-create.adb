@@ -168,6 +168,11 @@ package body Harriet.Factions.Create is
             Harriet.Worlds.Set_Owner (Sector, Faction);
          end;
       end loop;
+
+      for Neighbour of Harriet.Worlds.Get_Neighbours (Sector) loop
+         Harriet.Worlds.Set_Owner (Neighbour, Faction);
+      end loop;
+
    end Create_Initial_Installations;
 
    --------------------------
