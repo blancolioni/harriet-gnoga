@@ -11,6 +11,7 @@ with Harriet.Db.Electronics;
 with Harriet.Db.Fissile;
 with Harriet.Db.Fuel;
 with Harriet.Db.Food_Commodity;
+with Harriet.Db.Gas;
 with Harriet.Db.Habitation_Module;
 with Harriet.Db.Industrial_Module;
 with Harriet.Db.Intoxicant;
@@ -64,6 +65,7 @@ package body Harriet.Configure.Commodities is
       Fissile     : constant Boolean := Config.Get ("fissile");
       Food        : constant Boolean := Config.Get ("food");
       Fuel        : constant Boolean := Config.Get ("fuel");
+      Gas         : constant Boolean := Config.Get ("gas");
       Habitation  : constant Boolean := Config.Get ("habitation");
       Industrial  : constant Boolean := Config.Get ("industrial");
       Intoxicant  : constant Boolean := Config.Get ("intoxicant");
@@ -90,6 +92,12 @@ package body Harriet.Configure.Commodities is
                Tag          => Tag);
          elsif Fuel then
             Harriet.Db.Fuel.Create
+              (Available    => True,
+               Initial_Cost => Price,
+               Mass         => Real (Mass),
+               Tag          => Tag);
+         elsif Gas then
+            Harriet.Db.Gas.Create
               (Available    => True,
                Initial_Cost => Price,
                Mass         => Real (Mass),

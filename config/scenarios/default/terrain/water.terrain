@@ -1,5 +1,6 @@
 name = Water
-image = "/images/terrain/water.png"
+color = "#0077be"
+is_water = yes
 hazard = 0.05
 resource = { type = { 1 = hydrocarbon
                       2 = oil

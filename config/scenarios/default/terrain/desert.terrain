@@ -1,5 +1,5 @@
 name = Desert
-image = "/images/terrain/desert.png"
+color = "#edc9af"
 hazard = 0.08
 resource = { type = { 1 = salt
                       2 = fissile

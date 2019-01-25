@@ -1,5 +1,5 @@
 name = Swamp
-image = "/images/terrain/swamp.png"
+color = "#416825"
 hazard = 0.05
 resource = { type = { 1 = herb
                       2 = hydrocarbon

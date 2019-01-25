@@ -7,7 +7,7 @@ with Harriet.Random;
 with Harriet.Roman_Images;
 
 with Harriet.Constants;
---  with Harriet.Commodities;
+with Harriet.Climates;
 with Harriet.Solar_System;
 
 with Harriet.Db.Atmosphere_Component;
@@ -1144,9 +1144,10 @@ package body Harriet.Configure.Star_Systems is
 
             declare
                use Harriet.Db;
+               use Harriet.Climates;
                Pressure : constant Real := World.Surface_Pressure;
                Category : World_Category;
-               Climate  : Climate_Category;
+               Climate  : Climate_Reference;
                Habitability : Unit_Real := 0.0;
             begin
                if World.Gas_Giant then

@@ -1,5 +1,5 @@
 name = Mountain
-image = "/images/terrain/mountain.png"
+color = "#fffafa"
 hazard = 0.05
 resource = { type = { 1 = aluminium
                       2 = carbonite

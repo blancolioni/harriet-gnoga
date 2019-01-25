@@ -1,5 +1,5 @@
 name = Forest
-image = "/images/terrain/forest.png"
+color = "#F5DEB3"
 hazard = 0.02
 resource = { type = { 1 = carbonite
                       2 = fruit

@@ -1,5 +1,5 @@
 name = Grassland
-image = "/images/terrain/grass.png"
+color = "#018E0E"
 hazard = 0.01
 resource = { type = { 1 = funghi
                       2 = fruit

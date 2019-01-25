@@ -1,5 +1,5 @@
 name = Marsh
-image = "/images/terrain/marsh.png"
+color = "#8BA58F"
 hazard = 0.05
 resource = { type = { 1 = herb
                       2 = hydrocarbon

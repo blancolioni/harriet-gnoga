@@ -3,9 +3,11 @@ with Tropos.Writer;
 
 with Harriet.Options;
 
+with Harriet.Configure.Climates;
 with Harriet.Configure.Commodities;
 with Harriet.Configure.Galaxies;
 with Harriet.Configure.Ships;
+with Harriet.Configure.Terrain;
 
 with Harriet.Db.Scenario;
 
@@ -92,6 +94,8 @@ package body Harriet.Configure.Scenarios is
 
       Harriet.Configure.Commodities.Configure_Commodities
         (Scenario_Name);
+      Harriet.Configure.Terrain.Configure_Terrain (Scenario_Name);
+      Harriet.Configure.Climates.Configure_Climates (Scenario_Name);
 
       Harriet.Configure.Galaxies.Generate_Galaxy
         (Number_Of_Systems  => Harriet.Options.System_Count,

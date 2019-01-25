@@ -1,5 +1,5 @@
 name = Plain
-image = "/images/terrain/plain.png"
+color = "#F5DEB3"
 hazard = 0.01
 resource = { type = { 1 = funghi
                       2 = fruit

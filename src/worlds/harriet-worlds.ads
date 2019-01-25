@@ -41,6 +41,10 @@ package Harriet.Worlds is
      (World : Harriet.Db.World_Reference)
       return Non_Negative_Real;
 
+   function Climate
+     (World : Harriet.Db.World_Reference)
+      return Harriet.Db.Climate_Reference;
+
    function Habitability
      (World : Harriet.Db.World_Reference)
       return Unit_Real;
@@ -66,6 +70,10 @@ package Harriet.Worlds is
    function Get_Centre
      (Sector : Harriet.Db.World_Sector_Reference)
       return Sector_Vertex;
+
+   function Get_Terrain
+     (Sector : Harriet.Db.World_Sector_Reference)
+      return Harriet.Db.Terrain_Reference;
 
    type Sector_Vertex_Array is array (Positive range <>) of Sector_Vertex;
 

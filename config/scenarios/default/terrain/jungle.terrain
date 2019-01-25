@@ -1,5 +1,5 @@
 name = Jungle
-image = "/images/terrain/jungle.png"
+color = "#004b49"
 hazard = 0.05
 resource = { type = { 1 = fruit
                       2 = funghi

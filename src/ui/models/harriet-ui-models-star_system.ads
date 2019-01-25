@@ -38,7 +38,7 @@ package Harriet.UI.Models.Star_System is
    function Climate
      (Model : Root_Star_System_Model'Class;
       Index : Positive)
-      return Harriet.Db.Climate_Category;
+      return Harriet.Db.Climate_Reference;
 
    function Radius
      (Model : Root_Star_System_Model'Class;
@@ -84,7 +84,7 @@ private
          Reference       : Harriet.Db.World_Reference;
          Name            : Ada.Strings.Unbounded.Unbounded_String;
          Category        : Harriet.Db.World_Category;
-         Climate         : Harriet.Db.Climate_Category;
+         Climate         : Harriet.Db.Climate_Reference;
          Radius          : Non_Negative_Real;
          Orbit           : Non_Negative_Real;
          Year            : Non_Negative_Real;
@@ -133,7 +133,7 @@ private
    function Climate
      (Model : Root_Star_System_Model'Class;
       Index : Positive)
-      return Harriet.Db.Climate_Category
+      return Harriet.Db.Climate_Reference
    is (Model.Vector.Element (Index).Climate);
 
    function Radius

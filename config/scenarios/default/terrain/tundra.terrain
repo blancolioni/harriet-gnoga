@@ -1,5 +1,5 @@
 name = Tundra
-image = "/images/terrain/tundra.png"
+color = "#828979"
 hazard = 0.02
 resource = { type = { 1 = copper
                       2 = fruit

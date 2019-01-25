@@ -43,6 +43,18 @@ package body Harriet.Worlds is
       Selection.List.Clear;
    end Clear;
 
+   -------------
+   -- Climate --
+   -------------
+
+   function Climate
+     (World : Harriet.Db.World_Reference)
+      return Harriet.Db.Climate_Reference
+   is
+   begin
+      return Harriet.Db.World.Get (World).Climate;
+   end Climate;
+
    ------------
    -- Filter --
    ------------
@@ -96,6 +108,18 @@ package body Harriet.Worlds is
          Ships.Append (Harriet.Ships.Get (Ship.Reference));
       end loop;
    end Get_Ships;
+
+   -----------------
+   -- Get_Terrain --
+   -----------------
+
+   function Get_Terrain
+     (Sector : Harriet.Db.World_Sector_Reference)
+      return Harriet.Db.Terrain_Reference
+   is
+   begin
+      return Harriet.Db.World_Sector.Get (Sector).Terrain;
+   end Get_Terrain;
 
    ------------------
    -- Get_Vertices --

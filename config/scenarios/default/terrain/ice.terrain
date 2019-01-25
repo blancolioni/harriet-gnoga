@@ -1,5 +1,5 @@
 name = Ice
-image = "/images/terrain/ice.png"
+color = "#004b49"
 hazard = 0.05
 resource = { type = { 1 = hydrocarbon
                       2 = oil

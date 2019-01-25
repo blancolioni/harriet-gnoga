@@ -1,5 +1,6 @@
 with Ada.Characters.Handling;
 
+with Harriet.Climates;
 with Harriet.Solar_System;
 
 with Harriet.Db.World;
@@ -20,11 +21,6 @@ package body Harriet.UI.Models.World is
         (Category : Harriet.Db.World_Category)
          return String
       is (Nice (Category'Image));
-
-      function Climate_Name
-        (Climate : Harriet.Db.Climate_Category)
-         return String
-      is (Nice (Climate'Image));
 
       ----------
       -- Nice --
@@ -77,7 +73,7 @@ package body Harriet.UI.Models.World is
          begin
             Model.Set_Cell (Row, 1, Rec.Name);
             Model.Set_Cell (Row, 2, Category_Name (Rec.Category));
-            Model.Set_Cell (Row, 3, Climate_Name (Rec.Climate));
+            Model.Set_Cell (Row, 3, Harriet.Climates.Name (Rec.Climate));
             Model.Set_Cell (Row, 4, Rec.Mass / Earth_Mass);
             Model.Set_Cell (Row, 5, Rec.Radius / Earth_Radius);
             Model.Set_Cell (Row, 6, Rec.Surface_Gravity);
