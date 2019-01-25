@@ -5,3 +5,8 @@ ships = {
    transport = 1
    defender = 1
 }
+
+installations = {
+   hub = 1
+}
+   

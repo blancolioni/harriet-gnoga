@@ -4,7 +4,9 @@ package Owners is
 
 record Owner : Agent;
 
-record Has_Owner;
+record Has_Owner is
+   key Owner;
+end Has_Owner;
 
 record Shared;
 

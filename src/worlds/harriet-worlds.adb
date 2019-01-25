@@ -1,15 +1,49 @@
 with Harriet.Configure.Worlds;
 
+with Harriet.Db.Faction;
 with Harriet.Db.Generation;
+with Harriet.Db.Sector_Neighbour;
 with Harriet.Db.Sector_Vertex;
 with Harriet.Db.Ship;
 with Harriet.Db.World;
-with Harriet.Db.World_Sector;
 
 package body Harriet.Worlds is
 
    procedure Check_Surface
      (World : Harriet.Db.World_Reference);
+
+   -----------------
+   -- Best_Sector --
+   -----------------
+
+   function Best_Sector
+     (World : Harriet.Db.World_Reference;
+      Score : not null access
+        function (Sector : Harriet.Db.World_Sector.World_Sector_Type)
+      return Real)
+      return Harriet.Db.World_Sector_Reference
+   is
+      Best_Reference : Harriet.Db.World_Sector_Reference :=
+                         Harriet.Db.Null_World_Sector_Reference;
+      Best_Score     : Real := Real'First;
+   begin
+      Check_Surface (World);
+      for Sector of
+        Harriet.Db.World_Sector.Select_By_World
+          (World)
+      loop
+         declare
+            This_Score : constant Real :=
+                           Score (Sector);
+         begin
+            if This_Score > Best_Score then
+               Best_Score := This_Score;
+               Best_Reference := Sector.Reference;
+            end if;
+         end;
+      end loop;
+      return Best_Reference;
+   end Best_Sector;
 
    -------------------
    -- Check_Surface --
@@ -80,6 +114,29 @@ package body Harriet.Worlds is
       end if;
    end Filter;
 
+   -----------------
+   -- Find_Sector --
+   -----------------
+
+   function Find_Sector
+     (World : Harriet.Db.World_Reference;
+      Test  : not null access
+        function (Sector : Harriet.Db.World_Sector.World_Sector_Type)
+      return Boolean)
+      return Harriet.Db.World_Sector_Reference
+   is
+   begin
+      for Sector of
+        Harriet.Db.World_Sector.Select_By_World
+          (World)
+      loop
+         if Test (Sector) then
+            return Sector.Reference;
+         end if;
+      end loop;
+      return Harriet.Db.Null_World_Sector_Reference;
+   end Find_Sector;
+
    ----------------
    -- Get_Centre --
    ----------------
@@ -94,6 +151,42 @@ package body Harriet.Worlds is
       return Sector_Vertex'
         (Rec.X, Rec.Y, Rec.Z);
    end Get_Centre;
+
+   --------------------
+   -- Get_Neighbours --
+   --------------------
+
+   function Get_Neighbours
+     (Sector : Harriet.Db.World_Sector_Reference)
+      return World_Sector_Array
+   is
+      Result : World_Sector_Array (1 .. 10);
+      Count  : Natural := 0;
+   begin
+      for Neighbour of
+        Harriet.Db.Sector_Neighbour.Select_By_Sector
+          (Harriet.Db.World_Sector.Get (Sector).Reference)
+      loop
+         Count := Count + 1;
+         Result (Count) :=
+           Harriet.Db.World_Sector.Get_World_Sector
+             (Neighbour.Reference).Reference;
+      end loop;
+      return Result (1 .. Count);
+   end Get_Neighbours;
+
+   ---------------
+   -- Get_Owner --
+   ---------------
+
+   function Get_Owner
+     (Sector : Harriet.Db.World_Sector_Reference)
+      return Harriet.Db.Faction_Reference
+   is
+   begin
+      return Harriet.Db.Faction.Get_Faction
+        (Harriet.Db.World_Sector.Get (Sector).Owner).Reference;
+   end Get_Owner;
 
    ---------------
    -- Get_Ships --
@@ -258,6 +351,19 @@ package body Harriet.Worlds is
          Process (Sector.Reference);
       end loop;
    end Scan_Surface;
+
+   ---------------
+   -- Set_Owner --
+   ---------------
+
+   procedure Set_Owner
+     (Sector  : Harriet.Db.World_Sector_Reference;
+      Faction : Harriet.Db.Faction_Reference)
+   is
+   begin
+      Harriet.Db.World_Sector.Get (Sector).Set_Owner
+        (Harriet.Db.Faction.Get (Faction).Reference);
+   end Set_Owner;
 
    -----------------
    -- Star_System --

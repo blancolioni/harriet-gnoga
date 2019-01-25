@@ -10,18 +10,38 @@ with Harriet.Roman_Images;
 
 with Harriet.Ships;
 with Harriet.Star_Systems;
+with Harriet.Terrain;
 with Harriet.Worlds;
 
 with Harriet.Db.Account;
+with Harriet.Db.Deposit;
+with Harriet.Db.Facility;
 with Harriet.Db.Faction;
+with Harriet.Db.Installation;
 with Harriet.Db.Ship_Design;
 with Harriet.Db.Star_System_Distance;
+with Harriet.Db.World_Sector;
 with Harriet.Db.User;
 
 package body Harriet.Factions.Create is
 
    function Find_Homeworld
      return Harriet.Db.World_Reference;
+
+   function Find_Home_Sector
+     (World : Harriet.Db.World_Reference)
+      return Harriet.Db.World_Sector_Reference;
+
+   procedure Create_Initial_Ships
+     (Faction : Harriet.Db.Faction_Reference;
+      World   : Harriet.Db.World_Reference;
+      Config  : Tropos.Configuration);
+
+   procedure Create_Initial_Installations
+     (Faction : Harriet.Db.Faction_Reference;
+      World   : Harriet.Db.World_Reference;
+      Sector  : Harriet.Db.World_Sector_Reference;
+      Config  : Tropos.Configuration);
 
    --------------------
    -- Create_Faction --
@@ -45,10 +65,15 @@ package body Harriet.Factions.Create is
       end if;
 
       declare
+         Cash    : constant Harriet.Money.Money_Type :=
+                     Harriet.Money.To_Money
+                       (Real (Float'(Setup.Get ("cash"))));
          Account : constant Harriet.Db.Account_Reference :=
                      Harriet.Db.Account.Create
-                       (Start_Cash => Harriet.Money.To_Money (1.0e6),
-                        Cash       => Harriet.Money.To_Money (1.0e6));
+                       (Start_Cash => Cash,
+                        Cash       => Cash);
+         Sector  : constant Harriet.Db.World_Sector_Reference :=
+                     Find_Home_Sector (Capital);
          Faction : constant Harriet.Db.Faction_Reference :=
                      Harriet.Db.Faction.Create
                        (Name          => Name,
@@ -66,66 +91,13 @@ package body Harriet.Factions.Create is
                           Harriet.Worlds.Star_System (Capital),
                         Capital_World => Capital);
       begin
-         for Design_Config of Setup.Child ("ships") loop
-            declare
-               Design_Name : constant String := Design_Config.Config_Name;
-               Design : constant Harriet.Db.Ship_Design_Reference :=
-                          Harriet.Db.Ship_Design.First_Reference_By_Name
-                                 (Design_Name);
-               Count       : constant Natural :=
-                               Design_Config.Value;
 
-               function Create_Ship_Name
-                 (Design_Name : String;
-                  Index       : Positive)
-                  return String;
+         Create_Initial_Ships
+           (Faction, Capital, Setup.Child ("ships"));
 
-               function Create_Ship_Name
-                 (Design_Name : String;
-                  Index       : Positive)
-                  return String
-               is
-                  use Ada.Characters.Handling;
-                  First : Boolean := True;
-                  Result : String := Design_Name;
-               begin
-                  for Ch of Result loop
-                     if First then
-                        Ch := To_Upper (Ch);
-                        First := False;
-                     elsif Is_Letter (Ch) then
-                        Ch := To_Lower (Ch);
-                     elsif Ch in '-' | '_' then
-                        Ch := ' ';
-                        First := True;
-                     end if;
-                  end loop;
+         Create_Initial_Installations
+           (Faction, Capital, Sector, Setup.Child ("installations"));
 
-                  if Count = 1 then
-                     return Result;
-                  else
-                     return Result & " "
-                       & Harriet.Roman_Images.Roman_Image (Index);
-                  end if;
-               end Create_Ship_Name;
-
-            begin
-               if Design = Null_Ship_Design_Reference then
-                  Ada.Text_IO.Put_Line
-                    (Ada.Text_IO.Standard_Error,
-                     "error: design '" & Design_Config.Config_Name
-                     & "' does not exist");
-               else
-                  for I in 1 .. Count loop
-                     Harriet.Ships.Create_Ship
-                       (Owner  => Faction,
-                        World  => Capital,
-                        Design => Design,
-                        Name   => Create_Ship_Name (Design_Name, I));
-                  end loop;
-               end if;
-            end;
-         end loop;
          return Faction;
       end;
    end Create_Faction;
@@ -169,6 +141,157 @@ package body Harriet.Factions.Create is
          end;
       end loop;
    end Create_Factions;
+
+   ----------------------------------
+   -- Create_Initial_Installations --
+   ----------------------------------
+
+   procedure Create_Initial_Installations
+     (Faction : Harriet.Db.Faction_Reference;
+      World   : Harriet.Db.World_Reference;
+      Sector  : Harriet.Db.World_Sector_Reference;
+      Config  : Tropos.Configuration)
+   is
+      pragma Unreferenced (World);
+   begin
+      for Installation_Config of Config loop
+         declare
+            Facility : constant Harriet.Db.Facility_Reference :=
+                         Harriet.Db.Facility.Get_Reference_By_Tag
+                           (Installation_Config.Config_Name);
+         begin
+            Harriet.Db.Installation.Create
+              (Owner        =>
+                 Harriet.Db.Faction.Get (Faction).Reference,
+               World_Sector => Sector,
+               Facility     => Facility);
+            Harriet.Worlds.Set_Owner (Sector, Faction);
+         end;
+      end loop;
+   end Create_Initial_Installations;
+
+   --------------------------
+   -- Create_Initial_Ships --
+   --------------------------
+
+   procedure Create_Initial_Ships
+     (Faction : Harriet.Db.Faction_Reference;
+      World   : Harriet.Db.World_Reference;
+      Config  : Tropos.Configuration)
+   is
+   begin
+      for Design_Config of Config loop
+         declare
+            use type Harriet.Db.Ship_Design_Reference;
+            Design_Name : constant String := Design_Config.Config_Name;
+            Design      : constant Harriet.Db.Ship_Design_Reference :=
+                            Harriet.Db.Ship_Design.First_Reference_By_Name
+                              (Design_Name);
+            Count       : constant Natural :=
+                            Design_Config.Value;
+
+            function Create_Ship_Name
+              (Design_Name : String;
+               Index       : Positive)
+                  return String;
+
+            function Create_Ship_Name
+              (Design_Name : String;
+               Index       : Positive)
+                  return String
+            is
+               use Ada.Characters.Handling;
+               First  : Boolean := True;
+               Result : String := Design_Name;
+            begin
+               for Ch of Result loop
+                  if First then
+                     Ch := To_Upper (Ch);
+                     First := False;
+                  elsif Is_Letter (Ch) then
+                     Ch := To_Lower (Ch);
+                  elsif Ch in '-' | '_' then
+                     Ch := ' ';
+                     First := True;
+                  end if;
+               end loop;
+
+               if Count = 1 then
+                  return Result;
+               else
+                  return Result & " "
+                    & Harriet.Roman_Images.Roman_Image (Index);
+               end if;
+            end Create_Ship_Name;
+
+         begin
+            if Design = Harriet.Db.Null_Ship_Design_Reference then
+               Ada.Text_IO.Put_Line
+                 (Ada.Text_IO.Standard_Error,
+                  "error: design '" & Design_Config.Config_Name
+                  & "' does not exist");
+            else
+               for I in 1 .. Count loop
+                  Harriet.Ships.Create_Ship
+                    (Owner  => Faction,
+                     World  => World,
+                     Design => Design,
+                     Name   => Create_Ship_Name (Design_Name, I));
+               end loop;
+            end if;
+         end;
+      end loop;
+   end Create_Initial_Ships;
+
+   ----------------------
+   -- Find_Home_Sector --
+   ----------------------
+
+   function Find_Home_Sector
+     (World : Harriet.Db.World_Reference)
+      return Harriet.Db.World_Sector_Reference
+   is
+      function Score_Sector
+        (Sector : Harriet.Db.World_Sector.World_Sector_Type)
+         return Real;
+
+      ------------------
+      -- Score_Sector --
+      ------------------
+
+      function Score_Sector
+        (Sector : Harriet.Db.World_Sector.World_Sector_Type)
+         return Real
+      is
+         Score : Real := 0.0;
+      begin
+         if Harriet.Terrain.Is_Water (Sector.Terrain) then
+            return Real'First;
+         end if;
+
+         declare
+            Ns : constant Harriet.Worlds.World_Sector_Array :=
+                   Harriet.Worlds.Get_Neighbours (Sector.Reference);
+         begin
+            for N of Ns loop
+               for Deposit of
+                 Harriet.Db.Deposit.Select_By_World_Sector (N)
+               loop
+                  Score := Score
+                    + Deposit.Abundance / 1.0e6 * Deposit.Accessibility
+                    * (1.0 - Harriet.Terrain.Hazard
+                       (Harriet.Worlds.Get_Terrain (N)));
+               end loop;
+            end loop;
+
+            return Score * (1.0 - Harriet.Terrain.Hazard (Sector.Terrain));
+         end;
+      end Score_Sector;
+
+   begin
+      return Harriet.Worlds.Best_Sector (World, Score_Sector'Access);
+   end Find_Home_Sector;
+
    --------------------
    -- Find_Homeworld --
    --------------------

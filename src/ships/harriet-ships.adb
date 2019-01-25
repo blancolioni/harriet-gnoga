@@ -10,6 +10,7 @@ with Harriet.Constants;
 
 with Harriet.Worlds;
 
+with Harriet.Db.Faction;
 with Harriet.Db.Ship_Module;
 with Harriet.Db.Ship_Module_Design;
 with Harriet.Db.World;
@@ -32,6 +33,8 @@ package body Harriet.Ships is
                     Harriet.Db.Ship.Create
                       (Name            => Name,
                        Faction         => Owner,
+                       Owner           =>
+                         Harriet.Db.Faction.Get (Owner).Reference,
                        World           => World,
                        Star_System     => World_Rec.Star_System,
                        Orbit           =>

@@ -162,20 +162,28 @@ package body Harriet.UI.Views.World is
                begin
                   if Harriet.Worlds.Get_Centre (Sector).Z > 0.0 then
                      declare
+                        use type Harriet.Db.Faction_Reference;
                         Border : constant Harriet.Worlds.Sector_Vertex_Array :=
                                    Harriet.Worlds.Get_Vertices (Sector);
                         Polygon : Harriet.UI.Views.Picture.Point_Array
                           (Border'Range);
+                        Owner   : constant Harriet.Db.Faction_Reference :=
+                                    Harriet.Worlds.Get_Owner (Sector);
                      begin
                         for I in Border'Range loop
                            Polygon (I) := (Border (I).X, Border (I).Y);
                         end loop;
 
-                        View.Fill_Color
-                          (Harriet.Terrain.Color
-                             (Harriet.Worlds.Get_Terrain
-                                  (Sector)));
-
+                        if Owner = Harriet.Db.Null_Faction_Reference then
+                           View.Fill_Color
+                             (Harriet.Terrain.Color
+                                (Harriet.Worlds.Get_Terrain
+                                     (Sector)));
+                        else
+                           View.Fill_Color
+                             (Harriet.Factions.Color
+                                (Harriet.Factions.Get (Owner)));
+                        end if;
                         View.Polygon (Polygon, Filled => True);
                      end;
                   end if;

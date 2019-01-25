@@ -40,6 +40,7 @@ private
    type World_Sector_Type is
       record
          Reference : Harriet.Db.World_Sector_Reference;
+         Owner     : Harriet.Db.Faction_Reference;
          Boundary  : Sector_Boundary_Holders.Holder;
          Centre    : Harriet.Worlds.Sector_Vertex;
       end record;

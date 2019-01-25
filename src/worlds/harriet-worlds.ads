@@ -1,6 +1,7 @@
 private with Ada.Containers.Doubly_Linked_Lists;
 
 with Harriet.Db;
+with Harriet.Db.World_Sector;
 
 with Harriet.Ships.Lists;
 
@@ -53,10 +54,39 @@ package Harriet.Worlds is
      (World : Harriet.Db.World_Reference)
       return Boolean;
 
+   type World_Sector_Array is
+     array (Positive range <>) of Harriet.Db.World_Sector_Reference;
+
+   function Get_Neighbours
+     (Sector : Harriet.Db.World_Sector_Reference)
+      return World_Sector_Array;
+
    procedure Scan_Surface
      (World : Harriet.Db.World_Reference;
       Process : not null access
         procedure (Sector : Harriet.Db.World_Sector_Reference));
+
+   function Best_Sector
+     (World : Harriet.Db.World_Reference;
+      Score : not null access
+        function (Sector : Harriet.Db.World_Sector.World_Sector_Type)
+      return Real)
+      return Harriet.Db.World_Sector_Reference;
+
+   function Find_Sector
+     (World : Harriet.Db.World_Reference;
+      Test : not null access
+        function (Sector : Harriet.Db.World_Sector.World_Sector_Type)
+      return Boolean)
+      return Harriet.Db.World_Sector_Reference;
+
+   function Get_Owner
+     (Sector : Harriet.Db.World_Sector_Reference)
+      return Harriet.Db.Faction_Reference;
+
+   procedure Set_Owner
+     (Sector  : Harriet.Db.World_Sector_Reference;
+      Faction : Harriet.Db.Faction_Reference);
 
    procedure Get_Ships
      (World : Harriet.Db.World_Reference;

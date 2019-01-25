@@ -4,6 +4,7 @@ with Generated;
 with Names;
 with Knowledge;
 with Orders;
+with Owners;
 with Surfaces;
 with Systems;
 
@@ -72,7 +73,7 @@ record Feature : Has_Name, Has_Color is
    Habitability : Long_Float;
 end Feature;
    
-record World_Sector : Sector is
+record World_Sector : Sector, Has_Owner is
    key World;
    Terrain;
    Feature;

@@ -100,6 +100,7 @@ package body Harriet.UI.Models.World is
                Rec   : constant World_Sector_Type :=
                          World_Sector_Type'
                            (Reference => Sector,
+                            Owner     => Harriet.Worlds.Get_Owner (Sector),
                             Boundary  =>
                               Sector_Boundary_Holders.To_Holder (Tiles),
                             Centre    =>
