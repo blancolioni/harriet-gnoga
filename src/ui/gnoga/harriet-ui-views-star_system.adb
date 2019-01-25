@@ -1,15 +1,16 @@
 with Ada.Strings.Fixed;
 
-with Harriet.Color;
 with Harriet.Commands;
 with Harriet.Signals;
 
 with Harriet.Elementary_Functions;
 --  with Harriet.Solar_System;
 
+with Harriet.Climates;
 with Harriet.Factions;
 with Harriet.Ships.Lists;
 with Harriet.Star_Systems;
+with Harriet.Terrain;
 
 with Harriet.UI.Views.Model_Views;
 with Harriet.UI.Views.Picture;
@@ -139,47 +140,47 @@ package body Harriet.UI.Views.Star_System is
 
       Ships : Harriet.Ships.Lists.List;
 
-      procedure Set_World_Color
-        (Category : Harriet.Db.World_Category;
-         Climate  : Harriet.Db.Climate_Category);
-
-      ---------------------
-      -- Set_World_Color --
-      ---------------------
-
-      procedure Set_World_Color
-        (Category : Harriet.Db.World_Category;
-         Climate  : Harriet.Db.Climate_Category)
-      is
-         use all type Harriet.Db.World_Category;
-         use all type Harriet.Db.Climate_Category;
-         Color : Harriet.Color.Harriet_Color := Harriet.Color.White;
-      begin
-         case Category is
-            when Asteroid =>
-               Color := (0.6, 0.6, 0.6, 1.0);
-            when Dwarf | Terrestrial | Super_Terrestrial =>
-               case Climate is
-                  when Temperate =>
-                     Color := (0.0, 0.6, 0.0, 1.0);
-                  when Desert =>
-                     Color := Harriet.Color.From_String ("#e68e0d");
-                  when Water =>
-                     Color := Harriet.Color.From_String ("#0d8ee0");
-                  when Iceball =>
-                     Color := Harriet.Color.White;
-                  when others =>
-                     Color := (1.0, 0.0, 0.0, 1.0);
-               end case;
-            when Sub_Jovian =>
-               Color := Harriet.Color.From_String ("#3f54ba");
-            when Jovian =>
-               Color := Harriet.Color.From_String ("#ceb8b8");
-            when Super_Jovian =>
-               Color := Harriet.Color.From_String ("#d8ca9d");
-         end case;
-         View.Fill_Color (Color);
-      end Set_World_Color;
+--        procedure Set_World_Color
+--          (Category : Harriet.Db.World_Category;
+--           Climate  : Harriet.Db.Climate_Category);
+--
+--        ---------------------
+--        -- Set_World_Color --
+--        ---------------------
+--
+--        procedure Set_World_Color
+--          (Category : Harriet.Db.World_Category;
+--           Climate  : Harriet.Db.Climate_Category)
+--        is
+--           use all type Harriet.Db.World_Category;
+--           use all type Harriet.Db.Climate_Category;
+--           Color : Harriet.Color.Harriet_Color := Harriet.Color.White;
+--        begin
+--           case Category is
+--              when Asteroid =>
+--                 Color := (0.6, 0.6, 0.6, 1.0);
+--              when Dwarf | Terrestrial | Super_Terrestrial =>
+--                 case Climate is
+--                    when Temperate =>
+--                       Color := (0.0, 0.6, 0.0, 1.0);
+--                    when Desert =>
+--                       Color := Harriet.Color.From_String ("#e68e0d");
+--                    when Water =>
+--                       Color := Harriet.Color.From_String ("#0d8ee0");
+--                    when Iceball =>
+--                       Color := Harriet.Color.White;
+--                    when others =>
+--                       Color := (1.0, 0.0, 0.0, 1.0);
+--                 end case;
+--              when Sub_Jovian =>
+--                 Color := Harriet.Color.From_String ("#3f54ba");
+--              when Jovian =>
+--                 Color := Harriet.Color.From_String ("#ceb8b8");
+--              when Super_Jovian =>
+--                 Color := Harriet.Color.From_String ("#d8ca9d");
+--           end case;
+--           View.Fill_Color (Color);
+--        end Set_World_Color;
 
    begin
       View.Clear;
@@ -207,9 +208,10 @@ package body Harriet.UI.Views.Star_System is
          begin
             View.Draw_Color ((0.2, 0.3, 0.4, 0.6));
             View.Circle ((0.0, 0.0), Orbit, False);
-
-            Set_World_Color
-              (View.Model.Category (I), View.Model.Climate (I));
+            View.Fill_Color
+              (Harriet.Terrain.Color
+                 (Harriet.Climates.Default_Terrain
+                      (View.Model.Climate (I))));
             View.Circle ((X, Y), Radius / 10.0, True);
 
             declare
