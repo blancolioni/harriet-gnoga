@@ -5,6 +5,7 @@ with Harriet.Elementary_Functions;
 
 with Harriet.Factions;
 with Harriet.Ships.Lists;
+with Harriet.Terrain;
 with Harriet.Worlds;
 
 with Harriet.UI.Views.Model_Views;
@@ -163,18 +164,19 @@ package body Harriet.UI.Views.World is
                      declare
                         Border : constant Harriet.Worlds.Sector_Vertex_Array :=
                                    Harriet.Worlds.Get_Vertices (Sector);
-                        First  : Boolean := True;
+                        Polygon : Harriet.UI.Views.Picture.Point_Array
+                          (Border'Range);
                      begin
-                        for Point of Border loop
-                           if First then
-                              View.Move_To ((Point.X, Point.Y));
-                              First := False;
-                           else
-                              View.Line_To ((Point.X, Point.Y));
-                           end if;
+                        for I in Border'Range loop
+                           Polygon (I) := (Border (I).X, Border (I).Y);
                         end loop;
-                        View.Line_To ((Border (Border'First).X,
-                                      Border (Border'First).Y));
+
+                        View.Fill_Color
+                          (Harriet.Terrain.Color
+                             (Harriet.Worlds.Get_Terrain
+                                  (Sector)));
+
+                        View.Polygon (Polygon, Filled => True);
                      end;
                   end if;
                end Draw_Sector;
