@@ -168,9 +168,17 @@ package body Harriet.Worlds is
           (Harriet.Db.World_Sector.Get (Sector).Reference)
       loop
          Count := Count + 1;
-         Result (Count) :=
-           Harriet.Db.World_Sector.Get_World_Sector
-             (Neighbour.Reference).Reference;
+         declare
+            Neighbour_Ref : constant Db.Sector_Reference :=
+                              Neighbour.Neighbour;
+            Neighbour_Sec : constant Db.World_Sector.World_Sector_Type :=
+                              Db.World_Sector.Get_World_Sector
+                                (Neighbour_Ref);
+            World_Sec_Ref : constant Db.World_Sector_Reference :=
+                              Neighbour_Sec.Reference;
+         begin
+            Result (Count) := World_Sec_Ref;
+         end;
       end loop;
       return Result (1 .. Count);
    end Get_Neighbours;
