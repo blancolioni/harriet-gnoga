@@ -11,12 +11,27 @@ package Worlds is
 
    type World_Category is (Asteroid, Dwarf, Terrestrial, Super_Terrestrial, 
                            Sub_Jovian, Jovian, Super_Jovian);
-   
-   type Climate_Category is (Temperate, Desert, Venusian, Martian, Water, Iceball, Airless, Jovian);
+
+   record Terrain : Localised, Has_Color is
+      Hazard   : Long_Float;
+      Is_Water : Boolean;   
+   end Terrain;
+
+   record Climate : Localised is
+      Habitability    : Long_Float;
+      Default_Terrain : Terrain;
+   end Climate;
+
+   record Climate_Terrain is
+      key Climate;
+      Terrain;
+      Chance : Long_Float;
+      key Climate_Terrain with Climate, Terrain;
+   end Climate_Terrain;
    
    record World : Star_System_Object, Has_Name, Is_Generated, Knowable, Order_Target, Surface is
       Category                 : World_Category;
-      Climate                  : Climate_Category;
+      Climate;
       Greenhouse_Effect        : Boolean;
       Gas_Giant                : Boolean;
       key Habitability         : Long_Float;
@@ -47,10 +62,13 @@ package Worlds is
       key World_Atmosphere with World, Component;
    end Atmosphere;
 
-record Terrain : Has_Name, Has_Color is
-   Habitability : Long_Float;
-   Is_Water     : Boolean;   
-end Terrain;
+record Terrain_Resource is
+   Terrain;
+   Index     : Positive;
+   Resource;
+   Chance    : Long_Float;
+   unique key Terrain_Resource with Terrain, Index;
+end Terrain_Resource;
 
 record Feature : Has_Name, Has_Color is
    Habitability : Long_Float;
