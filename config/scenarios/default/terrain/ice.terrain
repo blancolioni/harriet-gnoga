@@ -1,5 +1,5 @@
 name = Ice
-color = "#004b49"
+color = "#99B0FF"
 hazard = 0.05
 resource = { type = { 1 = hydrocarbon
                       2 = oil
