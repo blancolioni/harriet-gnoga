@@ -15,6 +15,7 @@ with Harriet.Db.Consumer_Good;
 with Harriet.Db.Industrial_Good;
 with Harriet.Db.Ship_Component;
 
+with Harriet.Db.Colony_Hub;
 with Harriet.Db.Resource_Generator;
 with Harriet.Db.Factory;
 with Harriet.Db.Educational_Facility;
@@ -206,6 +207,11 @@ package body Harriet.Configure.Facilities is
                Power    => Power,
                Tag      => Tag);
          end if;
+      elsif Class = "hub" then
+         Harriet.Db.Colony_Hub.Create
+           (Capacity => Capacity,
+            Power    => Power,
+            Tag      => Tag);
       end if;
    end Configure_Facility;
 

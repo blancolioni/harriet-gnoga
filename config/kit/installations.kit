@@ -1,9 +1,10 @@
 with Facilities;
+with Managed;
 with Worlds;
 
 package Installations is
 
-   record Installation : Has_Owner is
+   record Installation : Has_Owner, Managed is
       key World_Sector;
       Facility;
    end Installation;

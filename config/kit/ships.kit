@@ -1,7 +1,8 @@
 with Commodities;
 with Localisation;
-with Names;
 with Factions;
+with Managed;
+with Names;
 with Owners;
 with Technology;
 with Transport;
@@ -11,7 +12,7 @@ package Ships is
 
 record Ship_Design : Has_Name;
 
-record Ship : Has_Name, Has_Owner is
+record Ship : Has_Name, Has_Owner, Managed is
    key Faction;
    key World;
    key Star_System;

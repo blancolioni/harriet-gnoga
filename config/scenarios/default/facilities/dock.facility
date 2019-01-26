@@ -1,4 +1,4 @@
-class = starcorp.common.types.OrbitalDock
+class = dock
 name = "Orbital Dock"
 power = 100
 worker = { type = { 1 = exec

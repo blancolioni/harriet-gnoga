@@ -4,8 +4,10 @@ with Ada.Text_IO;
 
 with WL.String_Sets;
 
+with Harriet.Calendar;
 with Harriet.Money;
 with Harriet.Quantities;
+with Harriet.Random;
 with Harriet.Real_Images;
 with Harriet.Roman_Images;
 
@@ -262,7 +264,11 @@ package body Harriet.Factions.Create is
             Harriet.Db.Installation.Create
               (Owner        => Owner,
                World_Sector => Sector,
-               Facility     => Facility);
+               Facility     => Facility,
+               Active       => True,
+               Next_Event   =>
+                 Harriet.Calendar.Delay_Days (Harriet.Random.Unit_Random),
+               Manager      => "default-installation");
             Harriet.Worlds.Set_Owner (Sector, Faction);
          end;
       end loop;
@@ -275,7 +281,12 @@ package body Harriet.Factions.Create is
                                (Owner        => Owner,
                                 World_Sector => Neighbour,
                                 Facility     =>
-                                  Choose_Facility (Neighbour));
+                                  Choose_Facility (Neighbour),
+                                Active       => True,
+                                Next_Event   =>
+                                  Harriet.Calendar.Delay_Days
+                                    (Harriet.Random.Unit_Random),
+                                Manager      => "default-installation");
          begin
             pragma Unreferenced (Installation);
          end;

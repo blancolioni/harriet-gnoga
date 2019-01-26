@@ -1,4 +1,5 @@
 with Commodities;
+with Managed;
 with Ships;
 with Transport;
 with Worlds;
@@ -11,7 +12,7 @@ record Pop_Group : Commodity is
    Salary           : Price_Type;
 end Pop_Group;
 
-record Pop : Transportable is
+record Pop : Transportable, Managed is
    key Faction;
    key World;
    key World_Sector;

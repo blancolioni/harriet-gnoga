@@ -1,4 +1,4 @@
-class = starcorp.common.types.ColonyHub
+class = hub
 name = "Colony Hub"
 power = 10
 worker = { type = { 1 = exec

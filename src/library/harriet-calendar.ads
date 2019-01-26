@@ -123,6 +123,7 @@ package Harriet.Calendar is
    function Years (Count : Natural) return Duration;
 
    function Days (Count : Non_Negative_Real) return Duration;
+   function Delay_Days (Days_Delay : Non_Negative_Real) return Time;
 
    Time_Error : exception;
 
@@ -172,5 +173,8 @@ private
 
    function Min (Left, Right : Time) return Time
    is (Time'Min (Left, Right));
+
+   function Delay_Days (Days_Delay : Non_Negative_Real) return Time
+   is (Clock + Days (Days_Delay));
 
 end Harriet.Calendar;

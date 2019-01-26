@@ -10,15 +10,16 @@ with Harriet.Db.Calendar;
 
 package body Harriet.Updates is
 
-   package Update_Maps is
-     new Ada.Containers.Indefinite_Ordered_Maps
-       (Key_Type     => Harriet.Calendar.Time,
-        Element_Type => Update_Interface'Class,
-        "<"          => Harriet.Calendar."<");
-
    package Update_Lists is
      new Ada.Containers.Indefinite_Doubly_Linked_Lists
        (Update_Interface'Class);
+
+   package Update_Maps is
+     new Ada.Containers.Indefinite_Ordered_Maps
+       (Key_Type     => Harriet.Calendar.Time,
+        Element_Type => Update_Lists.List,
+        "<"          => Harriet.Calendar."<",
+        "="          => Update_Lists."=");
 
    package Signal_Holders is
      new Ada.Containers.Indefinite_Holders
@@ -27,15 +28,50 @@ package body Harriet.Updates is
    task Update_Task is
       entry Start;
       entry Stop;
-      entry Add_Update
-        (Clock  : Harriet.Calendar.Time;
-         Update : Update_Interface'Class);
    end Update_Task;
+
+   task Broadcast_Task is
+      entry Broadcast (Signal : Harriet.Signals.Signal_Type);
+   end Broadcast_Task;
 
    task Dispatch_Task is
       entry Dispatch (List : Update_Lists.List);
-      entry Broadcast (Signal : Harriet.Signals.Signal_Type);
    end Dispatch_Task;
+
+   protected Update_Map is
+
+      procedure Add_Update
+        (Clock  : Harriet.Calendar.Time;
+         Update : Update_Interface'Class);
+
+      procedure Get_Updates
+        (Clock : Harriet.Calendar.Time;
+         List  : out Update_Lists.List);
+
+   private
+
+      Map : Update_Maps.Map;
+
+   end Update_Map;
+
+   --------------------
+   -- Broadcast_Task --
+   --------------------
+
+   task body Broadcast_Task is
+      Signal_Holder : Signal_Holders.Holder;
+   begin
+      loop
+         select
+            accept Broadcast (Signal : Harriet.Signals.Signal_Type) do
+               Signal_Holder.Replace_Element (Signal);
+            end Broadcast;
+            Harriet.Sessions.Broadcast (Signal_Holder.Element);
+         or
+            terminate;
+         end select;
+      end loop;
+   end Broadcast_Task;
 
    -------------------
    -- Dispatch_Task --
@@ -43,21 +79,18 @@ package body Harriet.Updates is
 
    task body Dispatch_Task is
       Dispatch_List : Update_Lists.List;
-      Signal_Holder : Signal_Holders.Holder;
    begin
       loop
          select
             accept Dispatch (List : in Update_Lists.List) do
                Dispatch_List := List;
             end Dispatch;
+            Ada.Text_IO.Put_Line
+              ("dispatch:"
+               & Natural'Image (Natural (Dispatch_List.Length)) & " events");
             for Update of Dispatch_List loop
                Update.Activate;
             end loop;
-         or
-            accept Broadcast (Signal : Harriet.Signals.Signal_Type) do
-               Signal_Holder.Replace_Element (Signal);
-            end Broadcast;
-            Harriet.Sessions.Broadcast (Signal_Holder.Element);
          or
             terminate;
          end select;
@@ -91,15 +124,63 @@ package body Harriet.Updates is
       Update : Update_Interface'Class)
    is
    begin
-      Update_Task.Add_Update (Clock, Update);
+      Update_Map.Add_Update (Clock, Update);
    end Update_At;
+
+   ----------------
+   -- Update_Map --
+   ----------------
+
+   protected body Update_Map is
+
+      ----------------
+      -- Add_Update --
+      ----------------
+
+      procedure Add_Update
+        (Clock  : Harriet.Calendar.Time;
+         Update : Update_Interface'Class)
+      is
+      begin
+         if Map.Contains (Clock) then
+            Map (Clock).Append (Update);
+         else
+            declare
+               List : Update_Lists.List;
+            begin
+               List.Append (Update);
+               Map.Insert (Clock, List);
+            end;
+         end if;
+      end Add_Update;
+
+      -----------------
+      -- Get_Updates --
+      -----------------
+
+      procedure Get_Updates
+        (Clock : Harriet.Calendar.Time;
+         List  : out Update_Lists.List)
+      is
+         use type Harriet.Calendar.Time;
+      begin
+         while not Map.Is_Empty
+           and then Map.First_Key <= Clock
+         loop
+            for Upd of Map.First_Element loop
+               List.Append (Upd);
+            end loop;
+            Map.Delete_First;
+         end loop;
+      end Get_Updates;
+
+   end Update_Map;
 
    -----------------
    -- Update_Task --
    -----------------
 
    task body Update_Task is
-      Map : Update_Maps.Map;
    begin
 
       select
@@ -122,17 +203,10 @@ package body Harriet.Updates is
          select
             accept Stop;
             exit;
-         or
-            accept Add_Update
-              (Clock : in Harriet.Calendar.Time;
-               Update : in Update_Interface'Class)
-            do
-               Map.Insert (Clock, Update);
-            end Add_Update;
          else
             delay 0.1;
             Harriet.Calendar.Advance (3600.0);
-            Dispatch_Task.Broadcast
+            Broadcast_Task.Broadcast
               (Harriet.Sessions.Signal_Clock_Tick);
 
             declare
@@ -144,18 +218,15 @@ package body Harriet.Updates is
             end;
 
             declare
-               use type Harriet.Calendar.Time;
                List : Update_Lists.List;
                Clock : constant Harriet.Calendar.Time :=
                          Harriet.Calendar.Clock;
             begin
-               while not Map.Is_Empty
-                 and then Map.First_Key >= Clock
-               loop
-                  List.Append (Map.First_Element);
-                  Map.Delete_First;
-               end loop;
-               Dispatch_Task.Dispatch (List);
+               Update_Map.Get_Updates (Clock, List);
+
+               if not List.Is_Empty then
+                  Dispatch_Task.Dispatch (List);
+               end if;
             end;
          end select;
       end loop;
@@ -172,7 +243,7 @@ package body Harriet.Updates is
    is
       use type Harriet.Calendar.Time;
    begin
-      Update_Task.Add_Update (Harriet.Calendar.Clock + Wait, Update);
+      Update_Map.Add_Update (Harriet.Calendar.Clock + Wait, Update);
    end Update_With_Delay;
 
 end Harriet.Updates;
