@@ -1,5 +1,7 @@
 with Tropos.Reader;
 
+with Harriet.Quantities;
+
 with Harriet.Db.Fissile;
 with Harriet.Db.Fuel;
 with Harriet.Db.Gas;
@@ -49,11 +51,11 @@ package body Harriet.Configure.Facilities is
    procedure Configure_Facility
      (Config : Tropos.Configuration)
    is
-      Tag         : constant String := Config.Config_Name;
-      Class       : constant String := Config.Get ("class");
-      Quality     : constant Natural := Config.Get ("quality", 0);
-      Power       : constant Real :=
-                      Real (Float'(Config.Get ("power", 0.0)));
+      Tag           : constant String := Config.Config_Name;
+      Class         : constant String := Config.Get ("class");
+      Quality       : constant Natural := Config.Get ("quality", 0);
+      Power         : constant Real :=
+                        Real (Float'(Config.Get ("power", 0.0)));
       Educational   : constant Boolean := Config.Get ("educational");
       Entertainment : constant Boolean := Config.Get ("entertainment");
       Fitness       : constant Boolean := Config.Get ("fitness");
@@ -64,13 +66,17 @@ package body Harriet.Configure.Facilities is
       Industrial    : constant Boolean := Config.Get ("industrial");
       Shipyard      : constant Boolean := Config.Get ("shipyard");
 
-      Fissile     : constant Boolean := Config.Get ("fissile");
-      Fuel        : constant Boolean := Config.Get ("fuel");
-      Gas         : constant Boolean := Config.Get ("gas");
-      Liquid      : constant Boolean := Config.Get ("liquid");
-      Metal       : constant Boolean := Config.Get ("metal");
-      Mineral     : constant Boolean := Config.Get ("mineral");
-      Organic     : constant Boolean := Config.Get ("organic");
+      Fissile       : constant Boolean := Config.Get ("fissile");
+      Fuel          : constant Boolean := Config.Get ("fuel");
+      Gas           : constant Boolean := Config.Get ("gas");
+      Liquid        : constant Boolean := Config.Get ("liquid");
+      Metal         : constant Boolean := Config.Get ("metal");
+      Mineral       : constant Boolean := Config.Get ("mineral");
+      Organic       : constant Boolean := Config.Get ("organic");
+
+      Capacity      : constant Harriet.Quantities.Quantity_Type :=
+                        Harriet.Quantities.To_Quantity
+                          (Real (Float'(Config.Get ("capacity", 0.0))));
 
    begin
 
@@ -79,8 +85,9 @@ package body Harriet.Configure.Facilities is
          declare
             Factory : constant Harriet.Db.Factory_Reference :=
                         Harriet.Db.Factory.Create
-                          (Power => Power,
-                           Tag   => Tag);
+                          (Power    => Power,
+                           Capacity => Capacity,
+                           Tag      => Tag);
          begin
             if Construction then
                for Commodity of Harriet.Db.Building_Module.Scan_By_Tag loop
@@ -119,8 +126,9 @@ package body Harriet.Configure.Facilities is
          declare
             Generator : constant Harriet.Db.Resource_Generator_Reference :=
                           Harriet.Db.Resource_Generator.Create
-                            (Power => Power,
-                             Tag   => Tag);
+                            (Power    => Power,
+                             Capacity => Capacity,
+                             Tag      => Tag);
          begin
             if Fissile then
                for Fissile of Harriet.Db.Fissile.Scan_By_Tag loop
@@ -175,24 +183,28 @@ package body Harriet.Configure.Facilities is
       elsif Class = "service-facility" then
          if Educational then
             Harriet.Db.Educational_Facility.Create
-              (Quality => Quality,
-               Power   => Power,
-               Tag     => Tag);
+              (Quality  => Quality,
+               Capacity => Capacity,
+               Power    => Power,
+               Tag      => Tag);
          elsif Entertainment then
             Harriet.Db.Entertainment_Facility.Create
-              (Quality => Quality,
-               Power   => Power,
-               Tag     => Tag);
+              (Quality  => Quality,
+               Capacity => Capacity,
+               Power    => Power,
+               Tag      => Tag);
          elsif Fitness then
             Harriet.Db.Fitness_Facility.Create
-              (Quality => Quality,
-               Power   => Power,
-               Tag     => Tag);
+              (Quality  => Quality,
+               Capacity => Capacity,
+               Power    => Power,
+               Tag      => Tag);
          elsif Medical then
             Harriet.Db.Medical_Facility.Create
-              (Quality => Quality,
-               Power   => Power,
-               Tag     => Tag);
+              (Quality  => Quality,
+               Capacity => Capacity,
+               Power    => Power,
+               Tag      => Tag);
          end if;
       end if;
    end Configure_Facility;
