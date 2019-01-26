@@ -92,6 +92,13 @@ package Harriet.Worlds is
      (World : Harriet.Db.World_Reference;
       Ships : out Harriet.Ships.Lists.List);
 
+   procedure Scan_Resources
+     (Sector  : Harriet.Db.World_Sector_Reference;
+      Process : not null access
+        procedure (Resource : Harriet.Db.Resource_Reference;
+                   Accessibility : Unit_Real;
+                   Abundance     : Non_Negative_Real));
+
    type Sector_Vertex is
       record
          X, Y, Z : Signed_Unit_Real;

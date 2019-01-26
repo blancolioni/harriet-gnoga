@@ -1,3 +1,5 @@
+with WL.Localisation;
+
 with Harriet.Db.Terrain;
 
 package body Harriet.Terrain is
@@ -24,6 +26,16 @@ package body Harriet.Terrain is
      (Terrain : Harriet.Db.Terrain_Reference)
       return Unit_Real
    is (Harriet.Db.Terrain.Get (Terrain).Hazard);
+
+   ----------
+   -- Name --
+   ----------
+
+   function Name
+     (Terrain : Harriet.Db.Terrain_Reference)
+      return String
+   is (WL.Localisation.Local_Text
+       (Harriet.Db.Terrain.Get (Terrain).Tag));
 
    --------------
    -- Is_Water --

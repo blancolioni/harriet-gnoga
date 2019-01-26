@@ -1,5 +1,6 @@
 with Harriet.Configure.Worlds;
 
+with Harriet.Db.Deposit;
 with Harriet.Db.Faction;
 with Harriet.Db.Generation;
 with Harriet.Db.Sector_Neighbour;
@@ -343,6 +344,27 @@ package body Harriet.Worlds is
    begin
       return Harriet.Db.World.Get (World).Radius;
    end Radius;
+
+   --------------------
+   -- Scan_Resources --
+   --------------------
+
+   procedure Scan_Resources
+     (Sector  : Harriet.Db.World_Sector_Reference;
+      Process : not null access
+        procedure (Resource : Harriet.Db.Resource_Reference;
+                   Accessibility : Unit_Real;
+                   Abundance     : Non_Negative_Real))
+   is
+   begin
+      for Deposit of
+        Harriet.Db.Deposit.Select_By_World_Sector
+          (Sector)
+      loop
+         Process (Deposit.Resource, Deposit.Accessibility,
+                  Deposit.Abundance);
+      end loop;
+   end Scan_Resources;
 
    ------------------
    -- Scan_Surface --

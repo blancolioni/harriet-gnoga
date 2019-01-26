@@ -6,6 +6,7 @@ with WL.String_Sets;
 
 with Harriet.Money;
 with Harriet.Quantities;
+with Harriet.Real_Images;
 with Harriet.Roman_Images;
 
 with Harriet.Ships;
@@ -17,7 +18,10 @@ with Harriet.Db.Account;
 with Harriet.Db.Deposit;
 with Harriet.Db.Facility;
 with Harriet.Db.Faction;
+with Harriet.Db.Generated_Resource;
 with Harriet.Db.Installation;
+with Harriet.Db.Resource;
+with Harriet.Db.Resource_Generator;
 with Harriet.Db.Ship_Design;
 with Harriet.Db.Star_System_Distance;
 with Harriet.Db.World_Sector;
@@ -42,6 +46,99 @@ package body Harriet.Factions.Create is
       World   : Harriet.Db.World_Reference;
       Sector  : Harriet.Db.World_Sector_Reference;
       Config  : Tropos.Configuration);
+
+   function Choose_Facility
+     (Sector : Harriet.Db.World_Sector_Reference)
+      return Harriet.Db.Facility_Reference;
+
+   ---------------------
+   -- Choose_Facility --
+   ---------------------
+
+   function Choose_Facility
+     (Sector : Harriet.Db.World_Sector_Reference)
+      return Harriet.Db.Facility_Reference
+   is
+      use Harriet.Db;
+
+      Best_Resource      : Harriet.Db.Resource_Reference :=
+                             Harriet.Db.Null_Resource_Reference;
+      Best_Accessibility : Unit_Real := 0.0;
+      Best_Abundance     : Non_Negative_Real := 0.0;
+
+      procedure Check_Resource
+        (Resource      : Harriet.Db.Resource_Reference;
+         Accessibility : Unit_Real;
+         Abundance     : Non_Negative_Real);
+
+      --------------------
+      -- Check_Resource --
+      --------------------
+
+      procedure Check_Resource
+        (Resource      : Harriet.Db.Resource_Reference;
+         Accessibility : Unit_Real;
+         Abundance     : Non_Negative_Real)
+      is
+      begin
+         if Accessibility > Best_Accessibility then
+            Best_Resource := Resource;
+            Best_Accessibility := Accessibility;
+            Best_Abundance := Abundance;
+         end if;
+      end Check_Resource;
+
+      Facility : Harriet.Db.Facility_Reference;
+
+   begin
+      Harriet.Worlds.Scan_Resources
+        (Sector, Check_Resource'Access);
+
+      Ada.Text_IO.Put
+        ("sector"
+         & Harriet.Db.To_String (Sector)
+         & " with terrain "
+         & Harriet.Terrain.Name
+           (Harriet.Worlds.Get_Terrain (Sector))
+         & ": ");
+      if Best_Resource = Harriet.Db.Null_Resource_Reference then
+         Ada.Text_IO.Put_Line
+           ("no available resources");
+         Facility :=
+           Harriet.Db.Facility.Get_Reference_By_Tag ("light-factory");
+      else
+         Ada.Text_IO.Put_Line
+           ("best resource: "
+            & Harriet.Db.Resource.Get (Best_Resource).Tag
+            & " accessibility "
+            & Harriet.Real_Images.Approximate_Image
+              (Best_Accessibility * 100.0)
+            & "% abundance "
+            & Harriet.Real_Images.Approximate_Image
+              (Best_Abundance * 100.0));
+
+         declare
+            use Harriet.Db.Generated_Resource;
+            Generated : constant Generated_Resource_Type :=
+                          First_By_Resource (Best_Resource);
+         begin
+            if Generated.Has_Element then
+               Facility :=
+                 Harriet.Db.Resource_Generator.Get
+                   (Generated.Resource_Generator)
+                 .Reference;
+            else
+               Ada.Text_IO.Put_Line ("no resource generators");
+               Facility :=
+                 Harriet.Db.Facility.Get_Reference_By_Tag ("light-factory");
+            end if;
+         end;
+      end if;
+      Ada.Text_IO.Put_Line
+        ("choosing: "
+         & Harriet.Db.Facility.Get (Facility).Tag);
+      return Facility;
+   end Choose_Facility;
 
    --------------------
    -- Create_Faction --
@@ -153,6 +250,8 @@ package body Harriet.Factions.Create is
       Config  : Tropos.Configuration)
    is
       pragma Unreferenced (World);
+      Owner : constant Harriet.Db.Owner_Reference :=
+                Harriet.Db.Faction.Get (Faction).Reference;
    begin
       for Installation_Config of Config loop
          declare
@@ -161,8 +260,7 @@ package body Harriet.Factions.Create is
                            (Installation_Config.Config_Name);
          begin
             Harriet.Db.Installation.Create
-              (Owner        =>
-                 Harriet.Db.Faction.Get (Faction).Reference,
+              (Owner        => Owner,
                World_Sector => Sector,
                Facility     => Facility);
             Harriet.Worlds.Set_Owner (Sector, Faction);
@@ -171,6 +269,16 @@ package body Harriet.Factions.Create is
 
       for Neighbour of Harriet.Worlds.Get_Neighbours (Sector) loop
          Harriet.Worlds.Set_Owner (Neighbour, Faction);
+         declare
+            Installation : constant Harriet.Db.Installation_Reference :=
+                             Harriet.Db.Installation.Create
+                               (Owner        => Owner,
+                                World_Sector => Neighbour,
+                                Facility     =>
+                                  Choose_Facility (Neighbour));
+         begin
+            pragma Unreferenced (Installation);
+         end;
       end loop;
 
    end Create_Initial_Installations;
@@ -282,10 +390,13 @@ package body Harriet.Factions.Create is
                for Deposit of
                  Harriet.Db.Deposit.Select_By_World_Sector (N)
                loop
-                  Score := Score
-                    + Deposit.Abundance / 1.0e6 * Deposit.Accessibility
-                    * (1.0 - Harriet.Terrain.Hazard
-                       (Harriet.Worlds.Get_Terrain (N)));
+                  Score :=
+                    Real'Max
+                      (Score,
+                         Deposit.Accessibility
+--                      + Deposit.Abundance / 1.0e6 * Deposit.Accessibility
+                       * (1.0 - Harriet.Terrain.Hazard
+                         (Harriet.Worlds.Get_Terrain (N))));
                end loop;
             end loop;
 
