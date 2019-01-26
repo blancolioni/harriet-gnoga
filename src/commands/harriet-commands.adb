@@ -1,4 +1,5 @@
 with Ada.Strings.Fixed;
+with Ada.Text_IO;
 
 package body Harriet.Commands is
 
@@ -16,8 +17,7 @@ package body Harriet.Commands is
 
    overriding procedure Put_Error
      (Writer : Null_Writer_Record;
-      Text   : String)
-   is null;
+      Text   : String);
 
    package Command_Maps is
      new WL.String_Maps (Root_Harriet_Command'Class);
@@ -82,10 +82,29 @@ package body Harriet.Commands is
 
    end Execute_Command_Line;
 
+   -----------------
+   -- Null_Writer --
+   -----------------
+
    function Null_Writer return Writer_Interface'Class is
    begin
       return Writer : Null_Writer_Record;
    end Null_Writer;
+
+   ---------------
+   -- Put_Error --
+   ---------------
+
+   overriding procedure Put_Error
+     (Writer : Null_Writer_Record;
+      Text   : String)
+   is
+      pragma Unreferenced (Writer);
+   begin
+      Ada.Text_IO.Put_Line
+        (Ada.Text_IO.Standard_Error,
+         "ERROR: " & Text);
+   end Put_Error;
 
    --------------
    -- Put_Line --
@@ -133,7 +152,7 @@ package body Harriet.Commands is
             begin
                First := Index_Non_Blank (Extended_Line, Last + 1);
                Last := (if First = 0 then 0
-                        else Index (Extended_Line, " ", First));
+                        else Index (Extended_Line, " ", First) - 1);
 
                if Arg = "-" or else Arg = "--" then
                   null;
