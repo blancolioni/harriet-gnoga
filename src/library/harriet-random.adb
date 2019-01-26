@@ -46,6 +46,15 @@ package body Harriet.Random is
       return Std_Normal * Standard_Deviation;
    end Normal_Random;
 
+   -----------
+   -- Reset --
+   -----------
+
+   procedure Reset is
+   begin
+      Ada.Numerics.Float_Random.Reset (Gen);
+   end Reset;
+
    -----------------
    -- Unit_Random --
    -----------------

@@ -1,5 +1,7 @@
 package Harriet.Random is
 
+   procedure Reset;
+
    function Unit_Random return Unit_Real;
 
    function Normal_Random
