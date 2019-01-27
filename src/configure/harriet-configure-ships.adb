@@ -1,4 +1,5 @@
 with Harriet.Money;
+with Harriet.Quantities;
 
 with Harriet.Db.Ship_Component;
 with Harriet.Db.Ship_Design;
@@ -45,7 +46,8 @@ package body Harriet.Configure.Ships is
    is
       Design : constant Harriet.Db.Ship_Design_Reference :=
                  Harriet.Db.Ship_Design.Create
-                   (Name => Design_Config.Config_Name);
+                   (Name      => Design_Config.Config_Name,
+                    Hold_Size => Harriet.Quantities.Zero);
    begin
       for Component_Config of Design_Config loop
          declare
