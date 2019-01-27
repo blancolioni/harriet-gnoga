@@ -18,6 +18,7 @@ with Harriet.Random;
 
 with Harriet.UI.Gnoga_UI;
 
+with Harriet.Calendar;
 with Harriet.Configure;
 with Harriet.Configure.Scenarios;
 with Harriet.Factions.Create;
