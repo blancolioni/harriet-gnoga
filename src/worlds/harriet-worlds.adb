@@ -1,8 +1,14 @@
+with Harriet.Calendar;
+
+with Harriet.Agents;
+
 with Harriet.Configure.Worlds;
 
+with Harriet.Db.Account;
 with Harriet.Db.Deposit;
 with Harriet.Db.Faction;
 with Harriet.Db.Generation;
+with Harriet.Db.Pop;
 with Harriet.Db.Sector_Neighbour;
 with Harriet.Db.Sector_Vertex;
 with Harriet.Db.Ship;
@@ -12,6 +18,50 @@ package body Harriet.Worlds is
 
    procedure Check_Surface
      (World : Harriet.Db.World_Reference);
+
+   --------------------
+   -- Add_Population --
+   --------------------
+
+   procedure Add_Population
+     (Sector  : Harriet.Db.World_Sector_Reference;
+      Faction : Harriet.Db.Faction_Reference;
+      Group   : Harriet.Db.Pop_Group_Reference;
+      Size    : Harriet.Quantities.Quantity_Type;
+      Cash    : Harriet.Money.Money_Type)
+   is
+      use type Harriet.Quantities.Quantity_Type;
+      Pop : constant Harriet.Db.Pop.Pop_Type :=
+              Harriet.Db.Pop.Get_By_Pop_Group_Sector
+                (Group, Sector);
+   begin
+      if Pop.Has_Element then
+         Pop.Set_Size (Pop.Size + Size);
+         Harriet.Agents.Add_Cash (Pop, Cash);
+      else
+         declare
+            Account : constant Harriet.Db.Account_Reference :=
+                        Harriet.Db.Account.Create
+                          (Harriet.Db.Null_Account_Reference, Cash, Cash);
+         begin
+            Harriet.Db.Pop.Create
+              (Active           => True,
+               Next_Event       => Harriet.Calendar.Clock,
+               Manager          => "default-pop",
+               Account          => Account,
+               Capacity         => Size,
+               Transported_Size => Harriet.Quantities.To_Real (Size),
+               Faction          => Faction,
+               World            =>
+                 Harriet.Db.World_Sector.Get (Sector).World,
+               World_Sector     => Sector,
+               Ship             => Harriet.Db.Null_Ship_Reference,
+               Pop_Group        => Group,
+               Size             => Size,
+               Happiness        => 1.0);
+         end;
+      end if;
+   end Add_Population;
 
    -----------------
    -- Best_Sector --

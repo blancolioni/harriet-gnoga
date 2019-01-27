@@ -1,5 +1,8 @@
 private with Ada.Containers.Doubly_Linked_Lists;
 
+with Harriet.Money;
+with Harriet.Quantities;
+
 with Harriet.Db;
 with Harriet.Db.World_Sector;
 
@@ -87,6 +90,13 @@ package Harriet.Worlds is
    procedure Set_Owner
      (Sector  : Harriet.Db.World_Sector_Reference;
       Faction : Harriet.Db.Faction_Reference);
+
+   procedure Add_Population
+     (Sector  : Harriet.Db.World_Sector_Reference;
+      Faction : Harriet.Db.Faction_Reference;
+      Group   : Harriet.Db.Pop_Group_Reference;
+      Size    : Harriet.Quantities.Quantity_Type;
+      Cash    : Harriet.Money.Money_Type);
 
    procedure Get_Ships
      (World : Harriet.Db.World_Reference;
