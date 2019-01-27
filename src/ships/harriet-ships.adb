@@ -3,6 +3,7 @@ with Ada.Text_IO;
 
 with Harriet.Calendar;
 with Harriet.Elementary_Functions;
+with Harriet.Money;
 with Harriet.Random;
 with Harriet.Real_Images;
 
@@ -10,7 +11,9 @@ with Harriet.Constants;
 
 with Harriet.Worlds;
 
+with Harriet.Db.Account;
 with Harriet.Db.Faction;
+with Harriet.Db.Ship_Design;
 with Harriet.Db.Ship_Module;
 with Harriet.Db.Ship_Module_Design;
 with Harriet.Db.World;
@@ -29,10 +32,21 @@ package body Harriet.Ships is
    is
       World_Rec : constant Harriet.Db.World.World_Type :=
                     Harriet.Db.World.Get (World);
-      Ship : constant Harriet.Db.Ship_Reference :=
+      Account      : constant Harriet.Db.Account_Reference :=
+                       Harriet.Db.Account.Create
+                         (Harriet.Db.Null_Account_Reference,
+                          Harriet.Money.Zero,
+                          Harriet.Money.Zero);
+      Ship         : constant Harriet.Db.Ship_Reference :=
                     Harriet.Db.Ship.Create
                       (Name            => Name,
+                       Capacity        =>
+                         Harriet.Db.Ship_Design.Get (Design).Hold_Size,
+                       Account         => Account,
                        Faction         => Owner,
+                       Active          => True,
+                       Next_Event      => Harriet.Calendar.Clock,
+                       Manager         => "default",
                        Owner           =>
                          Harriet.Db.Faction.Get (Owner).Reference,
                        World           => World,
@@ -66,20 +80,25 @@ package body Harriet.Ships is
             Tec_Level      => 0.0);
       end loop;
 
-      declare
-         S : constant Ship_Type := Get (Ship);
-      begin
-         Ada.Text_IO.Put_Line
-           (S.Name & " in orbit above "
-            & Harriet.Worlds.Name (S.World)
-            & ": altitude "
-            & Harriet.Real_Images.Approximate_Image
-              ((S.Orbit - Harriet.Worlds.Radius (S.World)) / 1_000.0)
-            & "km longitude "
-            & Harriet.Real_Images.Approximate_Image
-              (S.Current_Longitude)
-            & " degrees");
-      end;
+      if False then
+         declare
+            S : constant Ship_Type := Get (Ship);
+         begin
+            Ada.Text_IO.Put_Line
+              (S.Name & " in orbit above "
+               & Harriet.Worlds.Name (S.World)
+               & ": altitude "
+               & Harriet.Real_Images.Approximate_Image
+                 ((S.Orbit - Harriet.Worlds.Radius (S.World)) / 1_000.0)
+               & "km inclination "
+               & Harriet.Real_Images.Approximate_Image
+                 (S.Inclination)
+               & " deg longitude "
+               & Harriet.Real_Images.Approximate_Image
+                 (S.Current_Longitude)
+               & " E");
+         end;
+      end if;
    end Create_Ship;
 
    -----------------------

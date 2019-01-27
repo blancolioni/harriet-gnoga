@@ -4,6 +4,7 @@ with Money;
 package Agents is
 
    record Account is
+      Guarantor  : Account;
       Start_Cash : Money_Type;
       Cash       : Money_Type;
    end Account;

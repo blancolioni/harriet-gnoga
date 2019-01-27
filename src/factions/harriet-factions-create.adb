@@ -19,9 +19,11 @@ with Harriet.Worlds;
 with Harriet.Db.Account;
 with Harriet.Db.Deposit;
 with Harriet.Db.Facility;
+with Harriet.Db.Facility_Worker;
 with Harriet.Db.Faction;
 with Harriet.Db.Generated_Resource;
 with Harriet.Db.Installation;
+with Harriet.Db.Pop_Group;
 with Harriet.Db.Resource;
 with Harriet.Db.Resource_Generator;
 with Harriet.Db.Ship_Design;
@@ -30,6 +32,8 @@ with Harriet.Db.World_Sector;
 with Harriet.Db.User;
 
 package body Harriet.Factions.Create is
+
+   Log_Faction_Creation : constant Boolean := False;
 
    function Find_Homeworld
      return Harriet.Db.World_Reference;
@@ -96,28 +100,37 @@ package body Harriet.Factions.Create is
       Harriet.Worlds.Scan_Resources
         (Sector, Check_Resource'Access);
 
-      Ada.Text_IO.Put
-        ("sector"
-         & Harriet.Db.To_String (Sector)
-         & " with terrain "
-         & Harriet.Terrain.Name
-           (Harriet.Worlds.Get_Terrain (Sector))
-         & ": ");
+      if Log_Faction_Creation then
+         Ada.Text_IO.Put
+           ("sector"
+            & Harriet.Db.To_String (Sector)
+            & " with terrain "
+            & Harriet.Terrain.Name
+              (Harriet.Worlds.Get_Terrain (Sector))
+            & ": ");
+      end if;
+
       if Best_Resource = Harriet.Db.Null_Resource_Reference then
-         Ada.Text_IO.Put_Line
-           ("no available resources");
+         if Log_Faction_Creation then
+            Ada.Text_IO.Put_Line
+              ("no available resources");
+         end if;
+
          Facility :=
            Harriet.Db.Facility.Get_Reference_By_Tag ("light-factory");
       else
-         Ada.Text_IO.Put_Line
-           ("best resource: "
-            & Harriet.Db.Resource.Get (Best_Resource).Tag
-            & " accessibility "
-            & Harriet.Real_Images.Approximate_Image
-              (Best_Accessibility * 100.0)
-            & "% abundance "
-            & Harriet.Real_Images.Approximate_Image
-              (Best_Abundance * 100.0));
+
+         if Log_Faction_Creation then
+            Ada.Text_IO.Put_Line
+              ("best resource: "
+               & Harriet.Db.Resource.Get (Best_Resource).Tag
+               & " accessibility "
+               & Harriet.Real_Images.Approximate_Image
+                 (Best_Accessibility * 100.0)
+               & "% abundance "
+               & Harriet.Real_Images.Approximate_Image
+                 (Best_Abundance * 100.0));
+         end if;
 
          declare
             use Harriet.Db.Generated_Resource;
@@ -136,9 +149,11 @@ package body Harriet.Factions.Create is
             end if;
          end;
       end if;
-      Ada.Text_IO.Put_Line
-        ("choosing: "
-         & Harriet.Db.Facility.Get (Facility).Tag);
+      if Log_Faction_Creation then
+         Ada.Text_IO.Put_Line
+           ("choosing: "
+            & Harriet.Db.Facility.Get (Facility).Tag);
+      end if;
       return Facility;
    end Choose_Facility;
 
@@ -169,7 +184,8 @@ package body Harriet.Factions.Create is
                        (Real (Float'(Setup.Get ("cash"))));
          Account : constant Harriet.Db.Account_Reference :=
                      Harriet.Db.Account.Create
-                       (Start_Cash => Cash,
+                       (Guarantor  => Harriet.Db.Null_Account_Reference,
+                        Start_Cash => Cash,
                         Cash       => Cash);
          Sector  : constant Harriet.Db.World_Sector_Reference :=
                      Find_Home_Sector (Capital);
@@ -180,6 +196,9 @@ package body Harriet.Factions.Create is
                           (if Adjective = "" then Name else Adjective),
                         Plural_Name   =>
                           (if Plural_Name = "" then Name else Plural_Name),
+                        Active        => True,
+                        Next_Event    => Harriet.Calendar.Clock,
+                        Manager       => "",
                         Account       => Account,
                         Capacity      => Harriet.Quantities.Zero,
                         Red           => Color.Red,
@@ -254,42 +273,83 @@ package body Harriet.Factions.Create is
       pragma Unreferenced (World);
       Owner : constant Harriet.Db.Owner_Reference :=
                 Harriet.Db.Faction.Get (Faction).Reference;
+
+      procedure Create_Installation
+        (Facility : Harriet.Db.Facility_Reference;
+         Sector   : Harriet.Db.World_Sector_Reference;
+         Cash     : Harriet.Money.Money_Type);
+
+      -------------------------
+      -- Create_Installation --
+      -------------------------
+
+      procedure Create_Installation
+        (Facility : Harriet.Db.Facility_Reference;
+         Sector   : Harriet.Db.World_Sector_Reference;
+         Cash     : Harriet.Money.Money_Type)
+      is
+         Capacity : constant Harriet.Quantities.Quantity_Type :=
+                      Harriet.Quantities.To_Quantity (1000.0);
+         Account  : constant Harriet.Db.Account_Reference :=
+                      Harriet.Db.Account.Create
+                        (Harriet.Db.Null_Account_Reference,
+                         Cash, Cash);
+      begin
+         Harriet.Db.Installation.Create
+           (Owner        => Owner,
+            Capacity     => Capacity,
+            Account      => Account,
+            World_Sector => Sector,
+            Facility     => Facility,
+            Active       => True,
+            Next_Event   =>
+              Harriet.Calendar.Delay_Days (Harriet.Random.Unit_Random),
+            Manager      => "default-installation");
+         Harriet.Worlds.Set_Owner (Sector, Faction);
+
+         for Employee of
+           Harriet.Db.Facility_Worker.Select_By_Facility
+             (Facility)
+         loop
+            declare
+               use Harriet.Money;
+            begin
+               Harriet.Worlds.Add_Population
+                 (Sector  => Sector,
+                  Faction => Faction,
+                  Group   => Employee.Pop_Group,
+                  Size    => Employee.Quantity,
+                  Cash    =>
+                    Total
+                      (Harriet.Db.Pop_Group.Get (Employee.Pop_Group).Salary,
+                       Employee.Quantity));
+            end;
+         end loop;
+      end Create_Installation;
+
    begin
+
+      Harriet.Worlds.Set_Owner (Sector, Faction);
+
       for Installation_Config of Config loop
          declare
             Facility : constant Harriet.Db.Facility_Reference :=
                          Harriet.Db.Facility.Get_Reference_By_Tag
                            (Installation_Config.Config_Name);
          begin
-            Harriet.Db.Installation.Create
-              (Owner        => Owner,
-               World_Sector => Sector,
-               Facility     => Facility,
-               Active       => True,
-               Next_Event   =>
-                 Harriet.Calendar.Delay_Days (Harriet.Random.Unit_Random),
-               Manager      => "default-installation");
-            Harriet.Worlds.Set_Owner (Sector, Faction);
+            Create_Installation (Facility, Sector,
+                                 Harriet.Money.To_Money (1000.0));
          end;
       end loop;
 
       for Neighbour of Harriet.Worlds.Get_Neighbours (Sector) loop
+
          Harriet.Worlds.Set_Owner (Neighbour, Faction);
-         declare
-            Installation : constant Harriet.Db.Installation_Reference :=
-                             Harriet.Db.Installation.Create
-                               (Owner        => Owner,
-                                World_Sector => Neighbour,
-                                Facility     =>
-                                  Choose_Facility (Neighbour),
-                                Active       => True,
-                                Next_Event   =>
-                                  Harriet.Calendar.Delay_Days
-                                    (Harriet.Random.Unit_Random),
-                                Manager      => "default-installation");
-         begin
-            pragma Unreferenced (Installation);
-         end;
+
+         Create_Installation
+           (Facility => Choose_Facility (Neighbour),
+            Sector   => Neighbour,
+            Cash     => Harriet.Money.To_Money (1000.0));
       end loop;
 
    end Create_Initial_Installations;

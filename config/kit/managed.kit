@@ -1,0 +1,12 @@
+with Calendar;
+with Owners;
+
+package Managed is
+
+   record Managed is
+      Active     : Boolean;
+      Next_Event : Time;
+      Manager    : String (32);
+   end Managed;
+   
+end Managed;

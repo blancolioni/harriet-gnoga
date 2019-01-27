@@ -12,17 +12,16 @@ record Pop_Group : Commodity is
    Salary           : Price_Type;
 end Pop_Group;
 
-record Pop : Transportable, Managed is
+record Pop : Transportable, Managed, Agent is
    key Faction;
    key World;
    key World_Sector;
    key Ship;
    key Pop_Group;
-   Size      : Long_Float;
+   Size      : Quantity_Type;
    Happiness : Long_Float;
    key Faction_World with Faction, World;
-   key Faction_World_Sector with Faction, World_Sector;
-   key Faction_Ship with Faction, Ship;
+   unique key Pop_Group_Sector with Pop_Group, World_Sector;
 end Pop;
 
 end Pops;
