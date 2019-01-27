@@ -10,6 +10,11 @@ with Harriet.Db.Metal;
 with Harriet.Db.Mineral;
 with Harriet.Db.Organic;
 
+with Harriet.Db.Facility;
+with Harriet.Db.Facility_Module;
+with Harriet.Db.Facility_Worker;
+with Harriet.Db.Pop_Group;
+
 with Harriet.Db.Building_Module;
 with Harriet.Db.Consumer_Good;
 with Harriet.Db.Industrial_Good;
@@ -31,6 +36,48 @@ package body Harriet.Configure.Facilities is
    procedure Configure_Facility
      (Config : Tropos.Configuration);
 
+   procedure Configure_Employees
+     (Config : Tropos.Configuration);
+
+   procedure Configure_Modules
+     (Config : Tropos.Configuration);
+
+   -------------------------
+   -- Configure_Employees --
+   -------------------------
+
+   procedure Configure_Employees
+     (Config : Tropos.Configuration)
+   is
+      Facility : constant Harriet.Db.Facility_Reference :=
+                   Harriet.Db.Facility.Get_Reference_By_Tag
+                     (Config.Config_Name);
+      Emp_Config : constant Tropos.Configuration :=
+                     Config.Child ("worker");
+      Emp_Type   : constant Tropos.Configuration :=
+                     Emp_Config.Child ("type");
+      Emp_Qty    : constant Tropos.Configuration :=
+                     Emp_Config.Child ("qty");
+   begin
+      for Type_Config of Emp_Type loop
+         declare
+            Group : constant Harriet.Db.Pop_Group_Reference :=
+                      Harriet.Db.Pop_Group.Get_Reference_By_Tag
+                        (Type_Config.Value);
+            Quantity : constant Harriet.Quantities.Quantity_Type :=
+                         Harriet.Quantities.To_Quantity
+                           (Real
+                              (Float'(Emp_Qty.Get
+                               (Type_Config.Config_Name))));
+         begin
+            Harriet.Db.Facility_Worker.Create
+              (Facility  => Facility,
+               Pop_Group => Group,
+               Quantity  => Quantity);
+         end;
+      end loop;
+   end Configure_Employees;
+
    ---------------------------
    -- Configure_Facilities --
    ---------------------------
@@ -40,9 +87,17 @@ package body Harriet.Configure.Facilities is
    is
    begin
       Tropos.Reader.Read_Config
-        (Path      => Scenario_Directory (Scenario_Name, "Facilities"),
-         Extension => "Facility",
+        (Path      => Scenario_Directory (Scenario_Name, "facilities"),
+         Extension => "facility",
          Configure => Configure_Facility'Access);
+      Tropos.Reader.Read_Config
+        (Path      => Scenario_Directory (Scenario_Name, "facilities"),
+         Extension => "facility",
+         Configure => Configure_Employees'Access);
+      Tropos.Reader.Read_Config
+        (Path      => Scenario_Directory (Scenario_Name, "facilities"),
+         Extension => "facility",
+         Configure => Configure_Modules'Access);
    end Configure_Facilities;
 
    -------------------------
@@ -214,5 +269,41 @@ package body Harriet.Configure.Facilities is
             Tag      => Tag);
       end if;
    end Configure_Facility;
+
+   -----------------------
+   -- Configure_Modules --
+   -----------------------
+
+   procedure Configure_Modules
+     (Config : Tropos.Configuration)
+   is
+      Facility   : constant Harriet.Db.Facility_Reference :=
+                     Harriet.Db.Facility.Get_Reference_By_Tag
+                       (Config.Config_Name);
+      Mod_Config : constant Tropos.Configuration :=
+                     Config.Child ("module");
+      Mod_Type   : constant Tropos.Configuration :=
+                     Mod_Config.Child ("type");
+      Mod_Qty    : constant Tropos.Configuration :=
+                     Mod_Config.Child ("qty");
+   begin
+      for Type_Config of Mod_Type loop
+         declare
+            Module    : constant Harriet.Db.Building_Module_Reference :=
+                         Harriet.Db.Building_Module.Get_Reference_By_Tag
+                           (Type_Config.Value);
+            Quantity : constant Harriet.Quantities.Quantity_Type :=
+                         Harriet.Quantities.To_Quantity
+                           (Real
+                              (Float'(Mod_Qty.Get
+                               (Type_Config.Config_Name))));
+         begin
+            Harriet.Db.Facility_Module.Create
+              (Facility        => Facility,
+               Building_Module => Module,
+               Quantity        => Quantity);
+         end;
+      end loop;
+   end Configure_Modules;
 
 end Harriet.Configure.Facilities;
