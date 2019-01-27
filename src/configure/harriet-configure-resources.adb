@@ -17,7 +17,7 @@ package body Harriet.Configure.Resources is
             use Harriet.Solar_System;
             function Get (Name : String)
                           return Non_Negative_Real
-            is (Non_Negative_Real (Float'(Cfg.Get (Name, 0.0))));
+            is (Get_Real (Cfg, Name));
 
             Formula      : constant String :=
                              Cfg.Get ("formula", Cfg.Config_Name);

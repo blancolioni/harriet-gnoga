@@ -7,6 +7,12 @@ ships = {
 }
 
 installations = {
-   hub = 1
+   hub = {
+      cash = 10K
+      stock = {
+         consumer-goods = 1000
+         industrial-goods = 1000
+         resource = 1000
+      }
 }
    

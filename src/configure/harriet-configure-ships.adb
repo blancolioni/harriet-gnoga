@@ -29,8 +29,7 @@ package body Harriet.Configure.Ships is
          Component_Class =>
            Harriet.Db.Ship_Component_Class'Value
              (Component_Config.Get ("class")),
-         Mass            =>
-           Non_Negative_Real (Float'(Component_Config.Get ("mass", 0.0))),
+         Mass            => Get_Real (Component_Config, "mass"),
          Size            =>
            Component_Config.Get ("size"),
          Power           =>

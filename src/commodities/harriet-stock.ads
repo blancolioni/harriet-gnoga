@@ -11,6 +11,11 @@ package Harriet.Stock is
       Quantity : Harriet.Quantities.Quantity_Type;
       Value    : Harriet.Money.Money_Type);
 
+   procedure Add_Initial_Stock
+     (To       : Harriet.Db.Has_Stock_Reference;
+      Item     : Harriet.Db.Commodity_Reference;
+      Quantity : Harriet.Quantities.Quantity_Type);
+
    procedure Log_Stock
      (Stock : Harriet.Db.Has_Stock_Reference);
 

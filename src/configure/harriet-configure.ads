@@ -1,5 +1,8 @@
 with Tropos;
 
+with Harriet.Money;
+with Harriet.Quantities;
+
 package Harriet.Configure is
 
    procedure Initialize_Database;
@@ -34,5 +37,37 @@ package Harriet.Configure is
       Directory_Name  : String;
       File_Name       : String)
       return Tropos.Configuration;
+
+   function Configure_Money
+     (Config  : Tropos.Configuration;
+      Field   : String;
+      Default : Non_Negative_Real)
+      return Harriet.Money.Money_Type;
+
+   function Configure_Price
+     (Config : Tropos.Configuration;
+      Field  : String)
+      return Harriet.Money.Price_Type;
+
+   function Configure_Quantity
+     (Config : Tropos.Configuration;
+      Field  : String)
+      return Harriet.Quantities.Quantity_Type;
+
+   procedure Configure_Association
+     (Config : Tropos.Configuration;
+      Field  : String;
+      Configure : not null access
+        procedure (Left, Right : String));
+
+   function Get_Real
+     (Config  : Tropos.Configuration;
+      Field   : String;
+      Default : Real := 0.0)
+      return Real;
+
+   function Real_Value
+     (Config  : Tropos.Configuration)
+      return Real;
 
 end Harriet.Configure;

@@ -5,6 +5,7 @@ with Ada.Text_IO;
 with WL.String_Sets;
 
 with Harriet.Calendar;
+with Harriet.Configure;
 with Harriet.Money;
 with Harriet.Quantities;
 with Harriet.Random;
@@ -12,6 +13,7 @@ with Harriet.Real_Images;
 with Harriet.Roman_Images;
 
 with Harriet.Ships;
+with Harriet.Stock;
 with Harriet.Star_Systems;
 with Harriet.Terrain;
 with Harriet.Worlds;
@@ -30,6 +32,10 @@ with Harriet.Db.Ship_Design;
 with Harriet.Db.Star_System_Distance;
 with Harriet.Db.World_Sector;
 with Harriet.Db.User;
+
+with Harriet.Db.Commodity;
+with Harriet.Db.Consumer_Good;
+with Harriet.Db.Industrial_Good;
 
 package body Harriet.Factions.Create is
 
@@ -180,8 +186,8 @@ package body Harriet.Factions.Create is
 
       declare
          Cash    : constant Harriet.Money.Money_Type :=
-                     Harriet.Money.To_Money
-                       (Real (Float'(Setup.Get ("cash"))));
+                     Harriet.Configure.Configure_Money
+                       (Setup, "cash", 1000.0);
          Account : constant Harriet.Db.Account_Reference :=
                      Harriet.Db.Account.Create
                        (Guarantor  => Harriet.Db.Null_Account_Reference,
@@ -274,19 +280,21 @@ package body Harriet.Factions.Create is
       Owner : constant Harriet.Db.Owner_Reference :=
                 Harriet.Db.Faction.Get (Faction).Reference;
 
-      procedure Create_Installation
+      function Create_Installation
         (Facility : Harriet.Db.Facility_Reference;
          Sector   : Harriet.Db.World_Sector_Reference;
-         Cash     : Harriet.Money.Money_Type);
+         Cash     : Harriet.Money.Money_Type)
+         return Harriet.Db.Installation_Reference;
 
       -------------------------
       -- Create_Installation --
       -------------------------
 
-      procedure Create_Installation
+      function Create_Installation
         (Facility : Harriet.Db.Facility_Reference;
          Sector   : Harriet.Db.World_Sector_Reference;
          Cash     : Harriet.Money.Money_Type)
+         return Harriet.Db.Installation_Reference
       is
          Capacity : constant Harriet.Quantities.Quantity_Type :=
                       Harriet.Quantities.To_Quantity (1000.0);
@@ -294,17 +302,20 @@ package body Harriet.Factions.Create is
                       Harriet.Db.Account.Create
                         (Harriet.Db.Null_Account_Reference,
                          Cash, Cash);
+
+         Ref : constant Harriet.Db.Installation_Reference :=
+                      Harriet.Db.Installation.Create
+                        (Owner        => Owner,
+                         Capacity     => Capacity,
+                         Account      => Account,
+                         World_Sector => Sector,
+                         Facility     => Facility,
+                         Active       => True,
+                         Next_Event   =>
+                           Harriet.Calendar.Delay_Days
+                             (Harriet.Random.Unit_Random),
+                         Manager      => "default-installation");
       begin
-         Harriet.Db.Installation.Create
-           (Owner        => Owner,
-            Capacity     => Capacity,
-            Account      => Account,
-            World_Sector => Sector,
-            Facility     => Facility,
-            Active       => True,
-            Next_Event   =>
-              Harriet.Calendar.Delay_Days (Harriet.Random.Unit_Random),
-            Manager      => "default-installation");
          Harriet.Worlds.Set_Owner (Sector, Faction);
 
          for Employee of
@@ -325,6 +336,7 @@ package body Harriet.Factions.Create is
                        Employee.Quantity));
             end;
          end loop;
+         return Ref;
       end Create_Installation;
 
    begin
@@ -333,12 +345,67 @@ package body Harriet.Factions.Create is
 
       for Installation_Config of Config loop
          declare
+            use Harriet.Money;
             Facility : constant Harriet.Db.Facility_Reference :=
                          Harriet.Db.Facility.Get_Reference_By_Tag
                            (Installation_Config.Config_Name);
+            Cash     : constant Money_Type :=
+                         Harriet.Configure.Configure_Money
+                           (Installation_Config, "cash", 1000.0);
+            Ref : constant Harriet.Db.Installation_Reference :=
+                         Create_Installation (Facility, Sector, Cash);
+            Stock    : constant Harriet.Db.Has_Stock_Reference :=
+                         Harriet.Db.Installation.Get (Ref).Reference;
          begin
-            Create_Installation (Facility, Sector,
-                                 Harriet.Money.To_Money (1000.0));
+            for Item of Installation_Config.Child ("stock") loop
+               declare
+                  use Harriet.Quantities;
+                  Tag : constant String := Item.Config_Name;
+                  Qty : constant Quantity_Type :=
+                          To_Quantity (Real (Float'(Item.Value)));
+               begin
+                  if Tag = "consumer-goods" then
+                     for Commodity of
+                       Harriet.Db.Consumer_Good.Select_By_Available (True)
+                     loop
+                        Harriet.Stock.Add_Initial_Stock
+                          (Stock, Commodity.Reference, Qty);
+                     end loop;
+                  elsif Tag = "industrial-goods" then
+                     for Commodity of
+                       Harriet.Db.Industrial_Good.Select_By_Available (True)
+                     loop
+                        Harriet.Stock.Add_Initial_Stock
+                          (Stock, Commodity.Reference, Qty);
+                     end loop;
+                  elsif Tag = "resource" then
+                     for Commodity of
+                       Harriet.Db.Resource.Select_By_Available (True)
+                     loop
+                        Harriet.Stock.Add_Initial_Stock
+                          (Stock, Commodity.Reference, Qty);
+                     end loop;
+                  else
+                     declare
+                        use Harriet.Db;
+                        Commodity : constant Commodity_Reference :=
+                                      Harriet.Db.Commodity.Get_Reference_By_Tag
+                                        (Tag);
+                     begin
+                        if Commodity = Null_Commodity_Reference then
+                           raise Constraint_Error with
+                             "in configuration for "
+                             & Installation_Config.Config_Name
+                             & ": no such commodity: "
+                             & Tag;
+                        end if;
+
+                        Harriet.Stock.Add_Initial_Stock
+                          (Stock, Commodity, Qty);
+                     end;
+                  end if;
+               end;
+            end loop;
          end;
       end loop;
 
@@ -346,10 +413,15 @@ package body Harriet.Factions.Create is
 
          Harriet.Worlds.Set_Owner (Neighbour, Faction);
 
-         Create_Installation
-           (Facility => Choose_Facility (Neighbour),
-            Sector   => Neighbour,
-            Cash     => Harriet.Money.To_Money (1000.0));
+         declare
+            Ref : constant Harriet.Db.Installation_Reference :=
+                    Create_Installation
+                      (Facility => Choose_Facility (Neighbour),
+                       Sector   => Neighbour,
+                       Cash     => Harriet.Money.To_Money (1000.0));
+         begin
+            pragma Unreferenced (Ref);
+         end;
       end loop;
 
    end Create_Initial_Installations;

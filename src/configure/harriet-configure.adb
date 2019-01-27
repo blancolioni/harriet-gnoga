@@ -20,6 +20,83 @@ package body Harriet.Configure is
    function Initial_Root_Password return String;
 
    ---------------------------
+   -- Configure_Association --
+   ---------------------------
+
+   procedure Configure_Association
+     (Config    : Tropos.Configuration;
+      Field     : String;
+      Configure : not null access
+        procedure (Left, Right : String))
+   is
+      Assoc_Config  : constant Tropos.Configuration :=
+                        Config.Child (Field);
+      Left_Config   : constant Tropos.Configuration :=
+                        Assoc_Config.Child (1);
+      Right_Config  : constant Tropos.Configuration :=
+                        Assoc_Config.Child (2);
+   begin
+      for Left_Item of Left_Config loop
+         Configure (Left_Item.Value,
+                    Right_Config.Get (Left_Item.Config_Name));
+      end loop;
+   end Configure_Association;
+
+   ---------------------
+   -- Configure_Money --
+   ---------------------
+
+   function Configure_Money
+     (Config  : Tropos.Configuration;
+      Field   : String;
+      Default : Non_Negative_Real)
+      return Harriet.Money.Money_Type
+   is
+   begin
+      return Harriet.Money.To_Money (Get_Real (Config, Field, Default));
+   end Configure_Money;
+
+   ---------------------
+   -- Configure_Price --
+   ---------------------
+
+   function Configure_Price
+     (Config : Tropos.Configuration;
+      Field  : String)
+      return Harriet.Money.Price_Type
+   is
+   begin
+      return Harriet.Money.To_Price (Get_Real (Config, Field, 0.0));
+   end Configure_Price;
+
+   ------------------------
+   -- Configure_Quantity --
+   ------------------------
+
+   function Configure_Quantity
+     (Config : Tropos.Configuration;
+      Field  : String)
+      return Harriet.Quantities.Quantity_Type
+   is
+   begin
+      return Harriet.Quantities.To_Quantity (Get_Real (Config, Field, 0.0));
+   end Configure_Quantity;
+
+   --------------
+   -- Get_Real --
+   --------------
+
+   function Get_Real
+     (Config  : Tropos.Configuration;
+      Field   : String;
+      Default : Real := 0.0)
+      return Real
+   is
+   begin
+      return Real (Float'(Config.Get (Field, Float (Default))));
+   end Get_Real;
+
+   ---------------------------
    -- Initial_Root_Password --
    ---------------------------
 
@@ -95,6 +172,18 @@ package body Harriet.Configure is
         (Scenario_Name, Directory_Name, File_Class_Name,
          Call_Process'Access);
    end Load_Scenario_Files;
+
+   ----------------
+   -- Real_Value --
+   ----------------
+
+   function Real_Value
+     (Config  : Tropos.Configuration)
+      return Real
+   is
+   begin
+      return Real (Float'(Config.Value));
+   end Real_Value;
 
    -------------------------
    -- Scan_Scenario_Files --

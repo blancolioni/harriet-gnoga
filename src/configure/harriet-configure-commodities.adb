@@ -70,8 +70,7 @@ package body Harriet.Configure.Commodities is
       Class       : constant String := Config.Get ("class");
       Quality     : constant Natural := Config.Get ("quality", 0);
       Price       : constant Harriet.Money.Price_Type :=
-                      Harriet.Money.To_Price
-                        (Real (Float'(Config.Get ("npc-price", 0.0))));
+                      Harriet.Configure.Configure_Price (Config, "npc-price");
       Mass        : constant Float := Config.Get ("mass");
       Alloy       : constant Boolean := Config.Get ("alloy");
       Ceramic     : constant Boolean := Config.Get ("ceramic");
@@ -234,6 +233,10 @@ package body Harriet.Configure.Commodities is
          end if;
       end if;
    end Configure_Commodity;
+
+   --------------------------
+   -- Configure_Components --
+   --------------------------
 
    procedure Configure_Components
      (Config : Tropos.Configuration)

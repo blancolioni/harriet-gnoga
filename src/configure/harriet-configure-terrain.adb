@@ -41,7 +41,7 @@ package body Harriet.Configure.Terrain is
                      Red      => Color.Red,
                      Green    => Color.Green,
                      Blue     => Color.Blue,
-                     Hazard   => Real (Float'(Config.Get ("hazard", 0.0))),
+                     Hazard   => Get_Real (Config, "hazard") / 100.0,
                      Is_Water => Config.Get ("is_water"));
    begin
       if Config.Contains ("resource") then

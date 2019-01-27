@@ -15,8 +15,7 @@ package body Harriet.Configure.Pop_Groups is
      (Config : Tropos.Configuration)
    is
       Price : constant Harriet.Money.Price_Type :=
-                Harriet.Money.To_Price
-                  (Real (Float'(Config.Get ("salary"))));
+                Configure_Price (Config, "salary");
    begin
       Harriet.Db.Pop_Group.Create
         (Available        => True,

@@ -55,7 +55,7 @@ package body Harriet.Configure.Climates is
             Harriet.Db.Climate_Terrain.Create
               (Climate => Climate,
                Terrain => Terrain,
-               Chance  => Real (Float'(Terrain_Config.Value)) / 100.0);
+               Chance  => Real_Value (Terrain_Config) / 100.0);
          end;
       end loop;
 

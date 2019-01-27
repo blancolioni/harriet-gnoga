@@ -110,8 +110,7 @@ package body Harriet.Configure.Facilities is
       Tag           : constant String := Config.Config_Name;
       Class         : constant String := Config.Get ("class");
       Quality       : constant Natural := Config.Get ("quality", 0);
-      Power         : constant Real :=
-                        Real (Float'(Config.Get ("power", 0.0)));
+      Power         : constant Real := Get_Real (Config, "power");
       Educational   : constant Boolean := Config.Get ("educational");
       Entertainment : constant Boolean := Config.Get ("entertainment");
       Fitness       : constant Boolean := Config.Get ("fitness");
@@ -131,9 +130,7 @@ package body Harriet.Configure.Facilities is
       Organic       : constant Boolean := Config.Get ("organic");
 
       Capacity      : constant Harriet.Quantities.Quantity_Type :=
-                        Harriet.Quantities.To_Quantity
-                          (Real (Float'(Config.Get ("capacity", 0.0))));
-
+                        Configure_Quantity (Config, "capacity");
    begin
 
       if Class = "factory" then
