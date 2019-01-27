@@ -7,6 +7,7 @@ with Harriet.Configure.Climates;
 with Harriet.Configure.Commodities;
 with Harriet.Configure.Facilities;
 with Harriet.Configure.Galaxies;
+with Harriet.Configure.Pop_Groups;
 with Harriet.Configure.Ships;
 with Harriet.Configure.Terrain;
 
@@ -95,6 +96,7 @@ package body Harriet.Configure.Scenarios is
 
       Harriet.Configure.Commodities.Configure_Commodities
         (Scenario_Name);
+      Harriet.Configure.Pop_Groups.Configure_Pop_Groups (Scenario_Name);
       Harriet.Configure.Ships.Configure_Ship_Components (Scenario_Name);
 
       Harriet.Configure.Terrain.Configure_Terrain (Scenario_Name);
