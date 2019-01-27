@@ -2,10 +2,10 @@ with Ada.Characters.Latin_1;
 with Ada.Directories;
 with Ada.Text_IO;
 
-with Concorde.Calendar;
-with Concorde.Options;
+with Harriet.Calendar;
+with Harriet.Options;
 
-package body Concorde.Logging is
+package body Harriet.Logging is
 
    Logging_Enabled : Boolean := False;
    Log_File        : Ada.Text_IO.File_Type;
@@ -38,8 +38,8 @@ package body Concorde.Logging is
       if Logging_Enabled then
          Ada.Text_IO.Put_Line
            (Log_File,
-            Concorde.Calendar.Image
-              (Concorde.Calendar.Clock,
+            Harriet.Calendar.Image
+              (Harriet.Calendar.Clock,
                Include_Time_Fraction => True)
             & Separator
             & Category
@@ -58,13 +58,13 @@ package body Concorde.Logging is
 
    procedure Start_Logging is
       Log_Directory : constant String :=
-                        Concorde.Options.Log_Folder;
+                        Harriet.Options.Log_Folder;
    begin
       if not Ada.Directories.Exists (Log_Directory) then
          Ada.Directories.Create_Directory (Log_Directory);
       end if;
       Ada.Text_IO.Create (Log_File, Ada.Text_IO.Out_File,
-                          Log_Directory & "/concorde.log");
+                          Log_Directory & "/harriet.log");
       Logging_Enabled := True;
    end Start_Logging;
 
@@ -89,4 +89,4 @@ package body Concorde.Logging is
       end if;
    end Stop_Logging;
 
-end Concorde.Logging;
+end Harriet.Logging;

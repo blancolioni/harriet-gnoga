@@ -1,4 +1,4 @@
-package Concorde.Logging is
+package Harriet.Logging is
 
    procedure Log
      (Actor    : String;
@@ -12,4 +12,4 @@ package Concorde.Logging is
    procedure Start_Update;
    procedure Finish_Update;
 
-end Concorde.Logging;
+end Harriet.Logging;
