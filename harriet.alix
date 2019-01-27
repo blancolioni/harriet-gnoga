@@ -2,6 +2,7 @@ project_name = Harriet
 source_dir = src
 source_dir = src/agents
 source_dir = src/commands
+source_dir = src/commodities
 source_dir = src/configure
 source_dir = src/driver
 source_dir = src/factions
