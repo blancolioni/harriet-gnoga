@@ -37,20 +37,22 @@ package body Harriet.Managers is
    begin
       Update.Manager.Has_Next_Update := False;
       Update.Manager.Activate;
-      if Update.Manager.Has_Next_Update then
-         Update.Manager.Is_Active := True;
-         Harriet.Updates.Update_At
-           (Clock  => Update.Manager.Next_Update,
-            Update => Update);
-      else
-         declare
-            Rec : constant Harriet.Db.Managed.Managed_Type :=
-                    Harriet.Db.Managed.Get
-                      (Update.Manager.Managed);
-         begin
+      declare
+         Rec : constant Harriet.Db.Managed.Managed_Type :=
+                 Harriet.Db.Managed.Get
+                   (Update.Manager.Managed);
+      begin
+         if Update.Manager.Has_Next_Update then
+            Update.Manager.Is_Active := True;
+            Harriet.Updates.Update_At
+              (Clock  => Update.Manager.Next_Update,
+               Update => Update);
+            Rec.Set_Next_Event (Update.Manager.Next_Update);
+            Rec.Set_Active (True);
+         else
             Rec.Set_Active (False);
-         end;
-      end if;
+         end if;
+      end;
    end Activate;
 
    -----------------
