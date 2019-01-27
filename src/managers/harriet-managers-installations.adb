@@ -1,7 +1,9 @@
 with Ada.Text_IO;
 
+with Harriet.Money;
 with Harriet.Quantities;
 with Harriet.Random;
+with Harriet.Stock;
 
 with Harriet.Db.Deposit;
 with Harriet.Db.Facility;
@@ -36,9 +38,6 @@ package body Harriet.Managers.Installations is
           Harriet.Db.Resource_Generator.Get
             (Manager.Rgen);
    begin
-      Ada.Text_IO.Put_Line
-        (Gen.Tag & ": activating");
-
       for Deposit of
         Harriet.Db.Deposit.Select_By_World_Sector
           (Installation.World_Sector)
@@ -56,18 +55,20 @@ package body Harriet.Managers.Installations is
                                To_Quantity
                                  (Deposit.Accessibility * 20.0
                                   * (Harriet.Random.Unit_Random + 0.5));
+                  Cost     : constant Harriet.Money.Money_Type :=
+                               Harriet.Money.Zero;
                begin
-                  Ada.Text_IO.Put_Line
-                    ("generated " & Show (Quantity)
-                     & " " & Harriet.Db.Resource.Get (Resource).Tag);
+                  Harriet.Stock.Add_Stock
+                    (Installation,
+                     Harriet.Db.Resource.Get (Resource).Reference,
+                     Quantity,
+                     Cost);
                end;
-            else
-               Ada.Text_IO.Put_Line
-                 ("cannot generate "
-                  & Harriet.Db.Resource.Get (Resource).Tag);
             end if;
          end;
       end loop;
+
+      Harriet.Stock.Log_Stock (Installation.Reference);
 
       Manager.Set_Next_Update_Delay
         (Harriet.Calendar.Days (1));
