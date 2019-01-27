@@ -1,9 +1,13 @@
 with Ada.Directories;
+with Ada.Text_IO;
+
+with WL.Random;
 
 with Tropos.Reader;
 
 with Harriet.Configure.Resources;
 
+with Harriet.Options;
 with Harriet.Paths;
 
 with Harriet.Calendar;
@@ -13,13 +17,34 @@ with Harriet.Db.Calendar;
 
 package body Harriet.Configure is
 
+   function Initial_Root_Password return String;
+
+   ---------------------------
+   -- Initial_Root_Password --
+   ---------------------------
+
+   function Initial_Root_Password return String is
+   begin
+      if Harriet.Options.Generate_Root_Password then
+         return Password : String (1 .. 12) do
+            for Ch of Password loop
+               Ch :=
+                 Character'Val (WL.Random.Random_Number (65, 90));
+            end loop;
+            Ada.Text_IO.Put_Line ("root password: " & Password);
+         end return;
+      else
+         return "";
+      end if;
+   end Initial_Root_Password;
+
    -------------------------
    -- Initialize_Database --
    -------------------------
 
    procedure Initialize_Database is
    begin
-      Harriet.Db.User.Create ("root", "");
+      Harriet.Db.User.Create ("root", Initial_Root_Password);
       Harriet.Db.Calendar.Create
         (Clock => Harriet.Calendar.Clock);
       Harriet.Configure.Resources.Configure_Atmosphere_Components
