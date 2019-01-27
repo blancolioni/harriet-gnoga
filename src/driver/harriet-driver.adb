@@ -22,15 +22,17 @@ with Harriet.Calendar;
 with Harriet.Configure;
 with Harriet.Configure.Scenarios;
 with Harriet.Factions.Create;
+with Harriet.Logging;
 
 with Harriet.Commands.Loader;
+with Harriet.Managers.Loader;
 
 with Harriet.Updates;
 
 with Harriet.Db.Database;
 
-with Harriet.Db.User;
 with Harriet.Db.Faction;
+with Harriet.Db.User;
 
 procedure Harriet.Driver is
    Name_Generator : WL.Random.Names.Name_Generator;
@@ -59,6 +61,8 @@ procedure Harriet.Driver is
       end if;
    end Have_Required_Argument;
 
+   Database_Open : Boolean := False;
+
 begin
 
    if not Ada.Directories.Exists ("options.txt") then
@@ -84,20 +88,17 @@ begin
 
    if Harriet.Options.Create then
       Harriet.Db.Database.Create;
-      begin
-         Harriet.Configure.Initialize_Database;
+      Database_Open := True;
 
-         Harriet.Configure.Scenarios.Load_Scenario
-           (Scenario_Name  => Harriet.Options.Scenario,
-            Name_Generator => Name_Generator);
+      Harriet.Configure.Initialize_Database;
 
-         Harriet.Db.Database.Close;
-         return;
-      exception
-         when others =>
-            Harriet.Db.Database.Close;
-            raise;
-      end;
+      Harriet.Configure.Scenarios.Load_Scenario
+        (Scenario_Name  => Harriet.Options.Scenario,
+         Name_Generator => Name_Generator);
+
+      Harriet.Db.Database.Close;
+      Database_Open := False;
+      return;
    end if;
 
    if Harriet.Options.Add_Faction then
@@ -109,7 +110,11 @@ begin
             return;
          end if;
 
+         Harriet.Random.Reset;
+         WL.Random.Randomise;
+
          Harriet.Db.Database.Open;
+         Database_Open := True;
 
          declare
             Name_Config : constant Tropos.Configuration :=
@@ -158,6 +163,8 @@ begin
          end;
 
          Harriet.Db.Database.Close;
+         Database_Open := False;
+
          return;
       end if;
 
@@ -170,6 +177,7 @@ begin
       end if;
 
       Harriet.Db.Database.Open;
+      Database_Open := True;
 
       declare
          use Harriet.Db;
@@ -264,24 +272,27 @@ begin
                   "Faction created successfully");
             end if;
          end;
-      exception
-         when others =>
-            Harriet.Db.Database.Close;
-            raise;
+
+         Harriet.Db.Database.Close;
+         Database_Open := False;
+         return;
       end;
 
-      Harriet.Db.Database.Close;
-      return;
-
    end if;
+
+   Harriet.Managers.Loader.Register_Managers;
+   Harriet.Commands.Loader.Load_Commands;
+
+   Harriet.Logging.Start_Logging;
 
    Ada.Text_IO.Put_Line ("opening database ...");
 
    Harriet.Db.Database.Open;
+   Database_Open := True;
+
+   Harriet.Managers.Load_Managers;
 
    Ada.Text_IO.Put_Line ("starting server ...");
-
-   Harriet.Commands.Loader.Load_Commands;
 
    Gnoga.Application.Title ("Harriet");
 
@@ -296,13 +307,35 @@ begin
      (Event => Harriet.UI.Gnoga_UI.On_Connect_Default'Unrestricted_Access,
       Path  => "default");
 
+   Harriet.Calendar.Load_Clock;
+
+   Ada.Text_IO.Put_Line
+     ("Start date: " & Harriet.Calendar.Image (Harriet.Calendar.Clock));
+
    Harriet.Updates.Start_Updates;
 
    Gnoga.Application.Multi_Connect.Message_Loop;
 
    Harriet.Updates.Stop_Updates;
 
+   Ada.Text_IO.Put_Line
+     ("Stop date: " & Harriet.Calendar.Image (Harriet.Calendar.Clock));
+
    Ada.Text_IO.Put_Line ("Closing database");
    Harriet.Db.Database.Close;
+   Database_Open := False;
+
+   Ada.Text_IO.Put_Line ("exit");
+
+   Harriet.Logging.Stop_Logging;
+
+exception
+
+   when others =>
+      if Database_Open then
+         Harriet.Db.Database.Close;
+      end if;
+      Harriet.Logging.Stop_Logging;
+      raise;
 
 end Harriet.Driver;
