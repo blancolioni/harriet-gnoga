@@ -24,7 +24,7 @@ package body Harriet.Configure.Ships is
       Harriet.Db.Ship_Component.Create
         (Tag             => Component_Config.Config_Name,
          Available       => True,
-         Initial_Cost    => Harriet.Money.Zero,
+         Initial_Price   => Harriet.Money.Zero,
          Enabled_By      => Harriet.Db.Null_Technology_Reference,
          Component_Class =>
            Harriet.Db.Ship_Component_Class'Value

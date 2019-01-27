@@ -20,7 +20,7 @@ package body Harriet.Configure.Pop_Groups is
    begin
       Harriet.Db.Pop_Group.Create
         (Available        => True,
-         Initial_Cost     => Price,
+         Initial_Price    => Price,
          Mass             => 1.0,
          Tag              => Config.Config_Name,
          Consumer_Quality => Config.Child ("quality").Get ("consumer"),

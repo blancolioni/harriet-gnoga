@@ -7,7 +7,7 @@ package Commodities is
 
    record Commodity : Localised with Vector, Map is
       key Available : Boolean;
-      Initial_Cost  : Price_Type;
+      Initial_Price : Price_Type;
       Mass          : Long_Float;
    end Commodity;
 
@@ -17,7 +17,8 @@ package Commodities is
    
    record Recipe_Input is
       key Recipe;
-      key Input : Commodity;
+      key Commodity;
+      Quantity : Quantity_Type;
    end Recipe_Input;
 
    record Consumer_Good : Commodity is
