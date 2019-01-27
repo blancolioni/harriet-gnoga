@@ -1,3 +1,5 @@
+with Harriet.Db.Calendar;
+
 package body Harriet.Calendar is
 
    type Time_Element is (Seconds, Minutes, Hours,
@@ -43,8 +45,12 @@ package body Harriet.Calendar is
    -------------
 
    procedure Advance (Seconds : Duration) is
+      Time_Record : constant Harriet.Db.Calendar.Calendar_Type :=
+                      Harriet.Db.Calendar.First_By_Top_Record
+                        (Harriet.Db.R_Calendar);
    begin
       Current_Clock := Current_Clock + Seconds;
+      Time_Record.Set_Clock (Current_Clock);
    end Advance;
 
    -------------
@@ -164,6 +170,18 @@ package body Harriet.Calendar is
       return Time_Image (Hour, Minute, Second, Sub_Second);
    end Image;
 
+   ----------------
+   -- Load_Clock --
+   ----------------
+
+   procedure Load_Clock is
+      Time_Record : constant Harriet.Db.Calendar.Calendar_Type :=
+                      Harriet.Db.Calendar.First_By_Top_Record
+                        (Harriet.Db.R_Calendar);
+   begin
+      Current_Clock := Time_Record.Clock;
+   end Load_Clock;
+
    ------------
    -- Minute --
    ------------
@@ -217,15 +235,6 @@ package body Harriet.Calendar is
         + Duration (Second)
         + Sub_Second;
    end Seconds_Of;
-
-   ---------------
-   -- Set_Clock --
-   ---------------
-
-   procedure Set_Clock (New_Clock : Time) is
-   begin
-      Current_Clock := New_Clock;
-   end Set_Clock;
 
    -----------
    -- Split --

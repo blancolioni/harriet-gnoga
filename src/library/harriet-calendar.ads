@@ -106,7 +106,8 @@ package Harriet.Calendar is
    function Start return Time;
 
    procedure Advance (Seconds : Duration);
-   procedure Set_Clock (New_Clock : Time);
+
+   procedure Load_Clock;
 
    function "+" (Left : Time;     Right : Duration) return Time;
    function "+" (Left : Duration; Right : Time)     return Time;
