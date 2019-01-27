@@ -6,8 +6,6 @@ with Ada.Text_IO;
 with Harriet.Sessions;
 with Harriet.Signals;
 
-with Harriet.Db.Calendar;
-
 package body Harriet.Updates is
 
    package Update_Lists is
@@ -32,10 +30,12 @@ package body Harriet.Updates is
 
    task Broadcast_Task is
       entry Broadcast (Signal : Harriet.Signals.Signal_Type);
+      entry Stop;
    end Broadcast_Task;
 
    task Dispatch_Task is
       entry Dispatch (List : Update_Lists.List);
+      entry Stop;
    end Dispatch_Task;
 
    protected Update_Map is
@@ -68,6 +68,9 @@ package body Harriet.Updates is
             end Broadcast;
             Harriet.Sessions.Broadcast (Signal_Holder.Element);
          or
+            accept Stop;
+            exit;
+         or
             terminate;
          end select;
       end loop;
@@ -85,12 +88,12 @@ package body Harriet.Updates is
             accept Dispatch (List : in Update_Lists.List) do
                Dispatch_List := List;
             end Dispatch;
-            Ada.Text_IO.Put_Line
-              ("dispatch:"
-               & Natural'Image (Natural (Dispatch_List.Length)) & " events");
             for Update of Dispatch_List loop
                Update.Activate;
             end loop;
+         or
+            accept Stop;
+            exit;
          or
             terminate;
          end select;
@@ -113,6 +116,8 @@ package body Harriet.Updates is
    procedure Stop_Updates is
    begin
       Update_Task.Stop;
+      Dispatch_Task.Stop;
+      Broadcast_Task.Stop;
    end Stop_Updates;
 
    ---------------
@@ -191,14 +196,6 @@ package body Harriet.Updates is
 
       Ada.Text_IO.Put_Line ("Update task starting");
 
-      declare
-         Clock : constant Harriet.Db.Calendar.Calendar_Type :=
-                   Harriet.Db.Calendar.First_By_Top_Record
-                     (Harriet.Db.R_Calendar);
-      begin
-         Harriet.Calendar.Set_Clock (Clock.Clock);
-      end;
-
       loop
          select
             accept Stop;
@@ -208,14 +205,6 @@ package body Harriet.Updates is
             Harriet.Calendar.Advance (3600.0);
             Broadcast_Task.Broadcast
               (Harriet.Sessions.Signal_Clock_Tick);
-
-            declare
-               Clock : constant Harriet.Db.Calendar.Calendar_Type :=
-                         Harriet.Db.Calendar.First_By_Top_Record
-                           (Harriet.Db.R_Calendar);
-            begin
-               Clock.Set_Clock (Harriet.Calendar.Clock);
-            end;
 
             declare
                List : Update_Lists.List;
