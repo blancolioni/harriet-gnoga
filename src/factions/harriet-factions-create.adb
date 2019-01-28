@@ -283,7 +283,8 @@ package body Harriet.Factions.Create is
       function Create_Installation
         (Facility : Harriet.Db.Facility_Reference;
          Sector   : Harriet.Db.World_Sector_Reference;
-         Cash     : Harriet.Money.Money_Type)
+         Cash     : Harriet.Money.Money_Type;
+         Manager  : String)
          return Harriet.Db.Installation_Reference;
 
       -------------------------
@@ -293,7 +294,8 @@ package body Harriet.Factions.Create is
       function Create_Installation
         (Facility : Harriet.Db.Facility_Reference;
          Sector   : Harriet.Db.World_Sector_Reference;
-         Cash     : Harriet.Money.Money_Type)
+         Cash     : Harriet.Money.Money_Type;
+         Manager  : String)
          return Harriet.Db.Installation_Reference
       is
          Capacity : constant Harriet.Quantities.Quantity_Type :=
@@ -314,7 +316,7 @@ package body Harriet.Factions.Create is
                          Next_Event   =>
                            Harriet.Calendar.Delay_Days
                              (Harriet.Random.Unit_Random),
-                         Manager      => "default-installation");
+                         Manager      => Manager);
       begin
          Harriet.Worlds.Set_Owner (Sector, Faction);
 
@@ -352,8 +354,11 @@ package body Harriet.Factions.Create is
             Cash     : constant Money_Type :=
                          Harriet.Configure.Configure_Money
                            (Installation_Config, "cash", 1000.0);
+            Manager  : constant String :=
+                         Installation_Config.Get
+                           ("manager", "default-installation");
             Ref : constant Harriet.Db.Installation_Reference :=
-                         Create_Installation (Facility, Sector, Cash);
+                         Create_Installation (Facility, Sector, Cash, Manager);
             Stock    : constant Harriet.Db.Has_Stock_Reference :=
                          Harriet.Db.Installation.Get (Ref).Reference;
          begin
@@ -418,7 +423,8 @@ package body Harriet.Factions.Create is
                     Create_Installation
                       (Facility => Choose_Facility (Neighbour),
                        Sector   => Neighbour,
-                       Cash     => Harriet.Money.To_Money (1000.0));
+                       Cash     => Harriet.Money.To_Money (1000.0),
+                       Manager  => "default-installation");
          begin
             pragma Unreferenced (Ref);
          end;

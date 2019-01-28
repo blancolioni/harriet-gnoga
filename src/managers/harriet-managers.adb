@@ -1,5 +1,3 @@
-with Ada.Text_IO;
-
 with WL.String_Maps;
 
 with Harriet.Updates;
@@ -98,9 +96,6 @@ package body Harriet.Managers is
                         Update : constant Manager_Update :=
                                    (Manager => Manager);
                      begin
-                        Ada.Text_IO.Put_Line
-                          (Key & " activating at "
-                           & Harriet.Calendar.Image (Managed.Next_Event));
                         Harriet.Updates.Update_At
                           (Clock  => Managed.Next_Event,
                            Update => Update);

@@ -1,6 +1,10 @@
 package Harriet.Managers.Installations is
 
-   function Create
+   function Create_Default_Manager
+     (Managed : Harriet.Db.Managed_Reference)
+      return Manager_Type;
+
+   function Create_Hub_Manager
      (Managed : Harriet.Db.Managed_Reference)
       return Manager_Type;
 

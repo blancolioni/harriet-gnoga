@@ -1,9 +1,15 @@
+with Harriet.Calendar;
 with Harriet.Logging;
 
 with Harriet.Db.Commodity;
+with Harriet.Db.Historical_Stock;
 with Harriet.Db.Stock_Item;
 
 package body Harriet.Stock is
+
+   procedure Register_Stock
+     (Stock     : Harriet.Db.Has_Stock_Reference;
+      Commodity : Harriet.Db.Commodity_Reference);
 
    procedure Add_Stock
      (To       : Harriet.Db.Has_Stock_Reference;
@@ -56,18 +62,6 @@ package body Harriet.Stock is
                 Harriet.Db.Stock_Item.Get_By_Stock_Item
                   (To, Item);
    begin
---        if False then
---           Ada.Text_IO.Put_Line
---             ("add "
---              & Harriet.Quantities.Show (Quantity)
---              & " "
---              & Harriet.Db.Commodity.Get (Item).Tag
---              & " to "
---              & Harriet.Db.Record_Type'Image (To.Top_Record)
---              & Harriet.Db.To_String
---                (Harriet.Db.Has_Stock_Reference'(To.Reference)));
---        end if;
-
       if Stock.Has_Element then
          Stock.Set_Quantity (Stock.Quantity + Quantity);
          Stock.Set_Value (Stock.Value + Value);
@@ -78,7 +72,63 @@ package body Harriet.Stock is
             Quantity  => Quantity,
             Value     => Value);
       end if;
+      Register_Stock (To, Item);
    end Add_Stock;
+
+   ------------------
+   -- Get_Quantity --
+   ------------------
+
+   function Get_Quantity
+     (Has_Stock : Harriet.Db.Has_Stock_Reference;
+      Commodity : Harriet.Db.Commodity_Reference)
+      return Harriet.Quantities.Quantity_Type
+   is
+      Quantity : Harriet.Quantities.Quantity_Type;
+      Value    : Harriet.Money.Money_Type;
+   begin
+      Get_Stock (Has_Stock, Commodity, Quantity, Value);
+      return Quantity;
+   end Get_Quantity;
+
+   ---------------
+   -- Get_Stock --
+   ---------------
+
+   procedure Get_Stock
+     (Has_Stock : Harriet.Db.Has_Stock_Reference;
+      Commodity : Harriet.Db.Commodity_Reference;
+      Quantity  : out Harriet.Quantities.Quantity_Type;
+      Value     : out Harriet.Money.Money_Type)
+   is
+      Stock : constant Harriet.Db.Stock_Item.Stock_Item_Type :=
+                Harriet.Db.Stock_Item.Get_By_Stock_Item
+                  (Has_Stock, Commodity);
+   begin
+      if Stock.Has_Element then
+         Quantity := Stock.Quantity;
+         Value := Stock.Value;
+      else
+         Quantity := Quantities.Zero;
+         Value := Money.Zero;
+      end if;
+   end Get_Stock;
+
+   ---------------
+   -- Get_Value --
+   ---------------
+
+   function Get_Value
+     (Has_Stock : Harriet.Db.Has_Stock_Reference;
+      Commodity : Harriet.Db.Commodity_Reference)
+      return Harriet.Money.Money_Type
+   is
+      Quantity : Harriet.Quantities.Quantity_Type;
+      Value    : Harriet.Money.Money_Type;
+   begin
+      Get_Stock (Has_Stock, Commodity, Quantity, Value);
+      return Value;
+   end Get_Value;
 
    ---------------
    -- Log_Stock --
@@ -104,5 +154,56 @@ package body Harriet.Stock is
             & Harriet.Quantities.Show (Stock_Item.Quantity));
       end loop;
    end Log_Stock;
+
+   --------------------
+   -- Register_Stock --
+   --------------------
+
+   procedure Register_Stock
+     (Stock     : Harriet.Db.Has_Stock_Reference;
+      Commodity : Harriet.Db.Commodity_Reference)
+   is
+      Clock : constant Harriet.Calendar.Time :=
+                Harriet.Calendar.Clock;
+      Historical : constant Db.Historical_Stock.Historical_Stock_Type :=
+                     Db.Historical_Stock.Get_By_Historical_Stock
+                       (Stock, Commodity, Harriet.Calendar.To_Real (Clock));
+      Quantity   : Harriet.Quantities.Quantity_Type;
+      Value      : Harriet.Money.Money_Type;
+   begin
+      Get_Stock (Stock, Commodity, Quantity, Value);
+
+      if Historical.Has_Element then
+         Historical.Set_Quantity (Quantity);
+         Historical.Set_Value (Value);
+      else
+         Harriet.Db.Historical_Stock.Create
+           (Time_Stamp => Harriet.Calendar.To_Real (Clock),
+            Has_Stock  => Stock,
+            Commodity  => Commodity,
+            Quantity   => Quantity,
+            Value      => Value);
+      end if;
+   end Register_Stock;
+
+   ----------------
+   -- Scan_Stock --
+   ----------------
+
+   procedure Scan_Stock
+     (Has_Stock : Harriet.Db.Has_Stock.Has_Stock_Type;
+      Process   : not null access
+        procedure (Item     : Harriet.Db.Commodity_Reference;
+                   Quantity : Harriet.Quantities.Quantity_Type;
+                   Value    : Harriet.Money.Money_Type))
+   is
+   begin
+      for Stock_Item of
+        Harriet.Db.Stock_Item.Select_By_Has_Stock
+          (Has_Stock.Reference)
+      loop
+         Process (Stock_Item.Commodity, Stock_Item.Quantity, Stock_Item.Value);
+      end loop;
+   end Scan_Stock;
 
 end Harriet.Stock;

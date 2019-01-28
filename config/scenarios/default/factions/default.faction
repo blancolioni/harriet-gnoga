@@ -8,6 +8,7 @@ ships = {
 
 installations = {
    hub = {
+      manager = hub-manager
       cash = 10K
       stock = {
          consumer-goods = 1000

@@ -5,12 +5,16 @@ with Harriet.Quantities;
 with Harriet.Random;
 with Harriet.Stock;
 
+with Harriet.Markets;
+
 with Harriet.Db.Deposit;
 with Harriet.Db.Facility;
 with Harriet.Db.Generated_Resource;
 with Harriet.Db.Installation;
+with Harriet.Db.Market;
 with Harriet.Db.Resource;
 with Harriet.Db.Resource_Generator;
+with Harriet.Db.World_Sector;
 
 package body Harriet.Managers.Installations is
 
@@ -22,6 +26,15 @@ package body Harriet.Managers.Installations is
 
    overriding procedure Activate
      (Manager : not null access Resource_Generator_Manager);
+
+   type Hub_Manager is
+     new Root_Installation_Manager with
+      record
+         null;
+      end record;
+
+   overriding procedure Activate
+     (Manager : not null access Hub_Manager);
 
    --------------
    -- Activate --
@@ -75,11 +88,59 @@ package body Harriet.Managers.Installations is
 
    end Activate;
 
+   --------------
+   -- Activate --
+   --------------
+
+   overriding procedure Activate
+     (Manager : not null access Hub_Manager)
+   is
+      Installation : constant Harriet.Db.Installation.Installation_Type :=
+                       Harriet.Db.Installation.Get
+                         (Manager.Installation);
+
+      Market : constant Harriet.Db.Market_Reference :=
+                 Harriet.Db.Market.Get_Reference_By_World
+                   (Harriet.Db.World_Sector.Get (Installation.World_Sector)
+                    .World);
+
+      procedure Add_Offers
+        (Item     : Harriet.Db.Commodity_Reference;
+         Quantity : Harriet.Quantities.Quantity_Type;
+         Value    : Harriet.Money.Money_Type);
+
+      ----------------
+      -- Add_Offers --
+      ----------------
+
+      procedure Add_Offers
+        (Item     : Harriet.Db.Commodity_Reference;
+         Quantity : Harriet.Quantities.Quantity_Type;
+         Value    : Harriet.Money.Money_Type)
+      is
+      begin
+         Harriet.Markets.Ask
+           (Market    => Market,
+            Agent     => Installation,
+            Commodity => Item,
+            Quantity  => Quantity,
+            Price     =>
+              Harriet.Money.Adjust_Price
+                (Harriet.Money.Price (Value, Quantity), 1.1));
+      end Add_Offers;
+
+   begin
+      Harriet.Markets.Reset_Offers (Market, Installation);
+
+      Harriet.Stock.Scan_Stock
+        (Installation, Add_Offers'Access);
+   end Activate;
+
    ------------
    -- Create --
    ------------
 
-   function Create
+   function Create_Default_Manager
      (Managed : Harriet.Db.Managed_Reference)
       return Manager_Type
    is
@@ -105,6 +166,23 @@ package body Harriet.Managers.Installations is
                & Facility.Tag);
             return null;
       end case;
-   end Create;
+   end Create_Default_Manager;
+
+   ------------------------
+   -- Create_Hub_Manager --
+   ------------------------
+
+   function Create_Hub_Manager
+     (Managed : Harriet.Db.Managed_Reference)
+      return Manager_Type
+   is
+      Installation : constant Harriet.Db.Installation.Installation_Type :=
+                       Harriet.Db.Installation.Get_Installation
+                         (Managed);
+   begin
+      return new Hub_Manager'
+        (Installation    => Installation.Reference,
+         others          => <>);
+   end Create_Hub_Manager;
 
 end Harriet.Managers.Installations;

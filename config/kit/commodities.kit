@@ -1,4 +1,5 @@
 with Localisation;
+with Calendar;
 with Colors;
 with Money;
 with Quantities;
@@ -84,5 +85,14 @@ package Commodities is
       Value    : Money_Type;
       unique key Stock_Item with Has_Stock, Commodity;
    end Stock_Item;
+   
+   record Historical_Stock is
+      Time_Stamp : Long_Float;
+      Has_Stock;
+      Commodity;
+      Quantity : Quantity_Type;
+      Value    : Money_Type;
+      unique key Historical_Stock with Has_Stock, Commodity, Time_Stamp;
+   end Historical_Stock;
    
 end Commodities;
