@@ -64,6 +64,13 @@ package Harriet.UI.Models.Galaxy is
       Index : Positive)
       return Harriet.Db.Faction_Reference;
 
+   procedure Scan_Near_Systems
+     (Model       : Root_Galaxy_Model'Class;
+      Star_System : Harriet.Star_Systems.Star_System_Type'Class;
+      Process     : not null access
+        procedure (Near_System : Harriet.Star_Systems.Star_System_Type'Class;
+                   Distance    : Non_Negative_Real));
+
    procedure Scan_Star_Systems
      (Model   : Root_Galaxy_Model'Class;
       Process : not null access
@@ -81,16 +88,26 @@ package Harriet.UI.Models.Galaxy is
 
 private
 
+   type Near_System_Record is
+      record
+         Star_System : Harriet.Db.Star_System_Reference;
+         Distance    : Non_Negative_Real;
+      end record;
+
+   package Near_System_Lists is
+     new Ada.Containers.Doubly_Linked_Lists (Near_System_Record);
+
    type Star_Record is
       record
-         Reference   : Harriet.Db.Star_System_Reference;
-         Star_System : Harriet.Star_Systems.Star_System_Type;
-         Name        : Ada.Strings.Unbounded.Unbounded_String;
-         X, Y, Z     : Real;
-         Color       : Harriet.Color.Harriet_Color;
-         Mass        : Non_Negative_Real;
-         Radius      : Non_Negative_Real;
-         Luminosity  : Non_Negative_Real;
+         Reference    : Harriet.Db.Star_System_Reference;
+         Star_System  : Harriet.Star_Systems.Star_System_Type;
+         Name         : Ada.Strings.Unbounded.Unbounded_String;
+         X, Y, Z      : Real;
+         Color        : Harriet.Color.Harriet_Color;
+         Mass         : Non_Negative_Real;
+         Radius       : Non_Negative_Real;
+         Luminosity   : Non_Negative_Real;
+         Near_Systems : Near_System_Lists.List;
       end record;
 
    package Star_Vectors is
