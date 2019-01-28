@@ -23,10 +23,10 @@ with Harriet.Db.Ship_Component;
 with Harriet.Db.Colony_Hub;
 with Harriet.Db.Resource_Generator;
 with Harriet.Db.Factory;
-with Harriet.Db.Educational_Facility;
-with Harriet.Db.Entertainment_Facility;
-with Harriet.Db.Fitness_Facility;
-with Harriet.Db.Medical_Facility;
+with Harriet.Db.Educational;
+with Harriet.Db.Entertainment;
+with Harriet.Db.Fitness;
+with Harriet.Db.Medical;
 
 with Harriet.Db.Generated_Resource;
 with Harriet.Db.Produced_Commodity;
@@ -235,25 +235,25 @@ package body Harriet.Configure.Facilities is
          end;
       elsif Class = "service-facility" then
          if Educational then
-            Harriet.Db.Educational_Facility.Create
+            Harriet.Db.Educational.Create
               (Quality  => Quality,
                Capacity => Capacity,
                Power    => Power,
                Tag      => Tag);
          elsif Entertainment then
-            Harriet.Db.Entertainment_Facility.Create
+            Harriet.Db.Entertainment.Create
               (Quality  => Quality,
                Capacity => Capacity,
                Power    => Power,
                Tag      => Tag);
          elsif Fitness then
-            Harriet.Db.Fitness_Facility.Create
+            Harriet.Db.Fitness.Create
               (Quality  => Quality,
                Capacity => Capacity,
                Power    => Power,
                Tag      => Tag);
          elsif Medical then
-            Harriet.Db.Medical_Facility.Create
+            Harriet.Db.Medical.Create
               (Quality  => Quality,
                Capacity => Capacity,
                Power    => Power,

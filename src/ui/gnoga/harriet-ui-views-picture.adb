@@ -449,6 +449,10 @@ package body Harriet.UI.Views.Picture is
       end loop;
    end Render;
 
+   ------------------
+   -- Render_Layer --
+   ------------------
+
    procedure Render_Layer
      (View  : in out Root_Picture_View'Class;
       Layer : Layer_Index)
@@ -596,13 +600,13 @@ package body Harriet.UI.Views.Picture is
                Check_Colors (False);
                Check_Lines;
 
-               Context.Move_To
-                 (To_Screen_X (Current_Position.X),
-                  To_Screen_Y (Current_Position.Y));
-
                if not Drawing_Line then
                   Context.Begin_Path;
                end if;
+
+               Context.Move_To
+                 (To_Screen_X (Current_Position.X),
+                  To_Screen_Y (Current_Position.Y));
 
                Current_Position := Command.Position;
 
@@ -613,25 +617,31 @@ package body Harriet.UI.Views.Picture is
                Drawing_Line := True;
 
             when Draw_Line =>
-               Check_Colors (False);
-               Check_Lines;
 
-               Current_Position := Command.Line_From;
-               Context.Move_To
-                 (To_Screen_X (Current_Position.X),
-                  To_Screen_Y (Current_Position.Y));
+               if Is_Visible (Command.Line_From)
+                 or else Is_Visible (Command.Line_To)
+               then
+                  Check_Colors (False);
+                  Check_Lines;
 
-               if not Drawing_Line then
-                  Context.Begin_Path;
+                  if not Drawing_Line then
+                     Context.Begin_Path;
+                  end if;
+
+                  Current_Position := Command.Line_From;
+                  Context.Move_To
+                    (To_Screen_X (Current_Position.X),
+                     To_Screen_Y (Current_Position.Y));
+
+                  Current_Position := Command.Line_To;
+
+                  Context.Line_To
+                    (To_Screen_X (Current_Position.X),
+                     To_Screen_Y (Current_Position.Y));
+
+                  Context.Stroke;
+                  Drawing_Line := False;
                end if;
-
-               Current_Position := Command.Line_To;
-
-               Context.Line_To
-                 (To_Screen_X (Current_Position.X),
-                  To_Screen_Y (Current_Position.Y));
-
-               Drawing_Line := True;
 
             when Draw_Polygon =>
                Check_Path;
