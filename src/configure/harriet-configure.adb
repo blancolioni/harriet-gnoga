@@ -1,3 +1,4 @@
+with Ada.Characters.Handling;
 with Ada.Directories;
 with Ada.Text_IO;
 
@@ -110,6 +111,9 @@ package body Harriet.Configure is
       procedure Call_Process
         (Directory_Entry : Ada.Directories.Directory_Entry_Type);
 
+      procedure Scan_Directory
+        (Directory_Entry : Ada.Directories.Directory_Entry_Type);
+
       ------------------
       -- Call_Process --
       ------------------
@@ -121,6 +125,31 @@ package body Harriet.Configure is
          Process (Ada.Directories.Full_Name (Directory_Entry));
       end Call_Process;
 
+      procedure Scan_Directory
+        (Directory_Entry : Ada.Directories.Directory_Entry_Type)
+      is
+         Entry_Name : constant String :=
+                        Ada.Directories.Simple_Name (Directory_Entry);
+      begin
+         if not Ada.Characters.Handling.Is_Alphanumeric
+           (Entry_Name (Entry_Name'First))
+         then
+            return;
+         end if;
+
+         Ada.Directories.Search
+           (Directory => Ada.Directories.Full_Name (Directory_Entry),
+            Pattern   => "*." & File_Class_Name,
+            Filter    =>
+              (Ada.Directories.Ordinary_File => True, others => False),
+            Process   => Call_Process'Access);
+         Ada.Directories.Search
+           (Directory => Ada.Directories.Full_Name (Directory_Entry),
+            Pattern   => "*",
+            Filter    => (Ada.Directories.Directory => True, others => False),
+            Process   => Scan_Directory'Access);
+      end Scan_Directory;
+
    begin
       Ada.Directories.Search
         (Directory =>
@@ -128,6 +157,12 @@ package body Harriet.Configure is
          Pattern   => "*." & File_Class_Name,
          Filter    => (Ada.Directories.Ordinary_File => True, others => False),
          Process   => Call_Process'Access);
+      Ada.Directories.Search
+        (Directory =>
+           Scenario_Directory (Scenario_Name, Directory_Name),
+         Pattern   => "*",
+         Filter    => (Ada.Directories.Directory => True, others => False),
+         Process   => Scan_Directory'Access);
    end Scan_Scenario_Files;
 
    ------------------------

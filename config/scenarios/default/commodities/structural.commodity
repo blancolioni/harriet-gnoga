@@ -1,4 +1,4 @@
-class = "building-modules"
+class = building-modules
 name = Structural
 mass = 10
 structural = true
