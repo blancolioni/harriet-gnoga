@@ -15,7 +15,7 @@ temperature_limit = {
    failure = 1500
 }
 
-components = {
+parts = {
    aluminium = 25
    steel = 50
    cpu = 1

@@ -1,17 +1,25 @@
-bounding_cube = { -0.5 0.5 -0.5 0.5 -5 5 }
+bounding-cube = { -2 2 -2 2 -5 5 }
 shape = cylinder
-mass = 890
+mass = 16K
 attachments = {
-   { 0 0 -5 }
-   { 0 0 5 }
+   down = { 0 0 -5 }
+   up = { 0 0 5 }
 }
-fuel = { volume = 12 }
-color = { 189 145 116 }
-max_acceleration = {
-   linear = 30
-   angular = 5
+cargo = { volume = 150 liquid = yes }
+
+parts = {
+   aluminium 80
+   pvc = 20
+   electronic-component = 2
 }
-max_temperature = {
-   normal = 400
-   failure = 600
+
+color = { 229 165 136 }
+acceleration_limit = {
+   linear = 45
+   angular = 7
 }
+temperature_limit = {
+   normal = 500
+   failure = 800
+}
+heat = 20

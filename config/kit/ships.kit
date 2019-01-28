@@ -71,10 +71,11 @@ end Ship_Component;
 
 record Attachment is
    key Ship_Component;
-   Axis    : Integer;     --  x: -1/1 y: -2/2 z: -3/3
-   X       : Long_Float;
-   Y       : Long_Float;
-   Z       : Long_Float;
+   Name : String (16);
+   X : Long_Float;
+   Y : Long_Float;
+   Z : Long_Float;
+   key Attachment_Name with Ship_Component, Name;
 end Attachment;
 
 record Container_Component : Ship_Component is

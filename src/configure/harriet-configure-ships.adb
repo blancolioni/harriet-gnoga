@@ -8,6 +8,7 @@ with Harriet.Db.Commodity;
 with Harriet.Db.Container_Component;
 with Harriet.Db.Drive_Component;
 
+with Harriet.Db.Attachment;
 with Harriet.Db.Ship_Component;
 with Harriet.Db.Ship_Design;
 with Harriet.Db.Ship_Module_Design;
@@ -143,6 +144,21 @@ package body Harriet.Configure.Ships is
                 (Component_Config.Get ("propellent", "")),
             Exhaust_Velocity    => Get ("ve"));
       end if;
+
+      declare
+         Component : constant Harriet.Db.Ship_Component_Reference :=
+                       Harriet.Db.Ship_Component.Get_Reference_By_Tag
+                         (Component_Config.Config_Name);
+      begin
+         for Attach_Config of Component_Config.Child ("attachments") loop
+            Harriet.Db.Attachment.Create
+              (Ship_Component => Component,
+               Name           => Attach_Config.Config_Name,
+               X              => Attach_Config.Get (1),
+               Y              => Attach_Config.Get (2),
+               Z              => Attach_Config.Get (3));
+         end loop;
+      end;
 
    end Configure_Component;
 

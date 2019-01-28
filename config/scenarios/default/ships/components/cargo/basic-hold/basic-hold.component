@@ -9,7 +9,7 @@ attachments = {
    back = { 0 0 -5 }
    front = { 0 0 5 }
 }
-components = {
+parts = {
    aluminium = 100
    pvc = 100
    electronic-component = 10
