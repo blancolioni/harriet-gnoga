@@ -129,6 +129,55 @@ package body Harriet.UI.Views.Galaxy is
       procedure Render_Star_System
         (Star_System : Harriet.Star_Systems.Star_System_Type'Class);
 
+      procedure Render_Near_Connections
+        (Star_System : Harriet.Star_Systems.Star_System_Type'Class);
+
+      -----------------------------
+      -- Render_Near_Connections --
+      -----------------------------
+
+      procedure Render_Near_Connections
+        (Star_System : Harriet.Star_Systems.Star_System_Type'Class)
+      is
+
+         use Harriet.Star_Systems;
+         From_Point : constant Interstellar_Position :=
+                        Star_System.Position;
+
+         procedure Draw_Connection
+           (To       : Harriet.Star_Systems.Star_System_Type'Class;
+            Distance : Non_Negative_Real);
+
+         ---------------------
+         -- Draw_Connection --
+         ---------------------
+
+         procedure Draw_Connection
+           (To       : Harriet.Star_Systems.Star_System_Type'Class;
+            Distance : Non_Negative_Real)
+         is
+
+         begin
+            if Distance < 10.0 then
+               declare
+                  To_Point : constant Interstellar_Position :=
+                               To.Position;
+                  Scale    : constant Unit_Real :=
+                               0.2 + (10.0 - Distance) / 20.0;
+               begin
+                  View.Draw_Color ((Scale, Scale, Scale, 1.0));
+                  View.Line ((From_Point.X, From_Point.Y),
+                             (To_Point.X, To_Point.Y));
+               end;
+            end if;
+
+         end Draw_Connection;
+
+      begin
+         View.Model.Scan_Near_Systems
+           (Star_System, Draw_Connection'Access);
+      end Render_Near_Connections;
+
       -----------------
       -- Render_Star --
       -----------------
@@ -165,6 +214,7 @@ package body Harriet.UI.Views.Galaxy is
    begin
       View.Font ("OpenSans", 12.0);
       View.Background_Color (Harriet.Color.Black);
+      View.Model.Scan_Star_Systems (Render_Near_Connections'Access);
       View.Model.Scan_Star_Systems (Render_Star_System'Access);
    end Draw_Picture;
 

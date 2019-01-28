@@ -3,8 +3,9 @@ with WL.Localisation;
 with Harriet.Solar_System;
 
 with Harriet.Db.Faction;
-with Harriet.Db.Star_System;
 with Harriet.Db.Star;
+with Harriet.Db.Star_System;
+with Harriet.Db.Star_System_Distance;
 
 package body Harriet.UI.Models.Galaxy is
 
@@ -37,20 +38,33 @@ package body Harriet.UI.Models.Galaxy is
                          (Star.Red, Star.Green, Star.Blue, 1.0);
                Row   : constant Harriet.UI.Models.Tables.Table_Row_Index :=
                          Model.Add_Row;
+               Nearest : Near_System_Lists.List;
             begin
+               for Near of
+                 Harriet.Db.Star_System_Distance
+                   .Select_Bounded_By_Star_System_Range
+                     (Start_From      => Star_System.Reference,
+                      Start_Distance  => 0.0,
+                      Finish_From     => Star_System.Reference,
+                      Finish_Distance => 7.0)
+               loop
+                  Nearest.Append ((Near.To, Near.Distance));
+               end loop;
+
                Model.Vector.Append
                  (Star_Record'
-                    (Reference   => Star_System.Reference,
-                     Star_System =>
+                    (Reference    => Star_System.Reference,
+                     Star_System  =>
                        Harriet.Star_Systems.Get (Star_System.Reference),
-                     Name        => To_Unbounded_String (Star_System.Name),
-                     X           => Star_System.X,
-                     Y           => Star_System.Y,
-                     Z           => Star_System.Z,
-                     Color       => Color,
-                     Mass        => Star.Mass,
-                     Radius      => Star.Radius,
-                     Luminosity  => Star.Luminosity));
+                     Name         => To_Unbounded_String (Star_System.Name),
+                     X            => Star_System.X,
+                     Y            => Star_System.Y,
+                     Z            => Star_System.Z,
+                     Color        => Color,
+                     Mass         => Star.Mass,
+                     Radius       => Star.Radius,
+                     Luminosity   => Star.Luminosity,
+                     Near_Systems => Nearest));
                Model.Set_Cell (Row, 1, Star_System.Name);
                Model.Set_Cell (Row, 2, "G2");
                Model.Set_Cell (Row, 3, Star.Mass / Solar_Mass);
@@ -95,6 +109,30 @@ package body Harriet.UI.Models.Galaxy is
          return Harriet.Db.Null_Star_System_Reference;
       end if;
    end Find_Star;
+
+   -----------------------
+   -- Scan_Near_Systems --
+   -----------------------
+
+   procedure Scan_Near_Systems
+     (Model       : Root_Galaxy_Model'Class;
+      Star_System : Harriet.Star_Systems.Star_System_Type'Class;
+      Process     : not null access
+        procedure (Near_System : Harriet.Star_Systems.Star_System_Type'Class;
+                   Distance    : Non_Negative_Real))
+   is
+      use Harriet.Db;
+   begin
+      for Star_Rec of Model.Vector loop
+         if Star_Rec.Reference = Star_System.Reference then
+            for Near_System of Star_Rec.Near_Systems loop
+               Process (Harriet.Star_Systems.Get (Near_System.Star_System),
+                        Near_System.Distance);
+            end loop;
+            return;
+         end if;
+      end loop;
+   end Scan_Near_Systems;
 
    ----------------
    -- Scan_Stars --
