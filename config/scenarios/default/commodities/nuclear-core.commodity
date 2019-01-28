@@ -2,7 +2,7 @@ class = "industrial-goods"
 name = "Nuclear Core"
 mass = 10
 engine = true
-component = { type = { 1 = "electronic-component"
+component = { type = { 1 = electronic-component
                        2 = fissile
                        3 = steel
                        4 = cement
