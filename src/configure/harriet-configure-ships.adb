@@ -4,7 +4,10 @@ with Harriet.Constants;
 with Harriet.Money;
 with Harriet.Quantities;
 
+with Harriet.Db.Commodity;
 with Harriet.Db.Container_Component;
+with Harriet.Db.Drive_Component;
+
 with Harriet.Db.Ship_Component;
 with Harriet.Db.Ship_Design;
 with Harriet.Db.Ship_Module_Design;
@@ -101,6 +104,44 @@ package body Harriet.Configure.Ships is
             Liquid              => Get ("cargo", "liquid"),
             Gas                 => Get ("cargo", "gas"),
             Cryo                => Get ("cargo", "cryo"));
+      elsif Component_Config.Contains ("thrust") then
+
+         Ada.Text_IO.Put_Line ("configure: " & Component_Config.Config_Name);
+
+         Harriet.Db.Drive_Component.Create
+           (Idle_Power          => Idle_Power,
+            Max_Power           => Max_Power,
+            Linear_Accel_Limit  => Linear_Accel_Limit,
+            Angular_Accel_Limit => Angular_Accel_Limit,
+            Max_Normal_Temp     => Normal_Temperature,
+            Failure_Temp        => Fail_Temperature,
+            Explosion_Power     => Explosion_Power,
+            Tag                 => Tag,
+            Enabled_By          => Harriet.Db.Null_Technology_Reference,
+            Available           => True,
+            Initial_Cost        => Harriet.Money.Zero,
+            Mass                => Mass,
+            X1                  => X1,
+            X2                  => X2,
+            Y1                  => Y1,
+            Y2                  => Y2,
+            Z1                  => Z1,
+            Z2                  => Z2,
+            Minimum_Thrust      => Get ("thrust", "minimum"),
+            Maximum_Thrust      => Get ("thrust", "maximum"),
+            Fuel                =>
+              Harriet.Db.Commodity.Get_Reference_By_Tag
+                (Component_Config.Get ("fuel", "")),
+            Oxidiser            =>
+              Harriet.Db.Commodity.Get_Reference_By_Tag
+                (Component_Config.Get ("oxidiser", "")),
+            Max_Fuel_Burn       => Get ("max_fuel_burn"),
+            Max_Oxidiser_Burn   => Get ("max_oxidiser_burn"),
+            Fuel_Propellant     => Component_Config.Get ("propellent-fuel"),
+            Propellent          =>
+              Harriet.Db.Commodity.Get_Reference_By_Tag
+                (Component_Config.Get ("propellent", "")),
+            Exhaust_Velocity    => Get ("ve"));
       end if;
 
    end Configure_Component;
