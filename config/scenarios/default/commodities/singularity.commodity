@@ -1,0 +1,16 @@
+class = industrial-goods
+mass = 50
+engine = true
+component = { type = { 1 = nuclear-core
+                       2 = steel
+                       3 = electronic-component
+                       4 = noblegas
+                       5 = datastorage
+                     }
+              qty = { 1 = 1
+                      2 = 2
+                      3 = 2
+                      4 = 5
+                      5 = 1
+                    }
+            }
