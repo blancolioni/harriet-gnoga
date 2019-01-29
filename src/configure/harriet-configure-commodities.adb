@@ -13,6 +13,7 @@ with Harriet.Db.Alloy;
 with Harriet.Db.Ceramic;
 with Harriet.Db.Clothing_Commodity;
 with Harriet.Db.Commercial_Module;
+with Harriet.Db.Cryogenic;
 with Harriet.Db.Drink_Commodity;
 with Harriet.Db.Electronics;
 with Harriet.Db.Fissile;
@@ -71,11 +72,13 @@ package body Harriet.Configure.Commodities is
       Quality     : constant Natural := Config.Get ("quality", 0);
       Price       : constant Harriet.Money.Price_Type :=
                       Harriet.Configure.Configure_Price (Config, "npc-price");
-      Mass        : constant Float := Config.Get ("mass");
+      Mass        : constant Float := Config.Get ("mass", 0.0);
+      Density     : constant Float := Config.Get ("density", 0.0);
       Alloy       : constant Boolean := Config.Get ("alloy");
       Ceramic     : constant Boolean := Config.Get ("ceramic");
       Clothing    : constant Boolean := Config.Get ("clothing");
       Commercial  : constant Boolean := Config.Get ("commercial");
+      Cryo        : constant Boolean := Config.Get ("cryo");
       Drink       : constant Boolean := Config.Get ("drink");
       Electronics : constant Boolean := Config.Get ("electronic");
       Fissile     : constant Boolean := Config.Get ("fissile");
@@ -96,140 +99,168 @@ package body Harriet.Configure.Commodities is
       if Class = "resource" then
          if Fissile then
             Harriet.Db.Fissile.Create
-              (Available    => True,
+              (Available     => True,
                Initial_Price => Price,
-               Mass         => Real (Mass),
-               Tag          => Tag);
+               Mass          => Real (Mass),
+               Density       => Real (Density),
+               Tag           => Tag);
          elsif Fissile then
             Harriet.Db.Fissile.Create
-              (Available    => True,
+              (Available     => True,
                Initial_Price => Price,
-               Mass         => Real (Mass),
-               Tag          => Tag);
+               Mass          => Real (Mass),
+               Density       => Real (Density),
+               Tag           => Tag);
          elsif Fuel then
             Harriet.Db.Fuel.Create
-              (Available    => True,
+              (Available     => True,
                Initial_Price => Price,
-               Mass         => Real (Mass),
-               Tag          => Tag);
+               Mass          => Real (Mass),
+               Density       => Real (Density),
+               Tag           => Tag);
          elsif Gas then
             Harriet.Db.Gas.Create
-              (Available    => True,
+              (Available     => True,
                Initial_Price => Price,
-               Mass         => Real (Mass),
-               Tag          => Tag);
+               Mass          => Real (Mass),
+               Density       => Real (Density),
+               Tag           => Tag);
          elsif Liquid then
             Harriet.Db.Liquid.Create
-              (Available    => True,
+              (Available     => True,
                Initial_Price => Price,
-               Mass         => Real (Mass),
-               Tag          => Tag);
+               Mass          => Real (Mass),
+               Density       => Real (Density),
+               Tag           => Tag);
          elsif Metal then
             Harriet.Db.Metal.Create
-              (Available    => True,
+              (Available     => True,
                Initial_Price => Price,
-               Mass         => Real (Mass),
-               Tag          => Tag);
+               Mass          => Real (Mass),
+               Density       => Real (Density),
+               Tag           => Tag);
          elsif Mineral then
             Harriet.Db.Mineral.Create
-              (Available    => True,
+              (Available     => True,
                Initial_Price => Price,
-               Mass         => Real (Mass),
-               Tag          => Tag);
+               Mass          => Real (Mass),
+               Density       => Real (Density),
+               Tag           => Tag);
          elsif Organic then
             Harriet.Db.Organic.Create
-              (Available    => True,
+              (Available     => True,
                Initial_Price => Price,
-               Mass         => Real (Mass),
-               Tag          => Tag);
+               Mass          => Real (Mass),
+               Density       => Real (Density),
+               Tag           => Tag);
          end if;
       elsif Class = "building-modules" then
          if Commercial then
             Harriet.Db.Commercial_Module.Create
-              (Available    => True,
+              (Available     => True,
                Initial_Price => Price,
-               Mass         => Real (Mass),
-               Tag          => Tag);
+               Mass          => Real (Mass),
+               Density       => Real (Density),
+               Tag           => Tag);
          elsif Habitation then
             Harriet.Db.Habitation_Module.Create
-              (Available    => True,
+              (Available     => True,
                Initial_Price => Price,
-               Mass         => Real (Mass),
-               Tag          => Tag);
+               Mass          => Real (Mass),
+               Density       => Real (Density),
+               Tag           => Tag);
          elsif Industrial then
             Harriet.Db.Industrial_Module.Create
-              (Available    => True,
+              (Available     => True,
                Initial_Price => Price,
-               Mass         => Real (Mass),
-               Tag          => Tag);
+               Mass          => Real (Mass),
+               Density       => Real (Density),
+               Tag           => Tag);
          elsif Military then
             Harriet.Db.Military_Module.Create
-              (Available    => True,
+              (Available     => True,
                Initial_Price => Price,
-               Mass         => Real (Mass),
-               Tag          => Tag);
+               Mass          => Real (Mass),
+               Density       => Real (Density),
+               Tag           => Tag);
          elsif Structural then
             Harriet.Db.Structural.Create
-              (Available    => True,
+              (Available     => True,
                Initial_Price => Price,
-               Mass         => Real (Mass),
-               Tag          => Tag);
+               Mass          => Real (Mass),
+               Density       => Real (Density),
+               Tag           => Tag);
          end if;
       elsif Class = "consumer-goods" then
          if Clothing then
             Harriet.Db.Clothing_Commodity.Create
-              (Quality      => Quality,
-               Available    => True,
+              (Available     => True,
                Initial_Price => Price,
-               Mass         => Real (Mass),
-               Tag          => Tag);
+               Mass          => Real (Mass),
+               Density       => Real (Density),
+               Quality       => Quality,
+               Tag           => Tag);
          elsif Drink then
             Harriet.Db.Drink_Commodity.Create
-              (Quality      => Quality,
-               Available    => True,
+              (Available     => True,
                Initial_Price => Price,
-               Mass         => Real (Mass),
-               Tag          => Tag);
+               Mass          => Real (Mass),
+               Density       => Real (Density),
+               Quality       => Quality,
+               Tag           => Tag);
          elsif Food then
             Harriet.Db.Food_Commodity.Create
-              (Quality      => Quality,
-               Available    => True,
+              (Available     => True,
                Initial_Price => Price,
-               Mass         => Real (Mass),
-               Tag          => Tag);
+               Mass          => Real (Mass),
+               Density       => Real (Density),
+               Quality       => Quality,
+               Tag           => Tag);
          elsif Intoxicant then
             Harriet.Db.Intoxicant.Create
-              (Quality      => Quality,
-               Available    => True,
+              (Available     => True,
                Initial_Price => Price,
-               Mass         => Real (Mass),
-               Tag          => Tag);
+               Mass          => Real (Mass),
+               Density       => Real (Density),
+               Quality       => Quality,
+               Tag           => Tag);
          end if;
       elsif Class = "industrial-goods" then
          if Alloy then
             Harriet.Db.Alloy.Create
-              (Available    => True,
+              (Available     => True,
                Initial_Price => Price,
-               Mass         => Real (Mass),
-               Tag          => Tag);
+               Density       => Real (Density),
+               Mass          => Real (Mass),
+               Tag           => Tag);
          elsif Ceramic then
             Harriet.Db.Ceramic.Create
-              (Available    => True,
+              (Available     => True,
                Initial_Price => Price,
-               Mass         => Real (Mass),
-               Tag          => Tag);
+               Density       => Real (Density),
+               Mass          => Real (Mass),
+               Tag           => Tag);
+         elsif Cryo then
+            Harriet.Db.Cryogenic.Create
+              (Available     => True,
+               Initial_Price => Price,
+               Density       => Real (Density),
+               Mass          => Real (Mass),
+               Tag           => Tag);
          elsif Electronics then
             Harriet.Db.Electronics.Create
-              (Available    => True,
+              (Available     => True,
                Initial_Price => Price,
-               Mass         => Real (Mass),
-               Tag          => Tag);
+               Density       => Real (Density),
+               Mass          => Real (Mass),
+               Tag           => Tag);
          elsif Plastic then
             Harriet.Db.Plastics.Create
-              (Available    => True,
+              (Available     => True,
                Initial_Price => Price,
-               Mass         => Real (Mass),
-               Tag          => Tag);
+               Density       => Real (Density),
+               Mass          => Real (Mass),
+               Tag           => Tag);
          end if;
       end if;
    end Configure_Commodity;

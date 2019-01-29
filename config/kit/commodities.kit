@@ -10,6 +10,7 @@ package Commodities is
       key Available : Boolean;
       Initial_Price : Price_Type;
       Mass          : Long_Float;
+      Density       : Long_Float;
    end Commodity;
 
    record Recipe is
@@ -31,6 +32,8 @@ package Commodities is
    record Alloy : Industrial_Good;
    
    record Ceramic : Industrial_Good;
+   
+   record Cryogenic : Industrial_Good;
    
    record Electronics : Industrial_Good;
    
