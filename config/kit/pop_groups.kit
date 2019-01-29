@@ -1,29 +1,11 @@
-with Localisation;
-
-with Colors;
 with Commodities;
 
 package Pop_Groups is
 
-type Wealth_Class is (Poor, Middle, Rich);
-
-record Pop_Group : Has_Color, Localised is
-   Wealth             : Wealth_Class;
-   State_Capital_Only : Boolean;
-   Is_Artisan         : Boolean;
-   Is_Slave           : Boolean;
-   Has_Employment     : Boolean;
+record Pop_Group : Commodity is
+   Consumer_Quality : Positive;
+   Service_Quality  : Positive;
+   Salary           : Price_Type;
 end Pop_Group;
-
-type Need_Level is (Life, Everyday, Luxury);
-
-record Pop_Need is
-   Level : Need_Level;
-   key Pop_Group;
-   key Commodity;
-   Base : Float;
-   key Need_Level with Pop_Group, Level;
-   unique key Pop_Need with Pop_Group, Commodity;
-end Pop_Need;
 
 end Pop_Groups;

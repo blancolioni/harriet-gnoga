@@ -1,21 +1,18 @@
 with Commodities;
+with Installations;
 with Managed;
+with Pop_Groups;
 with Ships;
 with Transport;
 with Worlds;
 
 package Pops is
 
-record Pop_Group : Commodity is
-   Consumer_Quality : Positive;
-   Service_Quality  : Positive;
-   Salary           : Price_Type;
-end Pop_Group;
-
 record Pop : Transportable, Managed, Agent is
    key Faction;
    key World;
    key World_Sector;
+   key Installation;
    key Ship;
    key Pop_Group;
    Size      : Quantity_Type;
