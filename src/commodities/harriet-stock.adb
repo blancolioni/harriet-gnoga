@@ -7,6 +7,8 @@ with Harriet.Db.Stock_Item;
 
 package body Harriet.Stock is
 
+   Log_Stock_Enabled : constant Boolean := False;
+
    procedure Register_Stock
      (Stock     : Harriet.Db.Has_Stock_Reference;
       Commodity : Harriet.Db.Commodity_Reference);
@@ -145,19 +147,21 @@ package body Harriet.Stock is
       Actor : constant String :=
                 "has-stock" & Harriet.Db.To_String (Stock);
    begin
-      for Stock_Item of
-        Harriet.Db.Stock_Item.Select_By_Has_Stock
-          (Stock)
-      loop
-         Harriet.Logging.Log
-           (Actor    => Actor,
-            Location => "",
-            Category => "stock",
-            Message  =>
-              Harriet.Db.Commodity.Get (Stock_Item.Commodity).Tag
-                & " "
-            & Harriet.Quantities.Show (Stock_Item.Quantity));
-      end loop;
+      if Log_Stock_Enabled then
+         for Stock_Item of
+           Harriet.Db.Stock_Item.Select_By_Has_Stock
+             (Stock)
+         loop
+            Harriet.Logging.Log
+              (Actor    => Actor,
+               Location => "",
+               Category => "stock",
+               Message  =>
+                 Harriet.Db.Commodity.Get (Stock_Item.Commodity).Tag
+               & " "
+               & Harriet.Quantities.Show (Stock_Item.Quantity));
+         end loop;
+      end if;
    end Log_Stock;
 
    --------------------

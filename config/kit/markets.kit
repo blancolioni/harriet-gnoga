@@ -31,6 +31,8 @@ record Market_Offer is
    key Market;
    key Commodity;
    key Agent;
+   Has_Stock;
+   Account;
    Price       : Price_Type;
    key Priority    : Long_Float;
    Quantity        : Quantity_Type;
@@ -43,7 +45,7 @@ record Ask_Offer : Market_Offer;
 record Bid_Offer : Market_Offer;
 
 record Transaction is
-   key Time_Stamp : Time;
+   Time_Stamp : Time;
    key Market;
    key Commodity;
    key Buyer : Agent;

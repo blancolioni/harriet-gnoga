@@ -64,6 +64,8 @@ package body Harriet.Markets is
            (Market    => Market,
             Commodity => Commodity,
             Agent     => Agent,
+            Has_Stock => Has_Stock,
+            Account   => Account,
             Price     => Price,
             Priority  => Harriet.Money.To_Real (Price),
             Quantity  => Remaining);
@@ -104,6 +106,8 @@ package body Harriet.Markets is
         (Market    => Market,
          Commodity => Commodity,
          Agent     => Agent,
+         Has_Stock => Has_Stock,
+         Account   => Account,
          Price     => Price,
          Priority  => 1.0 / Harriet.Money.To_Real (Price),
          Quantity  => Quantity);
@@ -245,7 +249,8 @@ package body Harriet.Markets is
    is
       procedure Check_Bid
         (Commodity : Harriet.Db.Commodity_Reference;
-         Quantity  : Harriet.Quantities.Quantity_Type);
+         Quantity  : Harriet.Quantities.Quantity_Type;
+         Value     : Harriet.Money.Money_Type);
 
       ---------------
       -- Check_Bid --
@@ -253,10 +258,13 @@ package body Harriet.Markets is
 
       procedure Check_Bid
         (Commodity : Harriet.Db.Commodity_Reference;
-         Quantity  : Harriet.Quantities.Quantity_Type)
+         Quantity  : Harriet.Quantities.Quantity_Type;
+         Value     : Harriet.Money.Money_Type)
       is
+         pragma Unreferenced (Value);
          use Harriet.Money, Harriet.Quantities;
          This_Quantity : Quantity_Type := Zero;
+         This_Cost     : Money_Type    := Zero;
       begin
          for Ask of Harriet.Db.Ask_Offer.Select_Bounded_By_Market_Priority
            (Market, Commodity, 0.0, Market, Commodity, Real'Last)
@@ -265,13 +273,14 @@ package body Harriet.Markets is
                Bid_Quantity : constant Quantity_Type :=
                                 Min (Ask.Quantity, Quantity - This_Quantity);
             begin
-               Cost := Cost + Total (Ask.Price, Bid_Quantity);
+               This_Cost := This_Cost + Total (Ask.Price, Bid_Quantity);
                This_Quantity := This_Quantity + Bid_Quantity;
                exit when This_Quantity >= Quantity;
             end;
          end loop;
 
-         Available.Set_Quantity (Commodity, This_Quantity);
+         Available.Set_Quantity (Commodity, This_Quantity, This_Cost);
+         Cost := Cost + This_Cost;
       end Check_Bid;
 
    begin

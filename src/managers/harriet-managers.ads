@@ -39,7 +39,8 @@ private
 
    type Root_Manager_Type is abstract tagged
       record
-         Managed         : Harriet.Db.Managed_Reference;
+         Managed         : Harriet.Db.Managed_Reference :=
+                             Harriet.Db.Null_Managed_Reference;
          Is_Active       : Boolean := False;
          Has_Next_Update : Boolean := False;
          Next_Update     : Harriet.Calendar.Time;

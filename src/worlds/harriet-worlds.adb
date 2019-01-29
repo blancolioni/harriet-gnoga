@@ -8,6 +8,7 @@ with Harriet.Db.Account;
 with Harriet.Db.Deposit;
 with Harriet.Db.Faction;
 with Harriet.Db.Generation;
+with Harriet.Db.Market;
 with Harriet.Db.Pop;
 with Harriet.Db.Sector_Neighbour;
 with Harriet.Db.Sector_Vertex;
@@ -359,6 +360,18 @@ package body Harriet.Worlds is
       return Harriet.Db.World.Get (World).Category in
         Terrestrial .. Super_Terrestrial;
    end Is_Terrestrial;
+
+   ------------
+   -- Market --
+   ------------
+
+   function Market
+     (World : Harriet.Db.World_Reference)
+      return Harriet.Db.Market_Reference
+   is
+   begin
+      return Harriet.Db.Market.Get_By_World (World).Reference;
+   end Market;
 
    ----------
    -- Mass --

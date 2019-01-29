@@ -11,3 +11,4 @@ g,Surface g
 temperature,Temperature
 climate,Climate
 category,Category
+lh2,LH₂

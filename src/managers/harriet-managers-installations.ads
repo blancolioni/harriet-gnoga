@@ -21,6 +21,7 @@ private
          Market       : Harriet.Db.Market_Reference;
          Account      : Harriet.Db.Account_Reference;
          Facility     : Harriet.Db.Facility_Reference;
+         World        : Harriet.Db.World_Reference;
          Capacity     : Unit_Real;
       end record;
 

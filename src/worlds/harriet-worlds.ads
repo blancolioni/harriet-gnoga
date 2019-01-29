@@ -53,6 +53,10 @@ package Harriet.Worlds is
      (World : Harriet.Db.World_Reference)
       return Unit_Real;
 
+   function Market
+     (World : Harriet.Db.World_Reference)
+      return Harriet.Db.Market_Reference;
+
    function Is_Terrestrial
      (World : Harriet.Db.World_Reference)
       return Boolean;

@@ -6,6 +6,7 @@ with Worlds;
 package Installations is
 
    record Installation : Has_Owner, Managed, Agent is
+      key World;
       key World_Sector;
       Facility;
    end Installation;

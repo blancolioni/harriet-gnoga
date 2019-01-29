@@ -280,7 +280,6 @@ package body Harriet.Factions.Create is
       Hub_Sector  : Harriet.Db.World_Sector_Reference;
       Config      : Tropos.Configuration)
    is
-      pragma Unreferenced (World);
       Owner : constant Harriet.Db.Owner_Reference :=
                 Harriet.Db.Faction.Get (Faction).Reference;
 
@@ -314,6 +313,7 @@ package body Harriet.Factions.Create is
                         (Owner        => Owner,
                          Capacity     => Capacity,
                          Account      => Account,
+                         World        => World,
                          World_Sector => Sector,
                          Facility     => Facility,
                          Active       => True,
@@ -357,7 +357,7 @@ package body Harriet.Factions.Create is
                            (Installation_Config.Config_Name);
             Cash     : constant Money_Type :=
                          Harriet.Configure.Configure_Money
-                           (Installation_Config, "cash", 1000.0);
+                           (Installation_Config, "cash", 1.0E6);
             Manager  : constant String :=
                          Installation_Config.Get
                            ("manager", "default-installation");
@@ -428,7 +428,7 @@ package body Harriet.Factions.Create is
                     Create_Installation
                       (Facility => Choose_Facility (Neighbour),
                        Sector   => Neighbour,
-                       Cash     => Harriet.Money.To_Money (1000.0),
+                       Cash     => Harriet.Money.To_Money (1.0E6),
                        Manager  => "default-installation");
          begin
             pragma Unreferenced (Ref);

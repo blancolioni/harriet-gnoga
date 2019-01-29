@@ -1,4 +1,4 @@
-cash = 1M
+cash = 10M
 
 ships = {
    scout = 2
@@ -9,7 +9,7 @@ ships = {
 installations = {
    hub = {
       manager = hub-manager
-      cash = 10K
+      cash = 10M
       stock = {
          consumer-goods = 1000
          industrial-goods = 1000
