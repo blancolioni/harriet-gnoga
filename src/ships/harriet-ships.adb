@@ -12,7 +12,9 @@ with Harriet.Constants;
 with Harriet.Worlds;
 
 with Harriet.Db.Account;
+with Harriet.Db.Drive_Component;
 with Harriet.Db.Faction;
+with Harriet.Db.Ship_Component;
 with Harriet.Db.Ship_Design;
 with Harriet.Db.Ship_Module;
 with Harriet.Db.Ship_Module_Design;
@@ -134,5 +136,99 @@ package body Harriet.Ships is
       end if;
       return Longitude;
    end Current_Longitude;
+
+   ------------------
+   -- Current_Mass --
+   ------------------
+
+   function Current_Mass
+     (Ship : Ship_Type'Class)
+      return Non_Negative_Real
+   is
+   begin
+      return Ship.Dry_Mass;
+   end Current_Mass;
+
+   -----------------
+   -- Design_Mass --
+   -----------------
+
+   function Design_Mass
+     (Design : Harriet.Db.Ship_Design_Reference)
+      return Non_Negative_Real
+   is
+      Mass : Non_Negative_Real := 0.0;
+   begin
+      for Module of
+        Harriet.Db.Ship_Module_Design.Select_By_Ship_Design (Design)
+      loop
+         declare
+            use Harriet.Db.Ship_Component;
+            Component : constant Ship_Component_Type :=
+                          Get (Module.Ship_Component);
+         begin
+            Mass := Mass + Component.Mass;
+         end;
+      end loop;
+      return Mass;
+   end Design_Mass;
+
+   -------------------
+   -- Design_Thrust --
+   -------------------
+
+   function Design_Thrust
+     (Design : Harriet.Db.Ship_Design_Reference)
+      return Non_Negative_Real
+   is
+      Thrust : Non_Negative_Real := 0.0;
+   begin
+      for Module of
+        Harriet.Db.Ship_Module_Design.Select_By_Ship_Design (Design)
+      loop
+         declare
+            use Harriet.Db;
+            Component : constant Ship_Component.Ship_Component_Type :=
+                          Ship_Component.Get (Module.Ship_Component);
+         begin
+            if Component.Top_Record = R_Drive_Component then
+               declare
+                  Drive : constant Drive_Component.Drive_Component_Type :=
+                            Drive_Component.Get_Drive_Component
+                              (Module.Ship_Component);
+               begin
+                  Thrust := Thrust + Drive.Maximum_Thrust;
+               end;
+            end if;
+         end;
+      end loop;
+      return Thrust;
+   end Design_Thrust;
+
+   --------------
+   -- Dry_Mass --
+   --------------
+
+   function Dry_Mass
+     (Ship : Ship_Type'Class)
+      return Non_Negative_Real
+   is
+   begin
+      return Design_Mass
+        (Harriet.Db.Ship.Get (Ship.Reference).Ship_Design);
+   end Dry_Mass;
+
+   ------------------
+   -- Total_Thrust --
+   ------------------
+
+   function Total_Thrust
+     (Ship : Ship_Type'Class)
+      return Non_Negative_Real
+   is
+   begin
+      return Design_Thrust
+        (Harriet.Db.Ship.Get (Ship.Reference).Ship_Design);
+   end Total_Thrust;
 
 end Harriet.Ships;

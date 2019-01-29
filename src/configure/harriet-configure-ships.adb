@@ -3,10 +3,15 @@ with Ada.Text_IO;
 with Harriet.Constants;
 with Harriet.Money;
 with Harriet.Quantities;
+with Harriet.Real_Images;
+with Harriet.Solar_System;
+
+with Harriet.Ships;
 
 with Harriet.Db.Commodity;
 with Harriet.Db.Container_Component;
 with Harriet.Db.Drive_Component;
+with Harriet.Db.Power_Component;
 
 with Harriet.Db.Attachment;
 with Harriet.Db.Ship_Component;
@@ -32,10 +37,12 @@ package body Harriet.Configure.Ships is
       is (Real (Float'(Component_Config.Get (Name, 0.0))));
 
       function Get
-        (Child : String;
-         Name  : String)
+        (Child   : String;
+         Name    : String;
+         Default : Real := 0.0)
          return Real
-      is (Real (Float'(Component_Config.Child (Child).Get (Name, 0.0))));
+      is (Real (Float'(Component_Config.Child (Child).Get
+                       (Name, Float (Default)))));
 
       function Get
         (Child : String;
@@ -50,6 +57,11 @@ package body Harriet.Configure.Ships is
          Name  : String)
          return Boolean
       is (Component_Config.Child (Child).Get (Name));
+
+      function Get
+        (Name  : String)
+         return Boolean
+      is (Component_Config.Get (Name));
 
       Tag : constant String :=
               Component_Config.Config_Name;
@@ -67,13 +79,19 @@ package body Harriet.Configure.Ships is
                            Get ("temperature-limit", "failure")
                            + Harriet.Constants.Freezing_Point_Of_Water;
       Explosion_Power  : constant Non_Negative_Real :=
-                           Get ("explosion");
-      X1 : constant Real := Get ("bounding-cube", 1);
-      X2 : constant Real := Get ("bounding-cube", 2);
-      Y1 : constant Real := Get ("bounding-cube", 3);
-      Y2 : constant Real := Get ("bounding-cube", 4);
-      Z1 : constant Real := Get ("bounding-cube", 5);
-      Z2 : constant Real := Get ("bounding-cube", 6);
+                              Get ("explosion");
+      Throttled           : constant Boolean := Get ("throttle")
+        or else Component_Config.Contains ("throttled");
+      Min_Throttle        : constant Real := Get ("throttle", "min");
+      Max_Throttle        : constant Real := Get ("throttle", "max", 1.0);
+      Operating_Heat      : constant Real := Get ("heat", "operating");
+      Heat_Sink           : constant Real := Get ("heat", "sink");
+      X1 : constant Real := Get ("bounding-box", 1);
+      X2 : constant Real := Get ("bounding-box", 2);
+      Y1 : constant Real := Get ("bounding-box", 3);
+      Y2 : constant Real := Get ("bounding-box", 4);
+      Z1 : constant Real := Get ("bounding-box", 5);
+      Z2 : constant Real := Get ("bounding-box", 6);
 
    begin
       if Component_Config.Contains ("cargo") then
@@ -87,6 +105,11 @@ package body Harriet.Configure.Ships is
             Angular_Accel_Limit => Angular_Accel_Limit,
             Max_Normal_Temp     => Normal_Temperature,
             Failure_Temp        => Fail_Temperature,
+            Throttled           => Throttled,
+            Min_Throttle        => Min_Throttle,
+            Max_Throttle        => Max_Throttle,
+            Operating_Heat      => Operating_Heat,
+            Heat_Sink           => Heat_Sink,
             Explosion_Power     => Explosion_Power,
             Tag                 => Tag,
             Enabled_By          => Harriet.Db.Null_Technology_Reference,
@@ -105,6 +128,7 @@ package body Harriet.Configure.Ships is
             Liquid              => Get ("cargo", "liquid"),
             Gas                 => Get ("cargo", "gas"),
             Cryo                => Get ("cargo", "cryo"));
+
       elsif Component_Config.Contains ("thrust") then
 
          Ada.Text_IO.Put_Line ("configure: " & Component_Config.Config_Name);
@@ -116,11 +140,16 @@ package body Harriet.Configure.Ships is
             Angular_Accel_Limit => Angular_Accel_Limit,
             Max_Normal_Temp     => Normal_Temperature,
             Failure_Temp        => Fail_Temperature,
+            Throttled           => Throttled,
+            Min_Throttle        => Min_Throttle,
+            Max_Throttle        => Max_Throttle,
+            Operating_Heat      => Operating_Heat,
+            Heat_Sink           => Heat_Sink,
             Explosion_Power     => Explosion_Power,
             Tag                 => Tag,
             Enabled_By          => Harriet.Db.Null_Technology_Reference,
             Available           => True,
-            Initial_Cost        => Harriet.Money.Zero,
+            Initial_Price       => Harriet.Money.Zero,
             Mass                => Mass,
             X1                  => X1,
             X2                  => X2,
@@ -143,6 +172,35 @@ package body Harriet.Configure.Ships is
               Harriet.Db.Commodity.Get_Reference_By_Tag
                 (Component_Config.Get ("propellent", "")),
             Exhaust_Velocity    => Get ("ve"));
+      elsif Component_Config.Get ("class", "") = "power" then
+
+         Ada.Text_IO.Put_Line ("configure: " & Component_Config.Config_Name);
+
+         Harriet.Db.Power_Component.Create
+           (Idle_Power          => Idle_Power,
+            Max_Power           => Max_Power,
+            Linear_Accel_Limit  => Linear_Accel_Limit,
+            Angular_Accel_Limit => Angular_Accel_Limit,
+            Max_Normal_Temp     => Normal_Temperature,
+            Failure_Temp        => Fail_Temperature,
+            Throttled           => Throttled,
+            Min_Throttle        => Min_Throttle,
+            Max_Throttle        => Max_Throttle,
+            Operating_Heat      => Operating_Heat,
+            Heat_Sink           => Heat_Sink,
+            Explosion_Power     => Explosion_Power,
+            Tag                 => Tag,
+            Enabled_By          => Harriet.Db.Null_Technology_Reference,
+            Available           => True,
+            Initial_Price       => Harriet.Money.Zero,
+            Mass                => Mass,
+            X1                  => X1,
+            X2                  => X2,
+            Y1                  => Y1,
+            Y2                  => Y2,
+            Z1                  => Z1,
+            Z2                  => Z2,
+            Power_Output        => Get ("generate", "power"));
       end if;
 
       declare
@@ -180,6 +238,10 @@ package body Harriet.Configure.Ships is
             Component : constant Harriet.Db.Ship_Component_Reference :=
                           Harriet.Db.Ship_Component.Get_Reference_By_Tag
                             (Component_Config.Config_Name);
+            Count     : constant Positive :=
+                          (if Component_Config.Child_Count = 1
+                           then Component_Config.Value
+                           else 1);
          begin
             if Component = Null_Ship_Component_Reference then
                Ada.Text_IO.Put_Line
@@ -188,13 +250,31 @@ package body Harriet.Configure.Ships is
                   & "': no such component: "
                   & Component_Config.Config_Name);
             else
-               Harriet.Db.Ship_Module_Design.Create
-                 (Ship_Design    => Design,
-                  Ship_Component => Component);
+               for I in 1 .. Count loop
+                  Harriet.Db.Ship_Module_Design.Create
+                    (Ship_Design    => Design,
+                     Ship_Component => Component);
+               end loop;
             end if;
-
          end;
       end loop;
+
+      declare
+         Mass : constant Non_Negative_Real :=
+                  Harriet.Ships.Design_Mass (Design);
+         Thrust : constant Non_Negative_Real :=
+                    Harriet.Ships.Design_Thrust (Design);
+      begin
+         Ada.Text_IO.Put_Line
+           (Design_Config.Config_Name & ": mass "
+            & Harriet.Real_Images.Approximate_Image
+              (Mass / 1000.0)
+            & "t"
+            & " acceleration (empty) "
+            & Harriet.Real_Images.Approximate_Image
+              (Thrust / Mass / Harriet.Solar_System.Earth_Gravity)
+            & "g");
+      end;
    end Configure_Design;
 
    -------------------------------

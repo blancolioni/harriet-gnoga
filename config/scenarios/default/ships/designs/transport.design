@@ -1,5 +1,4 @@
-basic-chemical-drive = 4
+basic-chemical-drive = 2
 basic-cryo-tank = 2
 basic-fission-pile
-basic-hyperdrive
-light-cargo
+basic-hold

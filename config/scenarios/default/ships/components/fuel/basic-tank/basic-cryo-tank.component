@@ -1,4 +1,4 @@
-bounding-cube = { -2 2 -2 2 -5 5 }
+bounding-box = { -2 2 -2 2 -5 5 }
 shape = cylinder
 mass = 26K
 attachments = {

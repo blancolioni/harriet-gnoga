@@ -33,6 +33,26 @@ package Harriet.Ships is
      (Ship : Ship_Type'Class)
       return Non_Negative_Real;
 
+   function Dry_Mass
+     (Ship : Ship_Type'Class)
+      return Non_Negative_Real;
+
+   function Current_Mass
+     (Ship : Ship_Type'Class)
+      return Non_Negative_Real;
+
+   function Total_Thrust
+     (Ship : Ship_Type'Class)
+      return Non_Negative_Real;
+
+   function Design_Mass
+     (Design : Harriet.Db.Ship_Design_Reference)
+      return Non_Negative_Real;
+
+   function Design_Thrust
+     (Design : Harriet.Db.Ship_Design_Reference)
+      return Non_Negative_Real;
+
    procedure Create_Ship
      (Owner  : Harriet.Db.Faction_Reference;
       World  : Harriet.Db.World_Reference;

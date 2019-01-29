@@ -67,6 +67,11 @@ record Ship_Component : Localised, Technological, Commodity, Bounding_Cube is
    Max_Normal_Temp     : Long_Float;
    Failure_Temp        : Long_Float;
    Explosion_Power     : Long_Float;
+   Throttled           : Boolean;
+   Min_Throttle        : Long_Float;
+   Max_Throttle        : Long_Float;   
+   Operating_Heat      : Long_Float;
+   Heat_Sink           : Long_Float;
 end Ship_Component;
 
 record Attachment is
@@ -96,6 +101,10 @@ record Drive_Component : Ship_Component is
    Propellent        : Commodity;
    Exhaust_Velocity  : Long_Float;
 end Drive_Component;
+
+record Power_Component : Ship_Component is
+   Power_Output      : Long_Float;
+end Power_Component;
 
 record Hyperdrive_Component : Ship_Component is
    Hyperspeed : Long_Float;

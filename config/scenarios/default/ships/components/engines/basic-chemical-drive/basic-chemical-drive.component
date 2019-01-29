@@ -1,4 +1,4 @@
-bounding_box = { -1.5 1.5 -1.5 1.5 -5 1 }
+bounding-box = { -1.5 1.5 -1.5 1.5 -5 1 }
 shape = conical_frustum
 mass = 4000
 attachments = {
@@ -23,7 +23,7 @@ parts = {
 
 thrust = {
    minimum = 0
-   maxumum = 6M
+   maximum = 6M
 }
 
 Ve = 60K
