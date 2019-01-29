@@ -50,20 +50,67 @@ record Cargo is
    key Transportable;
 end Cargo;
 
-type Ship_Component_Class is
-  (Drive, Hyperdrive, Hold, Tank,
-   Energy_Bank, Power,
-   Life_Support,
-   Fighter_Bay, Missile_Tube, Beam_Weapon, Cannon,
-   Shield,
-   Cloak, Scanner);
+record Bounding_Cube is
+   X1 : Long_Float;
+   X2 : Long_Float;
+   Y1 : Long_Float;
+   Y2 : Long_Float;
+   Z1 : Long_Float;
+   Z2 : Long_Float;
+end Bounding_Cube;
 
-record Ship_Component : Localised, Technological, Commodity is
-   Component_Class : Ship_Component_Class;
-   Size            : Natural;
-   Power           : Natural;
+record Ship_Component : Localised, Technological, Commodity, Bounding_Cube is
+   Idle_Power          : Long_Float;
+   Max_Power           : Long_Float;
+   Linear_Accel_Limit  : Long_Float;
+   Angular_Accel_Limit : Long_Float;
+   Max_Normal_Temp     : Long_Float;
+   Failure_Temp        : Long_Float;
+   Explosion_Power     : Long_Float;
 end Ship_Component;
 
+record Attachment is
+   key Ship_Component;
+   Name : String (16);
+   X : Long_Float;
+   Y : Long_Float;
+   Z : Long_Float;
+   key Attachment_Name with Ship_Component, Name;
+end Attachment;
+
+record Container_Component : Ship_Component is
+   Capacity    : Quantity_Type;
+   Liquid      : Boolean;
+   Gas         : Boolean;
+   Cryo        : Boolean;
+end Container_Component;
+
+record Drive_Component : Ship_Component is
+   Minimum_Thrust    : Long_Float;
+   Maximum_Thrust    : Long_Float;   
+   Fuel              : Commodity;
+   Oxidiser          : Commodity;
+   Max_Fuel_Burn     : Long_Float;
+   Max_Oxidiser_Burn : Long_Float;
+   Fuel_Propellant   : Boolean;
+   Propellent        : Commodity;
+   Exhaust_Velocity  : Long_Float;
+end Drive_Component;
+
+record Hyperdrive_Component : Ship_Component is
+   Hyperspeed : Long_Float;
+end Hyperdrive_Component;
+
+record Weapon_Component : Ship_Component is
+   Effective_Range : Long_Float;
+end Weapon_Component;
+
+record Laser_Weapon_Component : Ship_Component is
+   Charge : Long_Float;
+end Laser_Weapon_Component;
+
+record Kinetic_Weapon_Component : Ship_Component;
+   
 record Ship_Module_Design is
    key Ship_Design;
    Ship_Component;
