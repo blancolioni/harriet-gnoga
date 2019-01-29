@@ -21,6 +21,7 @@ package body Harriet.Configure.Pop_Groups is
         (Available        => True,
          Initial_Price    => Price,
          Mass             => 1.0,
+         Density          => 0.0,
          Tag              => Config.Config_Name,
          Consumer_Quality => Config.Child ("quality").Get ("consumer"),
          Service_Quality  => Config.Child ("quality").Get ("service"),

@@ -45,7 +45,15 @@ package Harriet.Ships is
      (Ship : Ship_Type'Class)
       return Non_Negative_Real;
 
+   function Design_Cargo_Volume
+     (Design : Harriet.Db.Ship_Design_Reference)
+      return Non_Negative_Real;
+
    function Design_Mass
+     (Design : Harriet.Db.Ship_Design_Reference)
+      return Non_Negative_Real;
+
+   function Design_Fuel_Mass
      (Design : Harriet.Db.Ship_Design_Reference)
       return Non_Negative_Real;
 

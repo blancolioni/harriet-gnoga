@@ -36,7 +36,7 @@ start = {
    time = 5
 }
 
-fuel = lh2 max_fuel_burn = 70
+fuel = lh2 max_fuel_burn = 80
 oxidiser = lox max_oxidiser_burn = 228
 propellent = water
 propellent-fuel = yes

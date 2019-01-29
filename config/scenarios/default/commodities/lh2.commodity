@@ -1,0 +1,5 @@
+class = industrial-goods
+density = 70.8
+npc-price = 10
+liquid = yes
+cryo = yes

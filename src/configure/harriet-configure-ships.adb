@@ -114,8 +114,9 @@ package body Harriet.Configure.Ships is
             Tag                 => Tag,
             Enabled_By          => Harriet.Db.Null_Technology_Reference,
             Available           => True,
-         Initial_Price   => Harriet.Money.Zero,
+            Initial_Price       => Harriet.Money.Zero,
             Mass                => Mass,
+            Density             => 0.0,
             X1                  => X1,
             X2                  => X2,
             Y1                  => Y1,
@@ -151,6 +152,7 @@ package body Harriet.Configure.Ships is
             Available           => True,
             Initial_Price       => Harriet.Money.Zero,
             Mass                => Mass,
+            Density             => 0.0,
             X1                  => X1,
             X2                  => X2,
             Y1                  => Y1,
@@ -194,6 +196,7 @@ package body Harriet.Configure.Ships is
             Available           => True,
             Initial_Price       => Harriet.Money.Zero,
             Mass                => Mass,
+            Density             => 0.0,
             X1                  => X1,
             X2                  => X2,
             Y1                  => Y1,
@@ -260,19 +263,37 @@ package body Harriet.Configure.Ships is
       end loop;
 
       declare
-         Mass : constant Non_Negative_Real :=
-                  Harriet.Ships.Design_Mass (Design);
-         Thrust : constant Non_Negative_Real :=
-                    Harriet.Ships.Design_Thrust (Design);
+         Empty_Mass : constant Non_Negative_Real :=
+                        Harriet.Ships.Design_Mass (Design);
+         Fuel_Mass  : constant Non_Negative_Real :=
+                        Harriet.Ships.Design_Fuel_Mass (Design);
+         Cargo_Volume : constant Non_Negative_Real :=
+                          Harriet.Ships.Design_Cargo_Volume (Design);
+         Thrust     : constant Non_Negative_Real :=
+                        Harriet.Ships.Design_Thrust (Design);
       begin
          Ada.Text_IO.Put_Line
-           (Design_Config.Config_Name & ": mass "
+           (Design_Config.Config_Name & ": empty mass "
             & Harriet.Real_Images.Approximate_Image
-              (Mass / 1000.0)
+              (Empty_Mass / 1000.0)
             & "t"
-            & " acceleration (empty) "
+            & " fuel mass "
             & Harriet.Real_Images.Approximate_Image
-              (Thrust / Mass / Harriet.Solar_System.Earth_Gravity)
+              (Fuel_Mass / 1000.0)
+            & "t"
+            & " cargo volume "
+            & Harriet.Real_Images.Approximate_Image
+              (Cargo_Volume)
+            & "m3"
+            & " acceleration (fueled) "
+            & Harriet.Real_Images.Approximate_Image
+              (Thrust / (Empty_Mass + Fuel_Mass)
+               / Harriet.Solar_System.Earth_Gravity)
+            & "g"
+            & " acceleration (fueled, loaded) "
+            & Harriet.Real_Images.Approximate_Image
+              (Thrust / (Empty_Mass + Fuel_Mass + Cargo_Volume * 1000.0)
+               / Harriet.Solar_System.Earth_Gravity)
             & "g");
       end;
    end Configure_Design;
