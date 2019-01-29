@@ -294,7 +294,12 @@ package body Harriet.Configure.Ships is
             & Harriet.Real_Images.Approximate_Image
               (Thrust / (Empty_Mass + Fuel_Mass + Cargo_Volume * 1000.0)
                / Harriet.Solar_System.Earth_Gravity)
-            & "g");
+            & "g"
+            & " delta-v: "
+            & Harriet.Real_Images.Approximate_Image
+              (Harriet.Ships.Design_Delta_V (Design))
+            & "m/s");
+
       end;
    end Configure_Design;
 

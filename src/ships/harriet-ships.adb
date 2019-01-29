@@ -192,6 +192,48 @@ package body Harriet.Ships is
       return Volume;
    end Design_Cargo_Volume;
 
+   --------------------
+   -- Design_Delta_V --
+   --------------------
+
+   function Design_Delta_V
+     (Design : Harriet.Db.Ship_Design_Reference)
+      return Non_Negative_Real
+   is
+      Ve : Non_Negative_Real := 0.0;
+   begin
+      for Module of
+        Harriet.Db.Ship_Module_Design.Select_By_Ship_Design (Design)
+      loop
+         declare
+            use Harriet.Db, Harriet.Db.Ship_Component;
+            Rec_Type : constant Record_Type :=
+                         Get (Module.Ship_Component).Top_Record;
+         begin
+            if Rec_Type = R_Drive_Component then
+               declare
+                  use Harriet.Db.Drive_Component;
+                  Drive : constant Drive_Component_Type :=
+                                Get_Drive_Component
+                              (Module.Ship_Component);
+               begin
+                  Ve := Drive.Exhaust_Velocity;
+                  exit;
+               end;
+            end if;
+         end;
+      end loop;
+
+      declare
+         use Harriet.Elementary_Functions;
+         Dry_Mass : constant Non_Negative_Real := Design_Mass (Design);
+         Fuel_Mass : constant Non_Negative_Real := Design_Fuel_Mass (Design);
+         Full_Mass : constant Non_Negative_Real := Dry_Mass + Fuel_Mass;
+      begin
+         return Ve * Log (Full_Mass / Dry_Mass);
+      end;
+   end Design_Delta_V;
+
    ----------------------
    -- Design_Fuel_Mass --
    ----------------------
