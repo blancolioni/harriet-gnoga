@@ -55,6 +55,7 @@ package body Harriet.Worlds is
                World            =>
                  Harriet.Db.World_Sector.Get (Sector).World,
                World_Sector     => Sector,
+               Installation     => Harriet.Db.Null_Installation_Reference,
                Ship             => Harriet.Db.Null_Ship_Reference,
                Pop_Group        => Group,
                Size             => Size,

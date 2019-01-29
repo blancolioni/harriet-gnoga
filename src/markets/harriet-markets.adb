@@ -1,10 +1,74 @@
 with Ada.Containers.Doubly_Linked_Lists;
 
-with Harriet.Db.Market_Offer;
+with Harriet.Calendar;
+
 with Harriet.Db.Ask_Offer;
 with Harriet.Db.Bid_Offer;
+with Harriet.Db.Market_Offer;
+with Harriet.Db.Transaction;
 
 package body Harriet.Markets is
+
+   function First_Ask
+     (Market    : Harriet.Db.Market_Reference;
+      Commodity : Harriet.Db.Commodity_Reference)
+      return Harriet.Db.Ask_Offer_Reference;
+
+   function First_Bid
+     (Market    : Harriet.Db.Market_Reference;
+      Commodity : Harriet.Db.Commodity_Reference)
+     return Harriet.Db.Bid_Offer_Reference;
+
+   ---------
+   -- Ask --
+   ---------
+
+   procedure Ask
+     (Market    : Harriet.Db.Market_Reference;
+      Agent     : Harriet.Db.Agent_Reference;
+      Account   : Harriet.Db.Account_Reference;
+      Has_Stock : Harriet.Db.Has_Stock_Reference;
+      Commodity : Harriet.Db.Commodity_Reference;
+      Quantity  : Harriet.Quantities.Quantity_Type;
+      Price     : Harriet.Money.Price_Type)
+   is
+      use Harriet.Money;
+      use Harriet.Quantities;
+      Remaining : Quantity_Type := Quantity;
+   begin
+
+      for Bid of Harriet.Db.Bid_Offer.Select_Bounded_By_Market_Priority
+        (Market, Commodity, 0.0, Market, Commodity, Real'Last)
+      loop
+         exit when Bid.Price < Price;
+
+         declare
+            This_Quantity : constant Quantity_Type :=
+                              Min (Bid.Quantity, Remaining);
+         begin
+            Harriet.Db.Transaction.Create
+              (Time_Stamp => Harriet.Calendar.Clock,
+               Market     => Market,
+               Commodity  => Commodity,
+               Buyer      => Bid.Agent,
+               Seller     => Agent,
+               Price      => Price,
+               Quantity   => This_Quantity);
+            Remaining := Remaining - Quantity;
+         end;
+         exit when Remaining = Zero;
+      end loop;
+
+      if Remaining > Zero then
+         Harriet.Db.Ask_Offer.Create
+           (Market    => Market,
+            Commodity => Commodity,
+            Agent     => Agent,
+            Price     => Price,
+            Priority  => Harriet.Money.To_Real (Price),
+            Quantity  => Remaining);
+      end if;
+   end Ask;
 
    ---------
    -- Ask --
@@ -18,14 +82,32 @@ package body Harriet.Markets is
       Price     : Harriet.Money.Price_Type)
    is
    begin
-      Harriet.Db.Ask_Offer.Create
+      Ask (Market, Agent.Reference, Agent.Account, Agent.Reference,
+           Commodity, Quantity, Price);
+   end Ask;
+
+   ---------
+   -- Bid --
+   ---------
+
+   procedure Bid
+     (Market    : Harriet.Db.Market_Reference;
+      Agent     : Harriet.Db.Agent_Reference;
+      Account   : Harriet.Db.Account_Reference;
+      Has_Stock : Harriet.Db.Has_Stock_Reference;
+      Commodity : Harriet.Db.Commodity_Reference;
+      Quantity  : Harriet.Quantities.Quantity_Type;
+      Price     : Harriet.Money.Price_Type)
+   is
+   begin
+      Harriet.Db.Bid_Offer.Create
         (Market    => Market,
          Commodity => Commodity,
-         Agent     => Agent.Reference,
+         Agent     => Agent,
          Price     => Price,
          Priority  => 1.0 / Harriet.Money.To_Real (Price),
          Quantity  => Quantity);
-   end Ask;
+   end Bid;
 
    ---------
    -- Bid --
@@ -39,14 +121,85 @@ package body Harriet.Markets is
       Price     : Harriet.Money.Price_Type)
    is
    begin
-      Harriet.Db.Bid_Offer.Create
-        (Market    => Market,
-         Commodity => Commodity,
-         Agent     => Agent.Reference,
-         Price     => Price,
-         Priority  => Harriet.Money.To_Real (Price),
-         Quantity  => Quantity);
+      Bid (Market, Agent.Reference, Agent.Account, Agent.Reference,
+           Commodity, Quantity, Price);
    end Bid;
+
+   -----------------------
+   -- Current_Ask_Price --
+   -----------------------
+
+   function Current_Ask_Price
+     (Market    : Harriet.Db.Market_Reference;
+      Commodity : Harriet.Db.Commodity_Reference)
+      return Harriet.Money.Price_Type
+   is
+      use Harriet.Db;
+      Ask_Ref : constant Harriet.Db.Ask_Offer_Reference :=
+                  First_Ask (Market, Commodity);
+   begin
+      if Ask_Ref = Null_Ask_Offer_Reference then
+         return Harriet.Commodities.Initial_Price (Commodity);
+      else
+         return Harriet.Db.Ask_Offer.Get (Ask_Ref).Price;
+      end if;
+   end Current_Ask_Price;
+
+   -----------------------
+   -- Current_Bid_Price --
+   -----------------------
+
+   function Current_Bid_Price
+     (Market    : Harriet.Db.Market_Reference;
+      Commodity : Harriet.Db.Commodity_Reference)
+      return Harriet.Money.Price_Type
+   is
+      use Harriet.Db;
+      Bid_Ref : constant Harriet.Db.Bid_Offer_Reference :=
+                  First_Bid (Market, Commodity);
+   begin
+      if Bid_Ref = Null_Bid_Offer_Reference then
+         return Harriet.Commodities.Initial_Price (Commodity);
+      else
+         return Harriet.Db.Bid_Offer.Get (Bid_Ref).Price;
+      end if;
+   end Current_Bid_Price;
+
+   ---------------
+   -- First_Ask --
+   ---------------
+
+   function First_Ask
+     (Market    : Harriet.Db.Market_Reference;
+      Commodity : Harriet.Db.Commodity_Reference)
+      return Harriet.Db.Ask_Offer_Reference
+   is
+   begin
+      for Ask of Harriet.Db.Ask_Offer.Select_Bounded_By_Market_Priority
+        (Market, Commodity, 0.0, Market, Commodity, Real'Last)
+      loop
+         return Ask.Reference;
+      end loop;
+      return Harriet.Db.Null_Ask_Offer_Reference;
+   end First_Ask;
+
+   ---------------
+   -- First_Bid --
+   ---------------
+
+   function First_Bid
+     (Market    : Harriet.Db.Market_Reference;
+      Commodity : Harriet.Db.Commodity_Reference)
+      return Harriet.Db.Bid_Offer_Reference
+   is
+   begin
+      for Bid of Harriet.Db.Bid_Offer.Select_Bounded_By_Market_Priority
+        (Market, Commodity, 0.0, Market, Commodity, Real'Last)
+      loop
+         return Bid.Reference;
+      end loop;
+      return Harriet.Db.Null_Bid_Offer_Reference;
+   end First_Bid;
 
    ------------------
    -- Reset_Offers --
@@ -79,5 +232,50 @@ package body Harriet.Markets is
       end loop;
 
    end Reset_Offers;
+
+   -------------
+   -- Try_Bid --
+   -------------
+
+   procedure Try_Bid
+     (Market    : Harriet.Db.Market_Reference;
+      Wanted    : Harriet.Commodities.Stock_Type;
+      Available : out Harriet.Commodities.Stock_Type;
+      Cost      : out Harriet.Money.Money_Type)
+   is
+      procedure Check_Bid
+        (Commodity : Harriet.Db.Commodity_Reference;
+         Quantity  : Harriet.Quantities.Quantity_Type);
+
+      ---------------
+      -- Check_Bid --
+      ---------------
+
+      procedure Check_Bid
+        (Commodity : Harriet.Db.Commodity_Reference;
+         Quantity  : Harriet.Quantities.Quantity_Type)
+      is
+         use Harriet.Money, Harriet.Quantities;
+         This_Quantity : Quantity_Type := Zero;
+      begin
+         for Ask of Harriet.Db.Ask_Offer.Select_Bounded_By_Market_Priority
+           (Market, Commodity, 0.0, Market, Commodity, Real'Last)
+         loop
+            declare
+               Bid_Quantity : constant Quantity_Type :=
+                                Min (Ask.Quantity, Quantity - This_Quantity);
+            begin
+               Cost := Cost + Total (Ask.Price, Bid_Quantity);
+               This_Quantity := This_Quantity + Bid_Quantity;
+               exit when This_Quantity >= Quantity;
+            end;
+         end loop;
+
+         Available.Set_Quantity (Commodity, This_Quantity);
+      end Check_Bid;
+
+   begin
+      Wanted.Iterate (Check_Bid'Access);
+   end Try_Bid;
 
 end Harriet.Markets;

@@ -17,4 +17,28 @@ package body Harriet.Agents is
       Account.Set_Cash (Account.Cash + Cash);
    end Add_Cash;
 
+   ----------
+   -- Cash --
+   ----------
+
+   function Cash
+     (Account : Harriet.Db.Account_Reference)
+      return Harriet.Money.Money_Type
+   is
+   begin
+      return Harriet.Db.Account.Get (Account).Cash;
+   end Cash;
+
+   ----------
+   -- Cash --
+   ----------
+
+   function Cash
+     (Agent : Harriet.Db.Agent.Agent_Type)
+      return Harriet.Money.Money_Type
+   is
+   begin
+      return Cash (Agent.Account);
+   end Cash;
+
 end Harriet.Agents;

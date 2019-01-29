@@ -5,13 +5,16 @@ with Harriet.Quantities;
 with Harriet.Random;
 with Harriet.Stock;
 
+with Harriet.Agents;
 with Harriet.Markets;
 
 with Harriet.Db.Deposit;
 with Harriet.Db.Facility;
+with Harriet.Db.Facility_Worker;
 with Harriet.Db.Generated_Resource;
 with Harriet.Db.Installation;
 with Harriet.Db.Market;
+with Harriet.Db.Pop_Group;
 with Harriet.Db.Resource;
 with Harriet.Db.Resource_Generator;
 with Harriet.Db.World_Sector;
@@ -36,6 +39,73 @@ package body Harriet.Managers.Installations is
    overriding procedure Activate
      (Manager : not null access Hub_Manager);
 
+   overriding procedure Activate
+     (Manager : not null access Root_Installation_Manager)
+   is
+      use Harriet.Commodities;
+      use Harriet.Money;
+      use Harriet.Quantities;
+      M         : Root_Installation_Manager'Class renames
+                    Root_Installation_Manager'Class (Manager.all);
+      Have      : Harriet.Commodities.Stock_Type;
+      Required  : Harriet.Commodities.Stock_Type;
+      Missing   : Harriet.Commodities.Stock_Type;
+      Available : Harriet.Commodities.Stock_Type;
+      Cost      : Harriet.Money.Money_Type;
+      Cash      : constant Harriet.Money.Money_Type :=
+                    Harriet.Agents.Cash (Manager.Account);
+
+      procedure Place_Bid
+        (Commodity : Harriet.Db.Commodity_Reference;
+         Quantity  : Quantity_Type);
+
+      ---------------
+      -- Place_Bid --
+      ---------------
+
+      procedure Place_Bid
+        (Commodity : Harriet.Db.Commodity_Reference;
+         Quantity  : Quantity_Type)
+      is
+      begin
+         Harriet.Markets.Bid
+           (Market    => Manager.Market,
+            Agent     => Manager.Agent,
+            Account   => Manager.Account,
+            Has_Stock => Manager.Has_Stock,
+            Commodity => Commodity,
+            Quantity  => Quantity,
+            Price     =>
+              Harriet.Markets.Current_Ask_Price
+                (Manager.Market, Commodity));
+      end Place_Bid;
+
+   begin
+      Have.Load (Manager.Has_Stock);
+      Manager.Capacity := 1.0;
+      M.Get_Required_Stock (Required);
+      Missing := Harriet.Commodities.Missing (Have, Required);
+      if Missing.Total_Quantity > Zero then
+         Harriet.Markets.Try_Bid (Manager.Market, Missing, Available, Cost);
+         Available.Add (Have);
+         Manager.Capacity :=
+           M.Calculate_Capacity (Available);
+         if Cost > Cash then
+            declare
+               Base : constant Unit_Real :=
+                        M.Calculate_Capacity (Have);
+            begin
+               Manager.Capacity :=
+                 Base +
+                   (Manager.Capacity - Base) * To_Real (Cash) / To_Real (Cost);
+            end;
+         end if;
+
+         Missing := Have.Missing (Available);
+         Missing.Iterate (Place_Bid'Access);
+      end if;
+   end Activate;
+
    --------------
    -- Activate --
    --------------
@@ -50,7 +120,11 @@ package body Harriet.Managers.Installations is
         .Resource_Generator_Type :=
           Harriet.Db.Resource_Generator.Get
             (Manager.Rgen);
+
    begin
+
+      Activate (Root_Installation_Manager (Manager.all)'Access);
+
       for Deposit of
         Harriet.Db.Deposit.Select_By_World_Sector
           (Installation.World_Sector)
@@ -130,11 +204,49 @@ package body Harriet.Managers.Installations is
       end Add_Offers;
 
    begin
+
+      Activate (Root_Installation_Manager (Manager.all)'Access);
+
       Harriet.Markets.Reset_Offers (Market, Installation);
 
       Harriet.Stock.Scan_Stock
         (Installation, Add_Offers'Access);
    end Activate;
+
+   ------------------------
+   -- Calculate_Capacity --
+   ------------------------
+
+   function Calculate_Capacity
+     (Manager : Root_Installation_Manager;
+      Stock   : Harriet.Commodities.Stock_Type)
+      return Unit_Real
+   is
+      Result : Unit_Real := 1.0;
+   begin
+      for Employee of
+        Harriet.Db.Facility_Worker.Select_By_Facility
+          (Manager.Facility)
+      loop
+         declare
+            use Harriet.Quantities;
+            Commodity : constant Harriet.Db.Commodity_Reference :=
+                          Harriet.Db.Pop_Group.Get
+                            (Employee.Pop_Group).Reference;
+            Required  : constant Quantity_Type :=
+                          Employee.Quantity;
+            Employed  : constant Quantity_Type :=
+                          Stock.Get_Quantity (Commodity);
+            Limit     : constant Non_Negative_Real :=
+                          To_Real (Employed) / To_Real (Required);
+         begin
+            if Limit < Result then
+               Result := Limit;
+            end if;
+         end;
+      end loop;
+      return Result;
+   end Calculate_Capacity;
 
    ------------
    -- Create --
@@ -184,5 +296,24 @@ package body Harriet.Managers.Installations is
         (Installation    => Installation.Reference,
          others          => <>);
    end Create_Hub_Manager;
+
+   ------------------------
+   -- Get_Required_Stock --
+   ------------------------
+
+   procedure Get_Required_Stock
+     (Manager : Root_Installation_Manager;
+      Stock   : in out Harriet.Commodities.Stock_Type)
+   is
+   begin
+      for Employee of
+        Harriet.Db.Facility_Worker.Select_By_Facility
+          (Manager.Facility)
+      loop
+         Stock.Set_Quantity
+           (Harriet.Db.Pop_Group.Get (Employee.Pop_Group).Reference,
+            Harriet.Quantities.Scale (Employee.Quantity, Manager.Capacity));
+      end loop;
+   end Get_Required_Stock;
 
 end Harriet.Managers.Installations;

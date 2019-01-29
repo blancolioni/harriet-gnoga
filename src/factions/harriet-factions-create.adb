@@ -25,6 +25,7 @@ with Harriet.Db.Facility_Worker;
 with Harriet.Db.Faction;
 with Harriet.Db.Generated_Resource;
 with Harriet.Db.Installation;
+with Harriet.Db.Market;
 with Harriet.Db.Pop_Group;
 with Harriet.Db.Resource;
 with Harriet.Db.Resource_Generator;
@@ -54,10 +55,10 @@ package body Harriet.Factions.Create is
       Config  : Tropos.Configuration);
 
    procedure Create_Initial_Installations
-     (Faction : Harriet.Db.Faction_Reference;
-      World   : Harriet.Db.World_Reference;
-      Sector  : Harriet.Db.World_Sector_Reference;
-      Config  : Tropos.Configuration);
+     (Faction     : Harriet.Db.Faction_Reference;
+      World       : Harriet.Db.World_Reference;
+      Hub_Sector  : Harriet.Db.World_Sector_Reference;
+      Config      : Tropos.Configuration);
 
    function Choose_Facility
      (Sector : Harriet.Db.World_Sector_Reference)
@@ -216,6 +217,9 @@ package body Harriet.Factions.Create is
                         Capital_World => Capital);
       begin
 
+         Harriet.Db.Market.Create
+           (World => Capital);
+
          Create_Initial_Ships
            (Faction, Capital, Setup.Child ("ships"));
 
@@ -271,10 +275,10 @@ package body Harriet.Factions.Create is
    ----------------------------------
 
    procedure Create_Initial_Installations
-     (Faction : Harriet.Db.Faction_Reference;
-      World   : Harriet.Db.World_Reference;
-      Sector  : Harriet.Db.World_Sector_Reference;
-      Config  : Tropos.Configuration)
+     (Faction     : Harriet.Db.Faction_Reference;
+      World       : Harriet.Db.World_Reference;
+      Hub_Sector  : Harriet.Db.World_Sector_Reference;
+      Config      : Tropos.Configuration)
    is
       pragma Unreferenced (World);
       Owner : constant Harriet.Db.Owner_Reference :=
@@ -328,7 +332,7 @@ package body Harriet.Factions.Create is
                use Harriet.Money;
             begin
                Harriet.Worlds.Add_Population
-                 (Sector  => Sector,
+                 (Sector  => Hub_Sector,
                   Faction => Faction,
                   Group   => Employee.Pop_Group,
                   Size    => Employee.Quantity,
@@ -343,7 +347,7 @@ package body Harriet.Factions.Create is
 
    begin
 
-      Harriet.Worlds.Set_Owner (Sector, Faction);
+      Harriet.Worlds.Set_Owner (Hub_Sector, Faction);
 
       for Installation_Config of Config loop
          declare
@@ -358,7 +362,8 @@ package body Harriet.Factions.Create is
                          Installation_Config.Get
                            ("manager", "default-installation");
             Ref : constant Harriet.Db.Installation_Reference :=
-                         Create_Installation (Facility, Sector, Cash, Manager);
+                         Create_Installation
+                           (Facility, Hub_Sector, Cash, Manager);
             Stock    : constant Harriet.Db.Has_Stock_Reference :=
                          Harriet.Db.Installation.Get (Ref).Reference;
          begin
@@ -414,7 +419,7 @@ package body Harriet.Factions.Create is
          end;
       end loop;
 
-      for Neighbour of Harriet.Worlds.Get_Neighbours (Sector) loop
+      for Neighbour of Harriet.Worlds.Get_Neighbours (Hub_Sector) loop
 
          Harriet.Worlds.Set_Owner (Neighbour, Faction);
 
