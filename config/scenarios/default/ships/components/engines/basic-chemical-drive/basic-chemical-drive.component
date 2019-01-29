@@ -26,7 +26,7 @@ thrust = {
    maximum = 6M
 }
 
-Ve = 60K
+Ve = 44K
 
 heat = 1000
 throttled = yes
