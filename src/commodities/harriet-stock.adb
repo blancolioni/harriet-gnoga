@@ -58,20 +58,25 @@ package body Harriet.Stock is
       Value    : Harriet.Money.Money_Type)
    is
       use Harriet.Money, Harriet.Quantities;
-      Stock : constant Harriet.Db.Stock_Item.Stock_Item_Type :=
-                Harriet.Db.Stock_Item.Get_By_Stock_Item
-                  (To, Item);
    begin
-      if Stock.Has_Element then
-         Stock.Set_Quantity (Stock.Quantity + Quantity);
-         Stock.Set_Value (Stock.Value + Value);
-      else
-         Harriet.Db.Stock_Item.Create
-           (Has_Stock => To,
-            Commodity => Item,
-            Quantity  => Quantity,
-            Value     => Value);
-      end if;
+
+      declare
+         Stock : constant Harriet.Db.Stock_Item.Stock_Item_Type :=
+                   Harriet.Db.Stock_Item.Get_By_Stock_Item
+                     (To, Item);
+      begin
+         if Stock.Has_Element then
+            Stock.Set_Quantity (Stock.Quantity + Quantity);
+            Stock.Set_Value (Stock.Value + Value);
+         else
+            Harriet.Db.Stock_Item.Create
+              (Has_Stock => To,
+               Commodity => Item,
+               Quantity  => Quantity,
+               Value     => Value);
+         end if;
+      end;
+
       Register_Stock (To, Item);
    end Add_Stock;
 
