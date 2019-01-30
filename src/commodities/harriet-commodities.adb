@@ -32,6 +32,25 @@ package body Harriet.Commodities is
       end loop;
    end Add;
 
+   ------------------------
+   -- Get_Price_Per_Item --
+   ------------------------
+
+   function Get_Price_Per_Item
+     (Stock     : Stock_Type;
+      Commodity : Harriet.Db.Commodity_Reference)
+      return Harriet.Money.Price_Type
+   is
+      use Harriet.Quantities;
+      Rec : constant Stock_Record := Stock.Get_Rec (Commodity);
+   begin
+      if Rec.Quantity = Zero then
+         return Harriet.Money.Zero;
+      else
+         return Harriet.Money.Price (Rec.Value, Rec.Quantity);
+      end if;
+   end Get_Price_Per_Item;
+
    ------------------
    -- Get_Quantity --
    ------------------
@@ -209,6 +228,21 @@ package body Harriet.Commodities is
          end if;
       end loop;
       Stock.List.Append ((Commodity, Quantity, Value));
+   end Set_Quantity;
+
+   ------------------
+   -- Set_Quantity --
+   ------------------
+
+   procedure Set_Quantity
+     (Stock     : in out Stock_Type;
+      Commodity : Harriet.Db.Commodity_Reference;
+      Quantity  : Harriet.Quantities.Quantity_Type;
+      Price_Per : Harriet.Money.Price_Type)
+   is
+   begin
+      Stock.Set_Quantity (Commodity, Quantity,
+                          Harriet.Money.Total (Price_Per, Quantity));
    end Set_Quantity;
 
    --------------------

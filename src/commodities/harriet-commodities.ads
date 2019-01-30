@@ -29,11 +29,22 @@ package Harriet.Commodities is
       Commodity : Harriet.Db.Commodity_Reference)
       return Harriet.Money.Money_Type;
 
+   function Get_Price_Per_Item
+     (Stock     : Stock_Type;
+      Commodity : Harriet.Db.Commodity_Reference)
+      return Harriet.Money.Price_Type;
+
    procedure Set_Quantity
      (Stock     : in out Stock_Type;
       Commodity : Harriet.Db.Commodity_Reference;
       Quantity  : Harriet.Quantities.Quantity_Type;
       Value     : Harriet.Money.Money_Type);
+
+   procedure Set_Quantity
+     (Stock     : in out Stock_Type;
+      Commodity : Harriet.Db.Commodity_Reference;
+      Quantity  : Harriet.Quantities.Quantity_Type;
+      Price_Per : Harriet.Money.Price_Type);
 
    function Total_Quantity
      (Stock     : Stock_Type)
