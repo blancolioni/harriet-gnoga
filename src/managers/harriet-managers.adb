@@ -1,5 +1,8 @@
+with Ada.Text_IO;
+
 with WL.String_Maps;
 
+with Harriet.Logging;
 with Harriet.Updates;
 
 with Harriet.Db.Managed;
@@ -48,6 +51,11 @@ package body Harriet.Managers is
             Rec.Set_Next_Event (Update.Manager.Next_Update);
             Rec.Set_Active (True);
          else
+            Harriet.Logging.Log
+              (Actor    => "update",
+               Location => "",
+               Category => "",
+               Message  => "deactivating");
             Rec.Set_Active (False);
          end if;
       end;
@@ -89,6 +97,7 @@ package body Harriet.Managers is
 
             begin
                if Manager /= null then
+                  Manager.Is_Active := Managed.Active;
                   Manager.Managed := Ref;
                   Active_Map.Insert (Key, Manager);
                   if Managed.Active then
@@ -101,6 +110,14 @@ package body Harriet.Managers is
                            Update => Update);
                      end;
                   end if;
+               else
+                  Ada.Text_IO.Put_Line
+                    (Ada.Text_IO.Standard_Error,
+                     "cannot create manager '"
+                     & Managed.Manager
+                     & "' for "
+                     & Harriet.Db.Record_Type'Image
+                       (Managed.Top_Record));
                end if;
             end;
          end if;
@@ -155,6 +172,7 @@ package body Harriet.Managers is
                Update => Update);
          end;
       end if;
+
    end Set_Next_Update_Time;
 
 end Harriet.Managers;
