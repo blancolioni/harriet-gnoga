@@ -18,7 +18,7 @@ package Harriet.Markets is
 
    procedure Reset_Offers
      (Market : Harriet.Db.Market_Reference;
-      Agent  : Harriet.Db.Agent.Agent_Type);
+      Agent  : Harriet.Db.Agent_Reference);
 
    procedure Ask
      (Market    : Harriet.Db.Market_Reference;

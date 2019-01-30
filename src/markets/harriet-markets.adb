@@ -361,7 +361,7 @@ package body Harriet.Markets is
 
    procedure Reset_Offers
      (Market : Harriet.Db.Market_Reference;
-      Agent  : Harriet.Db.Agent.Agent_Type)
+      Agent  : Harriet.Db.Agent_Reference)
    is
       package Offer_Lists is
         new Ada.Containers.Doubly_Linked_Lists
@@ -371,7 +371,7 @@ package body Harriet.Markets is
    begin
       for Offer of
         Harriet.Db.Market_Offer.Select_By_Agent_Offer
-          (Market, Agent.Reference)
+          (Market, Agent)
       loop
          Offers.Append (Offer.Reference);
       end loop;
