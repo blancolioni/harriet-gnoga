@@ -273,31 +273,38 @@ package body Harriet.Configure.Ships is
                         Harriet.Ships.Design_Thrust (Design);
       begin
          Ada.Text_IO.Put_Line
-           (Design_Config.Config_Name & ": empty mass "
+           ("Name:          " & Design_Config.Config_Name);
+         Ada.Text_IO.Put_Line
+           ("Mass (empty):  "
             & Harriet.Real_Images.Approximate_Image
               (Empty_Mass / 1000.0)
-            & "t"
-            & " fuel mass "
+            & "t");
+         Ada.Text_IO.Put_Line
+           ("Mass (fueled): "
             & Harriet.Real_Images.Approximate_Image
-              (Fuel_Mass / 1000.0)
-            & "t"
-            & " cargo volume "
+              ((Empty_Mass + Fuel_Mass) / 1000.0)
+            & "t");
+         Ada.Text_IO.Put_Line
+           ("Mass (loaded): "
             & Harriet.Real_Images.Approximate_Image
-              (Cargo_Volume)
-            & "m3"
-            & " acceleration (fueled) "
+              ((Empty_Mass + Fuel_Mass) / 1000.0 + Cargo_Volume)
+            & "t");
+         Ada.Text_IO.Put_Line
+           ("Accel (fueled): "
             & Harriet.Real_Images.Approximate_Image
               (Thrust / (Empty_Mass + Fuel_Mass)
                / Harriet.Solar_System.Earth_Gravity)
-            & "g"
-            & " acceleration (fueled, loaded) "
+            & "g");
+         Ada.Text_IO.Put_Line
+           ("Accel (loaded): "
             & Harriet.Real_Images.Approximate_Image
               (Thrust / (Empty_Mass + Fuel_Mass + Cargo_Volume * 1000.0)
                / Harriet.Solar_System.Earth_Gravity)
-            & "g"
-            & " delta-v: "
+            & "g");
+         Ada.Text_IO.Put_Line
+           ("Delta-v (loaded): "
             & Harriet.Real_Images.Approximate_Image
-              (Harriet.Ships.Design_Delta_V (Design))
+              (Harriet.Ships.Design_Delta_V (Design, Cargo_Volume * 1000.0))
             & "m/s");
 
       end;
