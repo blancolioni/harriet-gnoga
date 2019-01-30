@@ -1,6 +1,7 @@
 with Ada.Containers.Indefinite_Doubly_Linked_Lists;
 with Ada.Containers.Indefinite_Holders;
 with Ada.Containers.Indefinite_Ordered_Maps;
+with Ada.Exceptions;
 with Ada.Text_IO;
 
 with Harriet.Sessions;
@@ -89,7 +90,15 @@ package body Harriet.Updates is
                Dispatch_List := List;
             end Dispatch;
             for Update of Dispatch_List loop
-               Update.Activate;
+               begin
+                  Update.Activate;
+               exception
+                  when E : others =>
+                     Ada.Text_IO.Put_Line
+                       (Ada.Text_IO.Standard_Error,
+                        "error while executing update: "
+                        & Ada.Exceptions.Exception_Message (E));
+               end;
             end loop;
          or
             accept Stop;
