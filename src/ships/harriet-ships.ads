@@ -50,7 +50,8 @@ package Harriet.Ships is
       return Non_Negative_Real;
 
    function Design_Delta_V
-     (Design : Harriet.Db.Ship_Design_Reference)
+     (Design     : Harriet.Db.Ship_Design_Reference;
+      Cargo_Mass : Non_Negative_Real)
       return Non_Negative_Real;
 
    function Design_Mass

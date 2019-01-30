@@ -197,7 +197,8 @@ package body Harriet.Ships is
    --------------------
 
    function Design_Delta_V
-     (Design : Harriet.Db.Ship_Design_Reference)
+     (Design     : Harriet.Db.Ship_Design_Reference;
+      Cargo_Mass : Non_Negative_Real)
       return Non_Negative_Real
    is
       Ve : Non_Negative_Real := 0.0;
@@ -226,7 +227,8 @@ package body Harriet.Ships is
 
       declare
          use Harriet.Elementary_Functions;
-         Dry_Mass : constant Non_Negative_Real := Design_Mass (Design);
+         Dry_Mass : constant Non_Negative_Real :=
+                      Design_Mass (Design) + Cargo_Mass;
          Fuel_Mass : constant Non_Negative_Real := Design_Fuel_Mass (Design);
          Full_Mass : constant Non_Negative_Real := Dry_Mass + Fuel_Mass;
       begin
