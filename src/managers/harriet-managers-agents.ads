@@ -13,17 +13,21 @@ package Harriet.Managers.Agents is
      (Manager : not null access Root_Agent_Manager);
 
    procedure Create_Market_Offers
-     (Manager : in out Root_Agent_Manager)
-   is abstract;
+     (Manager : in out Root_Agent_Manager);
 
    procedure Get_Required_Stock
-     (Manager : Root_Agent_Manager;
-      Stock   : in out Harriet.Commodities.Stock_Type)
+     (Manager  : Root_Agent_Manager;
+      Stock    : in out Harriet.Commodities.Stock_Type)
    is abstract;
 
    procedure Execute_Agent_Tasks
      (Manager : in out Root_Agent_Manager)
    is abstract;
+
+   function Calculate_Capacity
+     (Manager : Root_Agent_Manager;
+      Stock   : Harriet.Commodities.Stock_Type)
+      return Unit_Real;
 
    function Next_Sleep_Duration
      (Manager : Root_Agent_Manager)
@@ -64,6 +68,10 @@ package Harriet.Managers.Agents is
       Quantity  : Harriet.Quantities.Quantity_Type;
       Price     : Harriet.Money.Price_Type);
 
+   function Capacity
+     (Manager : Root_Agent_Manager'Class)
+      return Unit_Real;
+
    function Cash
      (Manager : Root_Agent_Manager'Class)
       return Harriet.Money.Money_Type;
@@ -83,6 +91,12 @@ private
          Market       : Harriet.Db.Market_Reference;
          Account      : Harriet.Db.Account_Reference;
          World        : Harriet.Db.World_Reference;
+         Capacity     : Unit_Real := 1.0;
       end record;
+
+   function Capacity
+     (Manager : Root_Agent_Manager'Class)
+      return Unit_Real
+   is (Manager.Capacity);
 
 end Harriet.Managers.Agents;

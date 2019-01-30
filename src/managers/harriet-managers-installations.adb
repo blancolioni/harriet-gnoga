@@ -4,7 +4,6 @@ with Harriet.Logging;
 with Harriet.Money;
 with Harriet.Quantities;
 with Harriet.Random;
-with Harriet.Real_Images;
 with Harriet.Stock;
 
 with Harriet.Markets;
@@ -45,41 +44,6 @@ package body Harriet.Managers.Installations is
      (Manager : in out Hub_Manager)
    is null;
 
-   ------------------------
-   -- Calculate_Capacity --
-   ------------------------
-
-   function Calculate_Capacity
-     (Manager : Root_Installation_Manager;
-      Stock   : Harriet.Commodities.Stock_Type)
-      return Unit_Real
-   is
-      Result : Unit_Real := 1.0;
-   begin
-      for Employee of
-        Harriet.Db.Facility_Worker.Select_By_Facility
-          (Manager.Facility)
-      loop
-         declare
-            use Harriet.Quantities;
-            Commodity : constant Harriet.Db.Commodity_Reference :=
-                          Harriet.Db.Pop_Group.Get
-                            (Employee.Pop_Group).Reference;
-            Required  : constant Quantity_Type :=
-                          Employee.Quantity;
-            Employed  : constant Quantity_Type :=
-                          Stock.Get_Quantity (Commodity);
-            Limit     : constant Non_Negative_Real :=
-                          To_Real (Employed) / To_Real (Required);
-         begin
-            if Limit < Result then
-               Result := Limit;
-            end if;
-         end;
-      end loop;
-      return Result;
-   end Calculate_Capacity;
-
    ----------------------------
    -- Create_Default_Manager --
    ----------------------------
@@ -111,7 +75,6 @@ package body Harriet.Managers.Installations is
                            (Harriet.Managers.Agents.Root_Agent_Manager with
                             Installation => Installation.Reference,
                             Facility        => Installation.Facility,
-                            Capacity        => 1.0,
                             Rgen            => Rgen);
             begin
                Manager.Initialize_Agent_Manager
@@ -143,100 +106,12 @@ package body Harriet.Managers.Installations is
                        Hub_Manager'
                          (Harriet.Managers.Agents.Root_Agent_Manager with
                           Installation => Installation.Reference,
-                          Facility     => Installation.Facility,
-                          Capacity     => 1.0);
+                          Facility     => Installation.Facility);
    begin
       Manager.Initialize_Agent_Manager
         (Installation, Installation.World);
       return new Hub_Manager'(Manager);
    end Create_Hub_Manager;
-
-   --------------------------
-   -- Create_Market_Offers --
-   --------------------------
-
-   overriding procedure Create_Market_Offers
-     (Manager : in out Root_Installation_Manager)
-   is
-      use Harriet.Commodities;
-      use Harriet.Money;
-      use Harriet.Quantities;
-      M         : Root_Installation_Manager'Class renames
-                    Root_Installation_Manager'Class (Manager);
-      Have      : Harriet.Commodities.Stock_Type;
-      Required  : Harriet.Commodities.Stock_Type;
-      Missing   : Harriet.Commodities.Stock_Type;
-      Available : Harriet.Commodities.Stock_Type;
-      Cost      : Harriet.Money.Money_Type;
-      Cash      : constant Harriet.Money.Money_Type := Manager.Cash;
-
-      procedure Place_Bid
-        (Commodity : Harriet.Db.Commodity_Reference;
-         Quantity  : Quantity_Type;
-         Value     : Money_Type);
-
-      ---------------
-      -- Place_Bid --
-      ---------------
-
-      procedure Place_Bid
-        (Commodity : Harriet.Db.Commodity_Reference;
-         Quantity  : Quantity_Type;
-         Value     : Money_Type)
-      is
-         pragma Unreferenced (Value);
-         Price : constant Harriet.Money.Price_Type :=
-                   Manager.Current_Market_Ask_Price (Commodity);
-      begin
-         Manager.Place_Bid (Commodity, Quantity, Price);
-      end Place_Bid;
-
-   begin
-      Harriet.Logging.Log
-        (Actor    => Harriet.Db.Facility.Get (Manager.Facility).Tag,
-         Location => Harriet.Worlds.Name (Manager.World),
-         Category => "manager",
-         Message  => "create market offers");
-      Manager.Current_Stock (Have);
-      Manager.Capacity := 1.0;
-      M.Get_Required_Stock (Required);
-      Missing := Harriet.Commodities.Missing (Have, Required);
-
-      if Missing.Total_Quantity > Zero then
-         Manager.Try_Bids (Missing, Available);
-         Cost := Available.Total_Value;
-
-         Available.Add (Have);
-
-         if Cost > Cash then
-            declare
-               Base : constant Unit_Real :=
-                        M.Calculate_Capacity (Have);
-            begin
-               Manager.Capacity :=
-                 Base +
-                   (Manager.Capacity - Base) * To_Real (Cash) / To_Real (Cost);
-            end;
-         end if;
-
-         Harriet.Logging.Log
-           (Actor    => Harriet.Db.Facility.Get (Manager.Facility).Tag,
-            Location => Harriet.Worlds.Name (Manager.World),
-            Category => "manager",
-            Message  =>
-              "available commodities "
-            & Harriet.Quantities.Show (Available.Total_Quantity)
-            & "; cost of missing commodities: "
-            & Harriet.Money.Show (Cost)
-            & "; cash "
-            & Harriet.Money.Show (Cash)
-            & "; estimated capacity: "
-            & Harriet.Real_Images.Approximate_Image (Manager.Capacity));
-
-         Missing := Available.Missing (Required);
-         Missing.Iterate (Place_Bid'Access);
-      end if;
-   end Create_Market_Offers;
 
    --------------------------
    -- Create_Market_Offers --
@@ -280,9 +155,6 @@ package body Harriet.Managers.Installations is
       end Add_Offers;
 
    begin
-
-      Harriet.Markets.Reset_Offers (Market, Installation);
-
       Create_Market_Offers (Root_Installation_Manager (Manager));
 
       Harriet.Stock.Scan_Stock
@@ -319,18 +191,20 @@ package body Harriet.Managers.Installations is
             then
                declare
                   use Harriet.Quantities;
+                  Commodity : constant Harriet.Db.Commodity_Reference :=
+                                Harriet.Db.Resource.Get (Resource).Reference;
                   Quantity : constant Quantity_Type :=
                                To_Quantity
                                  (Deposit.Accessibility * 20.0
                                   * (Harriet.Random.Unit_Random + 0.5));
                   Cost     : constant Harriet.Money.Money_Type :=
-                               Harriet.Money.Zero;
+                               Harriet.Money.Total
+                                 (Manager.Current_Market_Bid_Price
+                                    (Commodity),
+                                  Quantity);
                begin
                   Harriet.Stock.Add_Stock
-                    (Installation,
-                     Harriet.Db.Resource.Get (Resource).Reference,
-                     Quantity,
-                     Cost);
+                    (Installation, Commodity, Quantity, Cost);
                end;
             end if;
          end;
