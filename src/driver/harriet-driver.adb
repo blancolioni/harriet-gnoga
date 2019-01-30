@@ -294,19 +294,6 @@ begin
 
    Ada.Text_IO.Put_Line ("starting server ...");
 
-   Gnoga.Application.Title ("Harriet");
-
-   Gnoga.Application.HTML_On_Close ("Application disconnected.");
-
-   Gnoga.Application.Multi_Connect.Initialize
-     (Port    => 8080,
-      Boot    => "harriet.html",
-      Verbose => True);
-
-   Gnoga.Application.Multi_Connect.On_Connect_Handler
-     (Event => Harriet.UI.Gnoga_UI.On_Connect_Default'Unrestricted_Access,
-      Path  => "default");
-
    Harriet.Calendar.Load_Clock;
 
    Ada.Text_IO.Put_Line
@@ -314,7 +301,42 @@ begin
 
    Harriet.Updates.Start_Updates;
 
-   Gnoga.Application.Multi_Connect.Message_Loop;
+   if Harriet.Options.Command_Line then
+      if True then
+         loop
+            Ada.Text_IO.Put ("> ");
+            Ada.Text_IO.Flush;
+
+            begin
+               declare
+                  Line : constant String := Ada.Text_IO.Get_Line;
+               begin
+                  exit when Line = "exit";
+               end;
+            exception
+               when Ada.Text_IO.End_Error =>
+                  exit;
+            end;
+         end loop;
+      else
+         delay 600.0;
+      end if;
+   else
+      Gnoga.Application.Title ("Harriet");
+
+      Gnoga.Application.HTML_On_Close ("Application disconnected.");
+
+      Gnoga.Application.Multi_Connect.Initialize
+        (Port    => 8080,
+         Boot    => "harriet.html",
+         Verbose => True);
+
+      Gnoga.Application.Multi_Connect.On_Connect_Handler
+        (Event => Harriet.UI.Gnoga_UI.On_Connect_Default'Unrestricted_Access,
+         Path  => "default");
+
+      Gnoga.Application.Multi_Connect.Message_Loop;
+   end if;
 
    Harriet.Updates.Stop_Updates;
 
