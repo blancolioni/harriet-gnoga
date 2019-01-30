@@ -3,6 +3,10 @@ with Ada.Containers.Doubly_Linked_Lists;
 with Harriet.Calendar;
 with Harriet.Logging;
 
+with Harriet.Agents;
+with Harriet.Employment;
+with Harriet.Stock;
+
 with Harriet.Db.Ask_Offer;
 with Harriet.Db.Bid_Offer;
 with Harriet.Db.Market_Offer;
@@ -42,6 +46,20 @@ package body Harriet.Markets is
       Price     : Harriet.Money.Price_Type;
       Message   : String);
 
+   procedure Execute_Ask_Offer
+     (Account   : Harriet.Db.Account_Reference;
+      Has_Stock : Harriet.Db.Has_Stock_Reference;
+      Commodity : Harriet.Db.Commodity_Reference;
+      Quantity  : Harriet.Quantities.Quantity_Type;
+      Price     : Harriet.Money.Price_Type);
+
+   procedure Execute_Bid_Offer
+     (Account   : Harriet.Db.Account_Reference;
+      Has_Stock : Harriet.Db.Has_Stock_Reference;
+      Commodity : Harriet.Db.Commodity_Reference;
+      Quantity  : Harriet.Quantities.Quantity_Type;
+      Price     : Harriet.Money.Price_Type);
+
    ---------
    -- Ask --
    ---------
@@ -77,10 +95,36 @@ package body Harriet.Markets is
             This_Quantity : constant Quantity_Type :=
                               Min (Bid.Quantity, Remaining);
          begin
-            Log_Market
-              (Market, Agent, Commodity,
-               "sell " & Show (This_Quantity)
-               & " for " & Show (Total (Price, This_Quantity)));
+            if Harriet.Commodities.Is_Pop_Group (Commodity) then
+               Log_Market
+                 (Market, Bid.Agent, Commodity,
+                  "employ " & Show (This_Quantity)
+                  & " for " & Show (Total (Price, This_Quantity)));
+               Harriet.Employment.Create_Employment_Contract
+                 (Employer => Bid.Agent,
+                  Employee => Agent,
+                  Quantity => This_Quantity,
+                  Salary   => Price);
+            else
+               Log_Market
+                 (Market, Agent, Commodity,
+                  "sell " & Show (This_Quantity)
+                  & " for " & Show (Total (Price, This_Quantity)));
+            end if;
+
+            Execute_Ask_Offer
+              (Account   => Account,
+               Has_Stock => Has_Stock,
+               Commodity => Commodity,
+               Quantity  => This_Quantity,
+               Price     => Price);
+
+            Execute_Bid_Offer
+              (Account   => Bid.Account,
+               Has_Stock => Bid.Has_Stock,
+               Commodity => Commodity,
+               Quantity  => This_Quantity,
+               Price     => Price);
 
             Harriet.Db.Transaction.Create
               (Time_Stamp => Harriet.Calendar.Clock,
@@ -159,10 +203,38 @@ package body Harriet.Markets is
             This_Quantity : constant Quantity_Type :=
                               Min (Ask.Quantity, Remaining);
          begin
-            Log_Market
-              (Market, Agent, Commodity,
-               "buy " & Show (This_Quantity)
-               & " for " & Show (Total (Price, This_Quantity)));
+
+            if Harriet.Commodities.Is_Pop_Group (Commodity) then
+               Log_Market
+                 (Market, Agent, Commodity,
+                  "employ " & Show (This_Quantity)
+                  & " for " & Show (Total (Price, This_Quantity)));
+               Harriet.Employment.Create_Employment_Contract
+                 (Employer => Agent,
+                  Employee => Ask.Agent,
+                  Quantity => This_Quantity,
+                  Salary   => Price);
+            else
+               Log_Market
+                 (Market, Agent, Commodity,
+                  "buy " & Show (This_Quantity)
+                  & " for " & Show (Total (Price, This_Quantity)));
+
+            end if;
+
+            Execute_Bid_Offer
+              (Account   => Account,
+               Has_Stock => Has_Stock,
+               Commodity => Commodity,
+               Quantity  => This_Quantity,
+               Price     => Price);
+
+            Execute_Ask_Offer
+              (Account   => Ask.Account,
+               Has_Stock => Ask.Has_Stock,
+               Commodity => Commodity,
+               Quantity  => This_Quantity,
+               Price     => Price);
 
             Harriet.Db.Transaction.Create
               (Time_Stamp => Harriet.Calendar.Clock,
@@ -172,6 +244,7 @@ package body Harriet.Markets is
                Seller     => Ask.Agent,
                Price      => Price,
                Quantity   => This_Quantity);
+
             Remaining := Remaining - Quantity;
          end;
          exit when Remaining = Zero;
@@ -246,6 +319,53 @@ package body Harriet.Markets is
          return Harriet.Db.Bid_Offer.Get (Bid_Ref).Price;
       end if;
    end Current_Bid_Price;
+
+   -----------------------
+   -- Execute_Ask_Offer --
+   -----------------------
+
+   procedure Execute_Ask_Offer
+     (Account   : Harriet.Db.Account_Reference;
+      Has_Stock : Harriet.Db.Has_Stock_Reference;
+      Commodity : Harriet.Db.Commodity_Reference;
+      Quantity  : Harriet.Quantities.Quantity_Type;
+      Price     : Harriet.Money.Price_Type)
+   is
+   begin
+      Harriet.Stock.Remove_Stock
+        (From     => Has_Stock,
+         Item     => Commodity,
+         Quantity => Quantity);
+      Harriet.Agents.Add_Cash
+        (Account => Account,
+         Cash    => Harriet.Money.Total (Price, Quantity));
+   end Execute_Ask_Offer;
+
+   -----------------------
+   -- Execute_Bid_Offer --
+   -----------------------
+
+   procedure Execute_Bid_Offer
+     (Account   : Harriet.Db.Account_Reference;
+      Has_Stock : Harriet.Db.Has_Stock_Reference;
+      Commodity : Harriet.Db.Commodity_Reference;
+      Quantity  : Harriet.Quantities.Quantity_Type;
+      Price     : Harriet.Money.Price_Type)
+   is
+      Cost : constant Harriet.Money.Money_Type :=
+               Harriet.Money.Total (Price, Quantity);
+   begin
+      Harriet.Stock.Add_Stock
+        (To       => Has_Stock,
+         Item     => Commodity,
+         Quantity => Quantity,
+         Value    => Cost);
+
+      Harriet.Agents.Remove_Cash
+        (Account => Account,
+         Cash    => Cost);
+
+   end Execute_Bid_Offer;
 
    ---------------
    -- First_Ask --

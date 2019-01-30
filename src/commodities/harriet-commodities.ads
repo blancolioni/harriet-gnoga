@@ -17,6 +17,10 @@ package Harriet.Commodities is
      (Commodity : Harriet_Commodity)
       return Harriet.Money.Price_Type;
 
+   function Is_Pop_Group
+     (Commodity : Harriet_Commodity)
+      return Boolean;
+
    type Stock_Type is tagged private;
 
    function Get_Quantity

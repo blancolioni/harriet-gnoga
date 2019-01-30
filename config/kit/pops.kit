@@ -16,9 +16,11 @@ record Pop : Transportable, Managed, Agent is
    key Ship;
    key Pop_Group;
    Size      : Quantity_Type;
+   Salary    : Price_Type;
    Happiness : Long_Float;
    key Faction_World with Faction, World;
    unique key Pop_Group_Sector with Pop_Group, World_Sector;
+   unique key Pop_Group_Installation with Pop_Group, Installation;
 end Pop;
 
 end Pops;

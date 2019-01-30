@@ -1,6 +1,7 @@
 with Harriet.Calendar;
 
 with Harriet.Agents;
+with Harriet.Stock;
 
 with Harriet.Configure.Worlds;
 
@@ -10,6 +11,7 @@ with Harriet.Db.Faction;
 with Harriet.Db.Generation;
 with Harriet.Db.Market;
 with Harriet.Db.Pop;
+with Harriet.Db.Pop_Group;
 with Harriet.Db.Sector_Neighbour;
 with Harriet.Db.Sector_Vertex;
 with Harriet.Db.Ship;
@@ -35,10 +37,14 @@ package body Harriet.Worlds is
       Pop : constant Harriet.Db.Pop.Pop_Type :=
               Harriet.Db.Pop.Get_By_Pop_Group_Sector
                 (Group, Sector);
+      Commodity : constant Harriet.Db.Commodity_Reference :=
+                    Harriet.Db.Pop_Group.Get (Group).Reference;
    begin
       if Pop.Has_Element then
          Pop.Set_Size (Pop.Size + Size);
          Harriet.Agents.Add_Cash (Pop, Cash);
+         Harriet.Stock.Add_Stock
+           (Pop, Commodity, Size, Cash);
       else
          declare
             Account : constant Harriet.Db.Account_Reference :=
@@ -62,6 +68,11 @@ package body Harriet.Worlds is
                Size             => Size,
                Happiness        => 1.0);
          end;
+         Harriet.Stock.Add_Stock
+           (Harriet.Db.Pop.Get_By_Pop_Group_Sector
+              (Group, Sector),
+            Commodity, Size, Cash);
+
       end if;
    end Add_Population;
 

@@ -24,6 +24,10 @@ package body Harriet.Managers.Agents is
         (M.Next_Sleep_Duration);
    end Activate;
 
+   ------------------------
+   -- Calculate_Capacity --
+   ------------------------
+
    function Calculate_Capacity
      (Manager : Root_Agent_Manager;
       Stock   : Harriet.Commodities.Stock_Type)

@@ -4,6 +4,7 @@ with Ada.Containers.Indefinite_Ordered_Maps;
 with Ada.Exceptions;
 with Ada.Text_IO;
 
+with Harriet.Employment;
 with Harriet.Sessions;
 with Harriet.Signals;
 
@@ -100,6 +101,7 @@ package body Harriet.Updates is
                         & Ada.Exceptions.Exception_Message (E));
                end;
             end loop;
+            Harriet.Employment.Execute_Employment_Contracts;
          or
             accept Stop;
             exit;

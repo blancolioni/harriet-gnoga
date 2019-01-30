@@ -120,6 +120,19 @@ package body Harriet.Commodities is
       return Harriet.Db.Commodity.Get (Commodity).Initial_Price;
    end Initial_Price;
 
+   ------------------
+   -- Is_Pop_Group --
+   ------------------
+
+   function Is_Pop_Group
+     (Commodity : Harriet_Commodity)
+      return Boolean
+   is
+      use Harriet.Db;
+   begin
+      return Harriet.Db.Commodity.Get (Commodity).Top_Record = R_Pop_Group;
+   end Is_Pop_Group;
+
    -------------
    -- Iterate --
    -------------

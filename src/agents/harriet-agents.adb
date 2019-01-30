@@ -17,6 +17,21 @@ package body Harriet.Agents is
       Account.Set_Cash (Account.Cash + Cash);
    end Add_Cash;
 
+   --------------
+   -- Add_Cash --
+   --------------
+
+   procedure Add_Cash
+     (Account : Harriet.Db.Account_Reference;
+      Cash    : Harriet.Money.Money_Type)
+   is
+      use type Harriet.Money.Money_Type;
+      Rec : constant Harriet.Db.Account.Account_Type :=
+              Harriet.Db.Account.Get (Account);
+   begin
+      Rec.Set_Cash (Rec.Cash + Cash);
+   end Add_Cash;
+
    ----------
    -- Cash --
    ----------
@@ -40,5 +55,20 @@ package body Harriet.Agents is
    begin
       return Cash (Agent.Account);
    end Cash;
+
+   -----------------
+   -- Remove_Cash --
+   -----------------
+
+   procedure Remove_Cash
+     (Account : Harriet.Db.Account_Reference;
+      Cash    : Harriet.Money.Money_Type)
+   is
+      use type Harriet.Money.Money_Type;
+      Rec : constant Harriet.Db.Account.Account_Type :=
+              Harriet.Db.Account.Get (Account);
+   begin
+      Rec.Set_Cash (Rec.Cash - Cash);
+   end Remove_Cash;
 
 end Harriet.Agents;

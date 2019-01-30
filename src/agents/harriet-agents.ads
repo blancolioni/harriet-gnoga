@@ -16,4 +16,12 @@ package Harriet.Agents is
      (Agent : Harriet.Db.Agent.Agent_Type;
       Cash  : Harriet.Money.Money_Type);
 
+   procedure Add_Cash
+     (Account : Harriet.Db.Account_Reference;
+      Cash    : Harriet.Money.Money_Type);
+
+   procedure Remove_Cash
+     (Account : Harriet.Db.Account_Reference;
+      Cash    : Harriet.Money.Money_Type);
+
 end Harriet.Agents;

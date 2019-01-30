@@ -13,12 +13,6 @@ package body Harriet.Stock is
      (Stock     : Harriet.Db.Has_Stock_Reference;
       Commodity : Harriet.Db.Commodity_Reference);
 
-   procedure Add_Stock
-     (To       : Harriet.Db.Has_Stock_Reference;
-      Item     : Harriet.Db.Commodity_Reference;
-      Quantity : Harriet.Quantities.Quantity_Type;
-      Value    : Harriet.Money.Money_Type);
-
    -----------------------
    -- Add_Initial_Stock --
    -----------------------
@@ -201,6 +195,37 @@ package body Harriet.Stock is
             Value      => Value);
       end if;
    end Register_Stock;
+
+   ------------------
+   -- Remove_Stock --
+   ------------------
+
+   procedure Remove_Stock
+     (From     : Harriet.Db.Has_Stock_Reference;
+      Item     : Harriet.Db.Commodity_Reference;
+      Quantity : Harriet.Quantities.Quantity_Type)
+   is
+      use Harriet.Money, Harriet.Quantities;
+   begin
+
+      if Quantity > Zero then
+         declare
+            Stock : constant Harriet.Db.Stock_Item.Stock_Item_Type :=
+                      Harriet.Db.Stock_Item.Get_By_Stock_Item
+                        (From, Item);
+            Value : Money_Type;
+         begin
+            pragma Assert (Stock.Has_Element);
+            pragma Assert (Stock.Quantity >= Quantity);
+
+            Value := Total (Price (Stock.Value, Stock.Quantity), Quantity);
+            Stock.Set_Quantity (Stock.Quantity - Quantity);
+            Stock.Set_Value (Stock.Value - Value);
+         end;
+         Register_Stock (From, Item);
+      end if;
+
+   end Remove_Stock;
 
    ----------------
    -- Scan_Stock --
