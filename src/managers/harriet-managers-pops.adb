@@ -44,6 +44,8 @@ package body Harriet.Managers.Pops is
      (Manager : in out Root_Pop_Manager)
    is
    begin
+      Harriet.Managers.Agents.Root_Agent_Manager (Manager)
+        .Create_Market_Offers;
       if not Manager.Employed then
          Manager.Place_Ask
            (Commodity => Manager.Commodity,
