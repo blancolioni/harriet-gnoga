@@ -65,6 +65,7 @@ package body Harriet.Worlds is
                Installation     => Harriet.Db.Null_Installation_Reference,
                Ship             => Harriet.Db.Null_Ship_Reference,
                Pop_Group        => Group,
+               Salary           => Harriet.Money.Zero,
                Size             => Size,
                Happiness        => 1.0);
          end;
