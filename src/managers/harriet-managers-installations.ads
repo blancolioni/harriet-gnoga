@@ -1,5 +1,7 @@
 with Harriet.Commodities;
 
+private with Harriet.Managers.Agents;
+
 package Harriet.Managers.Installations is
 
    function Create_Default_Manager
@@ -13,22 +15,17 @@ package Harriet.Managers.Installations is
 private
 
    type Root_Installation_Manager is
-     abstract new Root_Manager_Type with
+     abstract new Harriet.Managers.Agents.Root_Agent_Manager with
       record
          Installation : Harriet.Db.Installation_Reference;
-         Agent        : Harriet.Db.Agent_Reference;
-         Has_Stock    : Harriet.Db.Has_Stock_Reference;
-         Market       : Harriet.Db.Market_Reference;
-         Account      : Harriet.Db.Account_Reference;
          Facility     : Harriet.Db.Facility_Reference;
-         World        : Harriet.Db.World_Reference;
          Capacity     : Unit_Real;
       end record;
 
-   overriding procedure Activate
-     (Manager : not null access Root_Installation_Manager);
+   overriding procedure Create_Market_Offers
+     (Manager : in out Root_Installation_Manager);
 
-   procedure Get_Required_Stock
+   overriding procedure Get_Required_Stock
      (Manager : Root_Installation_Manager;
       Stock   : in out Harriet.Commodities.Stock_Type);
 

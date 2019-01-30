@@ -159,14 +159,23 @@ package body Harriet.Commodities is
       return Stock : Stock_Type do
          for Rec of Required_Stock.List loop
             declare
-               use Harriet.Quantities;
+               use Harriet.Money, Harriet.Quantities;
                Available : constant Stock_Record :=
                              Get_Rec (Available_Stock, Rec.Commodity);
+               Missing   : constant Quantity_Type :=
+                             (if Available.Quantity < Rec.Quantity
+                              then Rec.Quantity - Available.Quantity
+                              else Zero);
+               Value     : constant Harriet.Money.Money_Type :=
+                             Harriet.Money.Total
+                               (Harriet.Money.Price
+                                  (Available.Value + Rec.Value,
+                                   Available.Quantity + Rec.Quantity),
+                                Missing);
             begin
-               if Available.Quantity < Rec.Quantity then
+               if Missing > Zero then
                   Stock.Set_Quantity
-                    (Rec.Commodity, Rec.Quantity - Available.Quantity,
-                     Harriet.Money.Zero);
+                    (Rec.Commodity, Missing, Value);
                end if;
             end;
          end loop;
@@ -186,6 +195,7 @@ package body Harriet.Commodities is
       use Harriet.Money, Harriet.Quantities;
       use type Harriet.Db.Commodity_Reference;
    begin
+      pragma Assert (Value > Zero or else Quantity = Zero);
       Stock.Total_Quantity := Stock.Total_Quantity + Quantity;
       Stock.Total_Value := Stock.Total_Value + Value;
 

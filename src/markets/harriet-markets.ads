@@ -55,7 +55,6 @@ package Harriet.Markets is
    procedure Try_Bid
      (Market    : Harriet.Db.Market_Reference;
       Wanted    : Harriet.Commodities.Stock_Type;
-      Available : out Harriet.Commodities.Stock_Type;
-      Cost      : out Harriet.Money.Money_Type);
+      Available : out Harriet.Commodities.Stock_Type);
 
 end Harriet.Markets;
