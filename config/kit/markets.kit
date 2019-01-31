@@ -11,7 +11,7 @@ record Market with Map is
 end Market;
    
 record Market_State is
-   Time_Stamp : Time;
+   key Time_Stamp : Time;
    Market;
    Commodity;
    Price  : Price_Type;
@@ -45,7 +45,7 @@ record Ask_Offer : Market_Offer;
 record Bid_Offer : Market_Offer;
 
 record Transaction is
-   Time_Stamp : Time;
+   key Time_Stamp : Time;
    key Market;
    key Commodity;
    key Buyer : Agent;
