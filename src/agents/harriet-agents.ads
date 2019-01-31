@@ -24,4 +24,13 @@ package Harriet.Agents is
      (Account : Harriet.Db.Account_Reference;
       Cash    : Harriet.Money.Money_Type);
 
+   procedure Move_Assets
+     (From     : Harriet.Db.Agent.Agent_Type;
+      To       : Harriet.Db.Agent.Agent_Type;
+      Fraction : Unit_Real);
+
+   procedure Log_Agent
+     (Agent   : Harriet.Db.Agent_Reference;
+      Message : String);
+
 end Harriet.Agents;

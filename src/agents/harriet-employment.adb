@@ -1,13 +1,21 @@
 with Ada.Containers.Doubly_Linked_Lists;
 
-with Harriet.Agents;
 with Harriet.Calendar;
+with Harriet.Pops;
+with Harriet.Updates.Events;
 
-with Harriet.Db.Account;
 with Harriet.Db.Installation;
 with Harriet.Db.Pop;
 
 package body Harriet.Employment is
+
+   Employment_Updates_Started : Boolean := False;
+
+   type Employment_Contracts_Update is
+     new Harriet.Updates.Update_Interface with null record;
+
+   overriding procedure Activate
+     (Item : Employment_Contracts_Update);
 
    type Contract_Record is
       record
@@ -28,6 +36,24 @@ package body Harriet.Employment is
       Quantity : Harriet.Quantities.Quantity_Type;
       Salary   : Harriet.Money.Price_Type);
 
+   --------------
+   -- Activate --
+   --------------
+
+   overriding procedure Activate
+     (Item : Employment_Contracts_Update)
+   is
+   begin
+      for Contract of Current loop
+         Execute (Contract.Employer, Contract.Employee,
+                  Contract.Quantity, Contract.Salary);
+      end loop;
+      Current.Clear;
+      Harriet.Updates.Events.Update_With_Delay
+        (Harriet.Calendar.Days (1.0),
+         Item);
+   end Activate;
+
    --------------------------------
    -- Create_Employment_Contract --
    --------------------------------
@@ -40,7 +66,22 @@ package body Harriet.Employment is
    is
    begin
       Current.Append ((Employer, Employee, Quantity, Salary));
+      if not Employment_Updates_Started then
+         declare
+            use type Harriet.Calendar.Time;
+            Update : Employment_Contracts_Update;
+         begin
+            Harriet.Updates.Events.Update_At
+              (Clock  => Harriet.Calendar.Clock + Harriet.Calendar.Days (1.0),
+               Update => Update);
+            Employment_Updates_Started := True;
+         end;
+      end if;
    end Create_Employment_Contract;
+
+   -------------
+   -- Execute --
+   -------------
 
    procedure Execute
      (Employer : Harriet.Db.Agent_Reference;
@@ -48,63 +89,31 @@ package body Harriet.Employment is
       Quantity : Harriet.Quantities.Quantity_Type;
       Salary   : Harriet.Money.Price_Type)
    is
-      use Harriet.Money, Harriet.Quantities;
       Installation : constant Harriet.Db.Installation.Installation_Type :=
                        Harriet.Db.Installation.Get_Installation (Employer);
       Pop          : constant Harriet.Db.Pop.Pop_Type :=
                        Harriet.Db.Pop.Get_Pop (Employee);
-      Account      : constant Harriet.Db.Account.Account_Type :=
-                       Harriet.Db.Account.Get (Pop.Account);
       Employed_Pop : constant Harriet.Db.Pop.Pop_Type :=
                        Harriet.Db.Pop.Get_By_Pop_Group_Installation
                          (Pop.Pop_Group, Installation.Reference);
-      Cash_Per_Pop : constant Price_Type :=
-                       Price (Account.Cash, Pop.Size);
-      New_Pop_Size : constant Quantity_Type := Pop.Size - Quantity;
-      New_Account  : Harriet.Db.Account_Reference;
    begin
-      Account.Set_Cash (Account.Cash - Total (Cash_Per_Pop, Quantity));
-      Pop.Set_Size (New_Pop_Size);
       if Employed_Pop.Has_Element then
-         New_Account := Employed_Pop.Account;
-         Employed_Pop.Set_Size (Employed_Pop.Size + Quantity);
+         Employed_Pop.Set_Salary (Salary);
+         Harriet.Pops.Move_Pops (Pop, Employed_Pop, Quantity);
       else
-         New_Account :=
-           Harriet.Db.Account.Create
-             (Harriet.Db.Null_Account_Reference, Zero, Zero);
-         Harriet.Db.Pop.Create
-           (Transported_Size => 0.0,
-            Active           => True,
-            Next_Event       => Harriet.Calendar.Clock,
-            Manager          => "default-pop",
-            Account          => New_Account,
-            Capacity         => Zero,
-            Faction          => Pop.Faction,
-            World            => Installation.World,
-            World_Sector     => Installation.World_Sector,
-            Installation     => Installation.Reference,
-            Ship             => Harriet.Db.Null_Ship_Reference,
-            Pop_Group        => Pop.Pop_Group,
-            Size             => Quantity,
-            Salary           => Salary,
-            Happiness        => Pop.Happiness);
+         declare
+            New_Pop : constant Harriet.Db.Pop.Pop_Type :=
+                        Harriet.Pops.New_Empty_Pop
+                          (Pop.Faction, Pop.Pop_Group,
+                           Installation.World,
+                           Installation.World_Sector);
+         begin
+            New_Pop.Set_Active (True);
+            New_Pop.Set_Next_Event (Pop.Next_Event);
+            New_Pop.Set_Installation (Installation.Reference);
+            Harriet.Pops.Move_Pops (Pop, New_Pop, Quantity);
+         end;
       end if;
-
-      Harriet.Agents.Add_Cash (New_Account, Total (Cash_Per_Pop, Quantity));
-
    end Execute;
-
-   ----------------------------------
-   -- Execute_Employment_Contracts --
-   ----------------------------------
-
-   procedure Execute_Employment_Contracts is
-   begin
-      for Contract of Current loop
-         Execute (Contract.Employer, Contract.Employee,
-                  Contract.Quantity, Contract.Salary);
-      end loop;
-      Current.Clear;
-   end Execute_Employment_Contracts;
 
 end Harriet.Employment;

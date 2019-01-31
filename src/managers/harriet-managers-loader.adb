@@ -9,13 +9,13 @@ package body Harriet.Managers.Loader is
 
    procedure Register_Managers is
    begin
-      Register_Manager
+      Register.Insert
         ("default-installation",
          Harriet.Managers.Installations.Create_Default_Manager'Access);
-      Register_Manager
+      Register.Insert
         ("hub-manager",
          Harriet.Managers.Installations.Create_Hub_Manager'Access);
-      Register_Manager
+      Register.Insert
         ("default-pop",
          Harriet.Managers.Pops.Create_Default_Manager'Access);
    end Register_Managers;

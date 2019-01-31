@@ -1,32 +1,7 @@
-with Ada.Text_IO;
-
-with WL.String_Maps;
-
 with Harriet.Logging;
-with Harriet.Updates;
-
-with Harriet.Db.Managed;
+with Harriet.Updates.Events;
 
 package body Harriet.Managers is
-
-   type Manager_Update is
-     new Harriet.Updates.Update_Interface with
-      record
-         Manager : Manager_Type;
-      end record;
-
-   overriding procedure Activate
-     (Update : Manager_Update);
-
-   package Register_Maps is
-     new WL.String_Maps (Constructor_Function);
-
-   Register : Register_Maps.Map;
-
-   package Manager_Maps is
-     new WL.String_Maps (Manager_Type);
-
-   Active_Map : Manager_Maps.Map;
 
    --------------
    -- Activate --
@@ -45,7 +20,7 @@ package body Harriet.Managers is
       begin
          if Update.Manager.Has_Next_Update then
             Update.Manager.Is_Active := True;
-            Harriet.Updates.Update_At
+            Harriet.Updates.Events.Update_At
               (Clock  => Update.Manager.Next_Update,
                Update => Update);
             Rec.Set_Next_Event (Update.Manager.Next_Update);
@@ -60,81 +35,6 @@ package body Harriet.Managers is
          end if;
       end;
    end Activate;
-
-   -----------------
-   -- Get_Manager --
-   -----------------
-
-   function Get_Manager
-     (Managed : Harriet.Db.Managed_Reference;
-      Name    : String)
-      return Manager_Type
-   is
-      Key : constant String := Name & Harriet.Db.To_String (Managed);
-   begin
-      if not Active_Map.Contains (Key) then
-         return null;
-      else
-         return Active_Map.Element (Key);
-      end if;
-   end Get_Manager;
-
-   -------------------
-   -- Load_Managers --
-   -------------------
-
-   procedure Load_Managers is
-   begin
-      for Managed of Harriet.Db.Managed.Scan_By_Top_Record loop
-         if Register.Contains (Managed.Manager) then
-            declare
-               Ref     : constant Harriet.Db.Managed_Reference :=
-                           Managed.Reference;
-               Key : constant String :=
-                       Managed.Manager & Harriet.Db.To_String (Ref);
-               Manager : constant Manager_Type :=
-                           Register.Element (Managed.Manager) (Ref);
-
-            begin
-               if Manager /= null then
-                  Manager.Is_Active := Managed.Active;
-                  Manager.Managed := Ref;
-                  Active_Map.Insert (Key, Manager);
-                  if Managed.Active then
-                     declare
-                        Update : constant Manager_Update :=
-                                   (Manager => Manager);
-                     begin
-                        Harriet.Updates.Update_At
-                          (Clock  => Managed.Next_Event,
-                           Update => Update);
-                     end;
-                  end if;
-               else
-                  Ada.Text_IO.Put_Line
-                    (Ada.Text_IO.Standard_Error,
-                     "cannot create manager '"
-                     & Managed.Manager
-                     & "' for "
-                     & Harriet.Db.Record_Type'Image
-                       (Managed.Top_Record));
-               end if;
-            end;
-         end if;
-      end loop;
-   end Load_Managers;
-
-   ----------------------
-   -- Register_Manager --
-   ----------------------
-
-   procedure Register_Manager
-     (Name        : String;
-      Constructor : Constructor_Function)
-   is
-   begin
-      Register.Insert (Name, Constructor);
-   end Register_Manager;
 
    ---------------------------
    -- Set_Next_Update_Delay --
@@ -167,7 +67,7 @@ package body Harriet.Managers is
                        (Manager => Manager_Type (Manager));
          begin
             Manager.Is_Active := True;
-            Harriet.Updates.Update_At
+            Harriet.Updates.Events.Update_At
               (Clock  => Manager.Next_Update,
                Update => Update);
          end;

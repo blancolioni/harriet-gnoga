@@ -95,7 +95,6 @@ package body Harriet.Managers.Pops is
       Stock.Set_Quantity
         (Clothing.Reference, Manager.Size,
          Manager.Current_Market_Ask_Price (Clothing.Reference));
-
    end Get_Required_Stock;
 
    ----------

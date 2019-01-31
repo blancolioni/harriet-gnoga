@@ -26,8 +26,9 @@ with Harriet.Logging;
 
 with Harriet.Commands.Loader;
 with Harriet.Managers.Loader;
+with Harriet.Managers.Execution;
 
-with Harriet.Updates;
+with Harriet.Updates.Control;
 
 with Harriet.Db.Database;
 
@@ -61,7 +62,8 @@ procedure Harriet.Driver is
       end if;
    end Have_Required_Argument;
 
-   Database_Open : Boolean := False;
+   Database_Open   : Boolean := False;
+   Updates_Running : Boolean := False;
 
 begin
 
@@ -290,7 +292,7 @@ begin
    Harriet.Db.Database.Open;
    Database_Open := True;
 
-   Harriet.Managers.Load_Managers;
+   Harriet.Managers.Execution.Load_Managers;
 
    Ada.Text_IO.Put_Line ("starting server ...");
 
@@ -299,7 +301,8 @@ begin
    Ada.Text_IO.Put_Line
      ("Start date: " & Harriet.Calendar.Image (Harriet.Calendar.Clock));
 
-   Harriet.Updates.Start_Updates;
+   Harriet.Updates.Control.Start_Updates;
+   Updates_Running := True;
 
    if Harriet.Options.Command_Line then
       if True then
@@ -338,7 +341,8 @@ begin
       Gnoga.Application.Multi_Connect.Message_Loop;
    end if;
 
-   Harriet.Updates.Stop_Updates;
+   Updates_Running := False;
+   Harriet.Updates.Control.Stop_Updates;
 
    Ada.Text_IO.Put_Line
      ("Stop date: " & Harriet.Calendar.Image (Harriet.Calendar.Clock));
@@ -354,6 +358,9 @@ begin
 exception
 
    when others =>
+      if Updates_Running then
+         Harriet.Updates.Control.Stop_Updates;
+      end if;
       if Database_Open then
          Harriet.Db.Database.Close;
       end if;

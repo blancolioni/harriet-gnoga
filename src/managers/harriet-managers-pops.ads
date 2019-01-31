@@ -23,6 +23,11 @@ private
          Service_Quality     : Positive;
       end record;
 
+   overriding function Identifier
+     (Manager : Root_Pop_Manager)
+      return String
+   is ("pop" & Harriet.Db.To_String (Manager.Pop) & " manager");
+
    overriding procedure Create_Market_Offers
      (Manager : in out Root_Pop_Manager);
 

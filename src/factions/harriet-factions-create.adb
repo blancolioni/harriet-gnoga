@@ -204,6 +204,7 @@ package body Harriet.Factions.Create is
                         Plural_Name   =>
                           (if Plural_Name = "" then Name else Plural_Name),
                         Active        => True,
+                        Scheduled     => False,
                         Next_Event    => Harriet.Calendar.Clock,
                         Manager       => "",
                         Account       => Account,
@@ -317,6 +318,7 @@ package body Harriet.Factions.Create is
                          World_Sector => Sector,
                          Facility     => Facility,
                          Active       => True,
+                         Scheduled    => False,
                          Next_Event   =>
                            Harriet.Calendar.Delay_Days
                              (Harriet.Random.Unit_Random),

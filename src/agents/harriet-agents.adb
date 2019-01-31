@@ -1,3 +1,9 @@
+with Harriet.Commodities;
+with Harriet.Logging;
+with Harriet.Quantities;
+with Harriet.Real_Images;
+with Harriet.Stock;
+
 with Harriet.Db.Account;
 
 package body Harriet.Agents is
@@ -55,6 +61,117 @@ package body Harriet.Agents is
    begin
       return Cash (Agent.Account);
    end Cash;
+
+   ---------------
+   -- Log_Agent --
+   ---------------
+
+   procedure Log_Agent
+     (Agent   : Harriet.Db.Agent_Reference;
+      Message : String)
+   is
+   begin
+      Harriet.Logging.Log
+        (Actor    => "Agent" & Harriet.Db.To_String (Agent),
+         Location => "",
+         Category => "",
+         Message  => Message);
+   end Log_Agent;
+
+   -----------------
+   -- Move_Assets --
+   -----------------
+
+   procedure Move_Assets
+     (From     : Harriet.Db.Agent.Agent_Type;
+      To       : Harriet.Db.Agent.Agent_Type;
+      Fraction : Unit_Real)
+   is
+      use Harriet.Money;
+
+      From_Account : constant Harriet.Db.Account.Account_Type :=
+                       Harriet.Db.Account.Get (From.Account);
+      To_Account   : constant Harriet.Db.Account.Account_Type :=
+                       Harriet.Db.Account.Get (To.Account);
+      Transfer_Cash : constant Money_Type :=
+                        Adjust (From_Account.Cash, Fraction);
+      From_Stock    : Harriet.Commodities.Stock_Type;
+
+      procedure Transfer_Stock
+        (Commodity : Harriet.Db.Commodity_Reference;
+         Quantity  : Harriet.Quantities.Quantity_Type;
+         Value     : Harriet.Money.Money_Type);
+
+      --------------------
+      -- Transfer_Stock --
+      --------------------
+
+      procedure Transfer_Stock
+        (Commodity : Harriet.Db.Commodity_Reference;
+         Quantity  : Harriet.Quantities.Quantity_Type;
+         Value     : Harriet.Money.Money_Type)
+      is
+         use Harriet.Quantities;
+         Transfer_Quantity : constant Quantity_Type :=
+                               Scale (Quantity, Fraction);
+         Transfer_Value    : constant Money_Type :=
+                               Adjust (Value, Fraction);
+      begin
+         if not Harriet.Commodities.Is_Pop_Group (Commodity) then
+            Log_Agent
+              (From.Reference,
+               "transferring " & Show (Transfer_Quantity)
+               & " " & Harriet.Commodities.Local_Name (Commodity)
+               & " of " & Show (Quantity));
+            Harriet.Stock.Remove_Stock
+              (From.Reference, Commodity, Transfer_Quantity);
+            Harriet.Stock.Add_Stock
+              (To.Reference, Commodity, Transfer_Quantity, Transfer_Value);
+         end if;
+      end Transfer_Stock;
+
+   begin
+
+      Log_Agent (From.Reference,
+                 "transferring "
+                 & Harriet.Real_Images.Approximate_Image (Fraction * 100.0)
+                 & "% to agent"
+                 & Harriet.Db.To_String
+                   (Harriet.Db.Agent_Reference'(To.Reference)));
+
+      From_Account.Set_Cash (From_Account.Cash - Transfer_Cash);
+      To_Account.Set_Cash (To_Account.Cash + Transfer_Cash);
+
+      From_Stock.Load (From.Reference);
+      From_Stock.Iterate (Transfer_Stock'Access);
+
+   exception
+      when others =>
+         Log_Agent (From.Reference,
+                    "exception during transfer");
+         raise;
+--        for Stock of
+--          Harriet.Db.Stock_Item.Select_By_Has_Stock (From.Reference)
+--        loop
+--           declare
+--              use Harriet.Quantities;
+--              Current_Quantity : constant Quantity_Type :=
+--                                   Stock.Quantity;
+--              Transfer_Quantity : constant Quantity_Type :=
+--                                    Scale (Current_Quantity, Fraction);
+--              Current_Value     : constant Money_Type :=
+--                                    Stock.Value;
+--              Transfer_Value    : constant Money_Type :=
+--                                    Adjust (Current_Value, Fraction);
+--           begin
+--              Stock.Set_Quantity (Current_Quantity - Transfer_Quantity);
+--              Stock.Set_Value (Current_Value - Transfer_Value);
+--              Harriet.Stock.Add_Stock
+--                (To.Reference, Stock.Commodity,
+--                 Transfer_Quantity, Transfer_Value);
+--           end;
+--        end loop;
+   end Move_Assets;
 
    -----------------
    -- Remove_Cash --

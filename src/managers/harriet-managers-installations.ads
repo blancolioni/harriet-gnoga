@@ -21,6 +21,12 @@ private
          Facility     : Harriet.Db.Facility_Reference;
       end record;
 
+   overriding function Identifier
+     (Manager : Root_Installation_Manager)
+      return String
+   is ("installation"
+       & Harriet.Db.To_String (Manager.Installation) & " manager");
+
    overriding procedure Get_Required_Stock
      (Manager : Root_Installation_Manager;
       Stock   : in out Harriet.Commodities.Stock_Type);

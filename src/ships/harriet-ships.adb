@@ -51,6 +51,7 @@ package body Harriet.Ships is
                        Account         => Account,
                        Faction         => Owner,
                        Active          => True,
+                       Scheduled       => False,
                        Next_Event      => Harriet.Calendar.Clock,
                        Manager         => "default",
                        Owner           =>

@@ -11,6 +11,4 @@ package Harriet.Employment is
       Quantity : Harriet.Quantities.Quantity_Type;
       Salary   : Harriet.Money.Price_Type);
 
-   procedure Execute_Employment_Contracts;
-
 end Harriet.Employment;

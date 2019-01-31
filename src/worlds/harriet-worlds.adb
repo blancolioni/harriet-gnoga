@@ -42,6 +42,9 @@ package body Harriet.Worlds is
    begin
       if Pop.Has_Element then
          Pop.Set_Size (Pop.Size + Size);
+         Pop.Set_Capacity (Pop.Capacity + Size);
+         Pop.Set_Transported_Size
+           (Pop.Transported_Size + Harriet.Quantities.To_Real (Size));
          Harriet.Agents.Add_Cash (Pop, Cash);
          Harriet.Stock.Add_Stock
            (Pop, Commodity, Size, Cash);
@@ -53,6 +56,7 @@ package body Harriet.Worlds is
          begin
             Harriet.Db.Pop.Create
               (Active           => True,
+               Scheduled        => False,
                Next_Event       => Harriet.Calendar.Clock,
                Manager          => "default-pop",
                Account          => Account,

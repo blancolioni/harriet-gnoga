@@ -1,60 +1,15 @@
-with Ada.Containers.Indefinite_Doubly_Linked_Lists;
 with Ada.Containers.Indefinite_Holders;
-with Ada.Containers.Indefinite_Ordered_Maps;
 with Ada.Exceptions;
 with Ada.Text_IO;
 
-with Harriet.Employment;
+--  with Harriet.Employment;
 with Harriet.Sessions;
-with Harriet.Signals;
 
-package body Harriet.Updates is
-
-   package Update_Lists is
-     new Ada.Containers.Indefinite_Doubly_Linked_Lists
-       (Update_Interface'Class);
-
-   package Update_Maps is
-     new Ada.Containers.Indefinite_Ordered_Maps
-       (Key_Type     => Harriet.Calendar.Time,
-        Element_Type => Update_Lists.List,
-        "<"          => Harriet.Calendar."<",
-        "="          => Update_Lists."=");
+package body Harriet.Updates.Tasks is
 
    package Signal_Holders is
      new Ada.Containers.Indefinite_Holders
        (Harriet.Signals.Signal_Type, Harriet.Signals."=");
-
-   task Update_Task is
-      entry Start;
-      entry Stop;
-   end Update_Task;
-
-   task Broadcast_Task is
-      entry Broadcast (Signal : Harriet.Signals.Signal_Type);
-      entry Stop;
-   end Broadcast_Task;
-
-   task Dispatch_Task is
-      entry Dispatch (List : Update_Lists.List);
-      entry Stop;
-   end Dispatch_Task;
-
-   protected Update_Map is
-
-      procedure Add_Update
-        (Clock  : Harriet.Calendar.Time;
-         Update : Update_Interface'Class);
-
-      procedure Get_Updates
-        (Clock : Harriet.Calendar.Time;
-         List  : out Update_Lists.List);
-
-   private
-
-      Map : Update_Maps.Map;
-
-   end Update_Map;
 
    --------------------
    -- Broadcast_Task --
@@ -101,7 +56,7 @@ package body Harriet.Updates is
                         & Ada.Exceptions.Exception_Message (E));
                end;
             end loop;
-            Harriet.Employment.Execute_Employment_Contracts;
+--              Harriet.Employment.Execute_Employment_Contracts;
          or
             accept Stop;
             exit;
@@ -110,38 +65,6 @@ package body Harriet.Updates is
          end select;
       end loop;
    end Dispatch_Task;
-
-   -------------------
-   -- Start_Updates --
-   -------------------
-
-   procedure Start_Updates is
-   begin
-      Update_Task.Start;
-   end Start_Updates;
-
-   ------------------
-   -- Stop_Updates --
-   ------------------
-
-   procedure Stop_Updates is
-   begin
-      Update_Task.Stop;
-      Dispatch_Task.Stop;
-      Broadcast_Task.Stop;
-   end Stop_Updates;
-
-   ---------------
-   -- Update_At --
-   ---------------
-
-   procedure Update_At
-     (Clock  : Harriet.Calendar.Time;
-      Update : Update_Interface'Class)
-   is
-   begin
-      Update_Map.Add_Update (Clock, Update);
-   end Update_At;
 
    ----------------
    -- Update_Map --
@@ -218,7 +141,7 @@ package body Harriet.Updates is
               (Harriet.Sessions.Signal_Clock_Tick);
 
             declare
-               List : Update_Lists.List;
+               List  : Update_Lists.List;
                Clock : constant Harriet.Calendar.Time :=
                          Harriet.Calendar.Clock;
             begin
@@ -233,17 +156,4 @@ package body Harriet.Updates is
       Ada.Text_IO.Put_Line ("Update task stopping");
    end Update_Task;
 
-   -----------------------
-   -- Update_With_Delay --
-   -----------------------
-
-   procedure Update_With_Delay
-     (Wait   : Duration;
-      Update : Update_Interface'Class)
-   is
-      use type Harriet.Calendar.Time;
-   begin
-      Update_Map.Add_Update (Harriet.Calendar.Clock + Wait, Update);
-   end Update_With_Delay;
-
-end Harriet.Updates;
+end Harriet.Updates.Tasks;

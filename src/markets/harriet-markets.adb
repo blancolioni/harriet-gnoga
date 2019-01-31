@@ -126,6 +126,8 @@ package body Harriet.Markets is
                Quantity  => This_Quantity,
                Price     => Price);
 
+            Bid.Set_Quantity (Bid.Quantity - This_Quantity);
+
             Harriet.Db.Transaction.Create
               (Time_Stamp => Harriet.Calendar.Clock,
                Market     => Market,
@@ -235,6 +237,8 @@ package body Harriet.Markets is
                Commodity => Commodity,
                Quantity  => This_Quantity,
                Price     => Price);
+
+            Ask.Set_Quantity (Ask.Quantity - This_Quantity);
 
             Harriet.Db.Transaction.Create
               (Time_Stamp => Harriet.Calendar.Clock,
