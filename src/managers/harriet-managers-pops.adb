@@ -1,6 +1,8 @@
 with Harriet.Db.Pop;
 with Harriet.Db.Pop_Group;
 
+with Harriet.Db.Consumer_Good;
+
 with Harriet.Db.Clothing_Commodity;
 with Harriet.Db.Drink_Commodity;
 with Harriet.Db.Food_Commodity;
@@ -63,8 +65,61 @@ package body Harriet.Managers.Pops is
    overriding procedure Execute_Agent_Tasks
      (Manager : in out Root_Pop_Manager)
    is
+      Consumer_Happiness : Unit_Real := 1.0;
+
+      function Use_Item
+        (Commodity : Harriet.Db.Commodity_Reference)
+         return Unit_Real;
+
+      --------------
+      -- Use_Item --
+      --------------
+
+      function Use_Item
+        (Commodity : Harriet.Db.Commodity_Reference)
+         return Unit_Real
+      is
+         use Harriet.Quantities;
+         Available : constant Quantity_Type :=
+                       Manager.Current_Stock (Commodity);
+         Required  : constant Quantity_Type :=
+                       Manager.Size;
+         Consumed  : constant Quantity_Type :=
+                       Min (Available, Required);
+      begin
+         Manager.Remove_Stock (Commodity, Consumed);
+
+         if Consumed < Required then
+            return To_Real (Consumed) / To_Real (Required);
+         else
+            return 1.0;
+         end if;
+      end Use_Item;
+
    begin
-      null;
+      for Item of
+        Harriet.Db.Consumer_Good.Select_By_Quality
+          (Manager.Consumption_Quality)
+      loop
+         Consumer_Happiness :=
+           Unit_Real'Min (Consumer_Happiness,
+                          Use_Item (Item.Reference));
+      end loop;
+
+      declare
+         Pop : constant Harriet.Db.Pop.Pop_Type :=
+                 Harriet.Db.Pop.Get (Manager.Pop);
+      begin
+         if Pop.Happiness < Consumer_Happiness then
+            Pop.Set_Happiness (Pop.Happiness
+                               + (Consumer_Happiness - Pop.Happiness)
+                               / 10.0);
+         else
+            Pop.Set_Happiness (Pop.Happiness
+                               + (Consumer_Happiness - Pop.Happiness)
+                               / 5.0);
+         end if;
+      end;
    end Execute_Agent_Tasks;
 
    ------------------------

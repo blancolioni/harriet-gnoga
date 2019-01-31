@@ -3,6 +3,7 @@ with Harriet.Logging;
 
 with Harriet.Agents;
 with Harriet.Markets;
+with Harriet.Stock;
 with Harriet.Worlds;
 
 package body Harriet.Managers.Agents is
@@ -221,6 +222,19 @@ package body Harriet.Managers.Agents is
       Stock.Load (Manager.Has_Stock);
    end Current_Stock;
 
+   -------------------
+   -- Current_Stock --
+   -------------------
+
+   function Current_Stock
+     (Manager   : Root_Agent_Manager'Class;
+      Commodity : Harriet.Db.Commodity_Reference)
+      return Harriet.Quantities.Quantity_Type
+   is
+   begin
+      return Harriet.Stock.Get_Quantity (Manager.Has_Stock, Commodity);
+   end Current_Stock;
+
    ------------------------------
    -- Initialize_Agent_Manager --
    ------------------------------
@@ -292,6 +306,20 @@ package body Harriet.Managers.Agents is
          Quantity  => Quantity,
          Price     => Price);
    end Place_Bid;
+
+   ------------------
+   -- Remove_Stock --
+   ------------------
+
+   procedure Remove_Stock
+     (Manager   : Root_Agent_Manager'Class;
+      Commodity : Harriet.Db.Commodity_Reference;
+      Quantity  : Harriet.Quantities.Quantity_Type)
+   is
+   begin
+      Harriet.Stock.Remove_Stock
+        (Manager.Has_Stock, Commodity, Quantity);
+   end Remove_Stock;
 
    --------------
    -- Try_Bids --

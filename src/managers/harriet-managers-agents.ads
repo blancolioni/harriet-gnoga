@@ -51,6 +51,16 @@ package Harriet.Managers.Agents is
      (Manager : Root_Agent_Manager'Class;
       Stock   : out Harriet.Commodities.Stock_Type);
 
+   function Current_Stock
+     (Manager : Root_Agent_Manager'Class;
+      Commodity : Harriet.Db.Commodity_Reference)
+      return Harriet.Quantities.Quantity_Type;
+
+   procedure Remove_Stock
+     (Manager   : Root_Agent_Manager'Class;
+      Commodity : Harriet.Db.Commodity_Reference;
+      Quantity  : Harriet.Quantities.Quantity_Type);
+
    procedure Try_Bids
      (Manager   : Root_Agent_Manager'Class;
       Stock     : Harriet.Commodities.Stock_Type;
