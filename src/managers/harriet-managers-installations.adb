@@ -7,7 +7,6 @@ with Harriet.Quantities;
 with Harriet.Random;
 with Harriet.Stock;
 
-with Harriet.Markets;
 with Harriet.Worlds;
 
 with Harriet.Db.Consumer_Good;
@@ -16,11 +15,9 @@ with Harriet.Db.Facility;
 with Harriet.Db.Facility_Worker;
 with Harriet.Db.Generated_Resource;
 with Harriet.Db.Installation;
-with Harriet.Db.Market;
 with Harriet.Db.Pop_Group;
 with Harriet.Db.Resource;
 with Harriet.Db.Resource_Generator;
-with Harriet.Db.World_Sector;
 
 package body Harriet.Managers.Installations is
 
@@ -29,6 +26,9 @@ package body Harriet.Managers.Installations is
       record
          Rgen : Harriet.Db.Resource_Generator_Reference;
       end record;
+
+   overriding procedure Create_Market_Offers
+     (Manager : in out Resource_Generator_Manager);
 
    overriding procedure Execute_Agent_Tasks
      (Manager : in out Resource_Generator_Manager);
@@ -120,27 +120,58 @@ package body Harriet.Managers.Installations is
    --------------------------
 
    overriding procedure Create_Market_Offers
+     (Manager : in out Resource_Generator_Manager)
+   is
+   begin
+      Harriet.Managers.Agents.Root_Agent_Manager (Manager)
+        .Create_Market_Offers;
+
+      for Gen of
+        Harriet.Db.Generated_Resource.Select_By_Resource_Generator
+          (Manager.Rgen)
+      loop
+         declare
+            use Harriet.Quantities;
+            Commodity : constant Harriet.Db.Commodity_Reference :=
+                          Harriet.Db.Resource.Get (Gen.Resource).Reference;
+            Quantity  : constant Quantity_Type :=
+                          Manager.Current_Stock (Commodity);
+         begin
+            if Quantity > Zero then
+               Manager.Place_Ask
+                 (Commodity => Commodity,
+                  Quantity  => Quantity,
+                  Price     => Manager.Current_Market_Bid_Price (Commodity));
+            end if;
+         end;
+      end loop;
+
+   end Create_Market_Offers;
+
+   --------------------------
+   -- Create_Market_Offers --
+   --------------------------
+
+   overriding procedure Create_Market_Offers
      (Manager : in out Hub_Manager)
    is
       Installation : constant Harriet.Db.Installation.Installation_Type :=
                        Harriet.Db.Installation.Get
                          (Manager.Installation);
 
-      Market : constant Harriet.Db.Market_Reference :=
-                 Harriet.Db.Market.Get_Reference_By_World
-                   (Harriet.Db.World_Sector.Get (Installation.World_Sector)
-                    .World);
-
-      procedure Add_Offers
+      procedure Add_Ask
         (Item     : Harriet.Db.Commodity_Reference;
          Quantity : Harriet.Quantities.Quantity_Type;
          Value    : Harriet.Money.Money_Type);
 
-      ----------------
-      -- Add_Offers --
-      ----------------
+      procedure Add_Bid
+        (Item     : Harriet.Db.Commodity_Reference);
 
-      procedure Add_Offers
+      -------------
+      -- Add_Ask --
+      -------------
+
+      procedure Add_Ask
         (Item     : Harriet.Db.Commodity_Reference;
          Quantity : Harriet.Quantities.Quantity_Type;
          Value    : Harriet.Money.Money_Type)
@@ -156,15 +187,36 @@ package body Harriet.Managers.Installations is
             & Harriet.Quantities.Show (Quantity)
             & "; value "
             & Harriet.Money.Show (Value));
-         Harriet.Markets.Ask
-           (Market    => Market,
-            Agent     => Installation,
-            Commodity => Item,
+         Manager.Place_Ask
+           (Commodity => Item,
             Quantity  => Quantity,
             Price     =>
               Harriet.Money.Adjust_Price
-                (Harriet.Money.Price (Value, Quantity), 1.1));
-      end Add_Offers;
+                (Manager.Current_Agent_Stock_Price (Item), 1.1));
+      end Add_Ask;
+
+      -------------
+      -- Add_Bid --
+      -------------
+
+      procedure Add_Bid
+        (Item     : Harriet.Db.Commodity_Reference)
+      is
+         use Harriet.Quantities;
+         Quantity : constant Quantity_Type :=
+                      Manager.Current_Market_Ask_Quantity
+                        (Item);
+      begin
+         if Quantity > Manager.Current_Stock (Item) then
+            Manager.Place_Bid
+              (Commodity => Item,
+               Quantity  => Quantity - Manager.Current_Stock (Item),
+               Price     =>
+                 Harriet.Money.Adjust_Price
+                   (Manager.Current_Agent_Stock_Price (Item),
+                    0.9));
+         end if;
+      end Add_Bid;
 
    begin
       Create_Market_Offers (Root_Installation_Manager (Manager));
@@ -176,7 +228,15 @@ package body Harriet.Managers.Installations is
          Message  => "scanning stock");
 
       Harriet.Stock.Scan_Stock
-        (Installation, Add_Offers'Access);
+        (Installation, Add_Ask'Access);
+
+      for Item of Harriet.Db.Consumer_Good.Scan_By_Tag loop
+         Add_Bid (Item.Reference);
+      end loop;
+      for Item of Harriet.Db.Resource.Scan_By_Tag loop
+         Add_Bid (Item.Reference);
+      end loop;
+
    end Create_Market_Offers;
 
    -------------------------
@@ -279,16 +339,31 @@ package body Harriet.Managers.Installations is
          begin
             if Harriet.Data_Series.Has_X_Intercept (Trend) then
                declare
+                  use type Harriet.Calendar.Time;
                   Zero_Date : constant Harriet.Calendar.Time :=
                                 Harriet.Calendar.To_Time
                                   (Harriet.Data_Series.X_Intercept (Trend));
+                  Now : constant Harriet.Calendar.Time :=
+                          Harriet.Calendar.Clock;
                begin
-                  Ada.Text_IO.Put_Line
-                    (Harriet.Worlds.Name (Manager.World)
-                     & ": "
-                     & Harriet.Commodities.Local_Name (Commodity)
-                     & ": stock exhausted by "
-                     & Harriet.Calendar.Image (Zero_Date));
+                  if Zero_Date > Now then
+                     if Zero_Date - Now < 30.0 then
+                        Manager.Set_Agent_Stock_Price
+                          (Commodity,
+                           Harriet.Money.Adjust_Price
+                             (Manager.Current_Agent_Stock_Price (Commodity),
+                              1.1));
+                     end if;
+                     Ada.Text_IO.Put_Line
+                       (Harriet.Worlds.Name (Manager.World)
+                        & ": "
+                        & Harriet.Commodities.Local_Name (Commodity)
+                        & ": stock exhausted by "
+                        & Harriet.Calendar.Image (Zero_Date)
+                        & "; new price "
+                        & Harriet.Money.Image
+                          (Manager.Current_Agent_Stock_Price (Commodity)));
+                  end if;
                end;
             end if;
          end;
@@ -302,7 +377,11 @@ package body Harriet.Managers.Installations is
             & ": hub on "
             & Harriet.Worlds.Name (Manager.World)
             & ": checking stock trends");
+
          for Item of Harriet.Db.Consumer_Good.Scan_By_Tag loop
+            Check_Trend (Item.Reference);
+         end loop;
+         for Item of Harriet.Db.Resource.Scan_By_Tag loop
             Check_Trend (Item.Reference);
          end loop;
 
