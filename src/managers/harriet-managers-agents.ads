@@ -61,6 +61,14 @@ package Harriet.Managers.Agents is
       Commodity : Harriet.Db.Commodity_Reference;
       Quantity  : Harriet.Quantities.Quantity_Type);
 
+   procedure Scan_Historical_Stock
+     (Manager   : Root_Agent_Manager'Class;
+      Commodity : Harriet.Db.Commodity_Reference;
+      Days      : Non_Negative_Real;
+      Process   : not null access
+        procedure (Date : Harriet.Calendar.Time;
+                   Quantity : Harriet.Quantities.Quantity_Type));
+
    procedure Try_Bids
      (Manager   : Root_Agent_Manager'Class;
       Stock     : Harriet.Commodities.Stock_Type;

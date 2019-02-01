@@ -6,6 +6,8 @@ with Harriet.Markets;
 with Harriet.Stock;
 with Harriet.Worlds;
 
+with Harriet.Db.Historical_Stock;
+
 package body Harriet.Managers.Agents is
 
    --------------
@@ -320,6 +322,35 @@ package body Harriet.Managers.Agents is
       Harriet.Stock.Remove_Stock
         (Manager.Has_Stock, Commodity, Quantity);
    end Remove_Stock;
+
+   ---------------------------
+   -- Scan_Historical_Stock --
+   ---------------------------
+
+   procedure Scan_Historical_Stock
+     (Manager   : Root_Agent_Manager'Class;
+      Commodity : Harriet.Db.Commodity_Reference;
+      Days      : Non_Negative_Real;
+      Process   : not null access
+        procedure (Date : Harriet.Calendar.Time;
+                   Quantity : Harriet.Quantities.Quantity_Type))
+   is
+      use Harriet.Calendar;
+      Now   : constant Time := Clock;
+      Start : constant Time := Now - Harriet.Calendar.Days (Days);
+   begin
+      for Historical_Stock of
+        Harriet.Db.Historical_Stock
+          .Select_Historical_Stock_Bounded_By_Time_Stamp
+            (Has_Stock         => Manager.Has_Stock,
+             Commodity         => Commodity,
+             Start_Time_Stamp  => To_Real (Start),
+             Finish_Time_Stamp => To_Real (Now))
+      loop
+         Process (To_Time (Historical_Stock.Time_Stamp),
+                  Historical_Stock.Quantity);
+      end loop;
+   end Scan_Historical_Stock;
 
    --------------
    -- Try_Bids --
