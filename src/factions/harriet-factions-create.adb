@@ -27,6 +27,7 @@ with Harriet.Db.Generated_Resource;
 with Harriet.Db.Installation;
 with Harriet.Db.Market;
 with Harriet.Db.Pop_Group;
+with Harriet.Db.Pop_Group_Needs;
 with Harriet.Db.Resource;
 with Harriet.Db.Resource_Generator;
 with Harriet.Db.Ship_Design;
@@ -283,6 +284,8 @@ package body Harriet.Factions.Create is
    is
       Owner : constant Harriet.Db.Owner_Reference :=
                 Harriet.Db.Faction.Get (Faction).Reference;
+      Hub   : Harriet.Db.Installation_Reference :=
+                Harriet.Db.Null_Installation_Reference;
 
       function Create_Installation
         (Facility : Harriet.Db.Facility_Reference;
@@ -302,6 +305,8 @@ package body Harriet.Factions.Create is
          Manager  : String)
          return Harriet.Db.Installation_Reference
       is
+         use type Harriet.Db.Installation_Reference;
+
          Capacity : constant Harriet.Quantities.Quantity_Type :=
                       Harriet.Quantities.To_Quantity (1000.0);
          Account  : constant Harriet.Db.Account_Reference :=
@@ -324,6 +329,10 @@ package body Harriet.Factions.Create is
                              (Harriet.Random.Unit_Random),
                          Manager      => Manager);
       begin
+         if Hub = Harriet.Db.Null_Installation_Reference then
+            Hub := Ref;
+         end if;
+
          Harriet.Worlds.Set_Owner (Sector, Faction);
 
          for Employee of
@@ -342,6 +351,16 @@ package body Harriet.Factions.Create is
                     Total
                       (Harriet.Db.Pop_Group.Get (Employee.Pop_Group).Salary,
                        Employee.Quantity));
+               for Needs of
+                 Harriet.Db.Pop_Group_Needs.Select_By_Pop_Group
+                   (Employee.Pop_Group)
+               loop
+                  Harriet.Stock.Add_Initial_Stock
+                    (Harriet.Db.Installation.Get (Hub).Reference,
+                     Needs.Commodity,
+                     Harriet.Quantities.Scale (Employee.Quantity, 21.0));
+               end loop;
+
             end;
          end loop;
          return Ref;
@@ -627,8 +646,9 @@ package body Harriet.Factions.Create is
             end if;
 
             for Neighbour of
-              Db.Star_System_Distance.Select_Bounded_By_Star_System_Range
-                (Star_System, 0.0, Star_System, 99.0)
+              Db.Star_System_Distance
+                .Select_Star_System_Range_Bounded_By_Distance
+                  (Star_System, 0.0, 99.0)
             loop
                declare
                   Neighbour_Name : constant String :=
