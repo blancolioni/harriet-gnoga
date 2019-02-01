@@ -5,6 +5,7 @@ with Harriet.Logging;
 with Harriet.Money;
 with Harriet.Quantities;
 with Harriet.Random;
+with Harriet.Real_Images;
 with Harriet.Stock;
 
 with Harriet.Worlds;
@@ -80,8 +81,7 @@ package body Harriet.Managers.Installations is
             begin
                Manager.Initialize_Agent_Manager
                  (Installation, Installation.World);
-               return new Resource_Generator_Manager'
-                 (Manager);
+               return new Resource_Generator_Manager'(Manager);
             end;
          when others =>
             Ada.Text_IO.Put_Line
@@ -208,6 +208,20 @@ package body Harriet.Managers.Installations is
                         (Item);
       begin
          if Quantity > Manager.Current_Stock (Item) then
+            Harriet.Logging.Log
+              (Actor    => Installation.Identity,
+               Location => Harriet.Worlds.Name (Installation.World),
+               Category => "market",
+               Message  => "creating bid for "
+               & Harriet.Commodities.Local_Name (Item)
+               & ": quantity "
+               & Harriet.Quantities.Show
+                 (Quantity - Manager.Current_Stock (Item))
+               & "; price "
+               & Harriet.Money.Show
+                 (Harriet.Money.Adjust_Price
+                      (Manager.Current_Agent_Stock_Price (Item),
+                       0.9)));
             Manager.Place_Bid
               (Commodity => Item,
                Quantity  => Quantity - Manager.Current_Stock (Item),
@@ -332,37 +346,107 @@ package body Harriet.Managers.Installations is
          Manager.Scan_Historical_Stock
            (Commodity, 7.0, Add_Data_Point'Access);
 
+         Add_Data_Point (Harriet.Calendar.Clock,
+                         Manager.Current_Stock (Commodity));
+
          declare
             Trend : constant Harriet.Data_Series.Regression :=
                       Harriet.Data_Series.Simple_Linear_Regression
                         (Series);
+            Gradient : constant Real :=
+                         Harriet.Data_Series.Gradient (Trend);
          begin
-            if Harriet.Data_Series.Has_X_Intercept (Trend) then
+            if abs Gradient > 0.001 then
                declare
-                  use type Harriet.Calendar.Time;
+                  use Harriet.Calendar;
                   Zero_Date : constant Harriet.Calendar.Time :=
                                 Harriet.Calendar.To_Time
                                   (Harriet.Data_Series.X_Intercept (Trend));
-                  Now : constant Harriet.Calendar.Time :=
-                          Harriet.Calendar.Clock;
+                  Now       : constant Harriet.Calendar.Time :=
+                                Harriet.Calendar.Clock;
+                  Max_Increase : constant Harriet.Calendar.Time :=
+                                   Now + Days (7.0);
+                  Min_Increase : constant Harriet.Calendar.Time :=
+                                   Now + Days (70.0);
+                  Adjustment   : Non_Negative_Real := 1.0;
+                  Old_Price    : constant Harriet.Money.Price_Type :=
+                                   Manager.Current_Agent_Stock_Price
+                                     (Commodity);
                begin
                   if Zero_Date > Now then
-                     if Zero_Date - Now < 30.0 then
+                     if Zero_Date < Max_Increase then
+                        Adjustment := 1.5;
+                     elsif Zero_Date < Min_Increase then
+                        Adjustment :=
+                          1.0 +
+                            Real (Min_Increase - Zero_Date)
+                          / Real (Days (1))
+                          / 500.0;
+                     end if;
+
+                     if Adjustment /= 1.0 then
                         Manager.Set_Agent_Stock_Price
                           (Commodity,
                            Harriet.Money.Adjust_Price
                              (Manager.Current_Agent_Stock_Price (Commodity),
-                              1.1));
+                              Adjustment));
+
+                        Harriet.Logging.Log
+                          (Actor    =>
+                             Harriet.Db.Facility.Get
+                               (Manager.Facility).Tag,
+                           Location =>
+                             Harriet.Worlds.Name (Manager.World),
+                           Category =>
+                             Harriet.Commodities.Local_Name (Commodity),
+                           Message  =>
+                             "stock exhausted within "
+                           & Harriet.Real_Images.Approximate_Image
+                             (Real (Zero_Date - Now) / Real (Days (1)))
+                           & " days on "
+                           & Harriet.Calendar.Image (Zero_Date)
+                           & "; adjustment +"
+                           & Harriet.Real_Images.Approximate_Image
+                             ((Adjustment - 1.0) * 100.0)
+                           & "%"
+                           & "; old price "
+                           & Harriet.Money.Show (Old_Price)
+                           & "; new price "
+                           & Harriet.Money.Show
+                             (Manager.Current_Agent_Stock_Price
+                                  (Commodity)));
                      end if;
-                     Ada.Text_IO.Put_Line
-                       (Harriet.Worlds.Name (Manager.World)
-                        & ": "
-                        & Harriet.Commodities.Local_Name (Commodity)
-                        & ": stock exhausted by "
-                        & Harriet.Calendar.Image (Zero_Date)
-                        & "; new price "
-                        & Harriet.Money.Image
-                          (Manager.Current_Agent_Stock_Price (Commodity)));
+                  elsif Harriet.Data_Series.Gradient (Trend) > 0.5 then
+                     declare
+                        D : constant Unit_Real :=
+                              1.0 - Real'Min (Gradient, 5.0) / 50.0;
+                     begin
+                        Manager.Set_Agent_Stock_Price
+                          (Commodity,
+                           Harriet.Money.Adjust_Price
+                             (Manager.Current_Agent_Stock_Price (Commodity),
+                              D));
+                        Harriet.Logging.Log
+                          (Actor    =>
+                             Harriet.Db.Facility.Get
+                               (Manager.Facility).Tag,
+                           Location =>
+                             Harriet.Worlds.Name (Manager.World),
+                           Category =>
+                             Harriet.Commodities.Local_Name (Commodity),
+                           Message  =>
+                             "stock growing at "
+                           & Harriet.Real_Images.Approximate_Image (Gradient)
+                           & "; adjustment -"
+                           & Harriet.Real_Images.Approximate_Image
+                             ((1.0 - D) * 100.0)
+                           & "%"
+                           & "; old price "
+                           & Harriet.Money.Show (Old_Price)
+                           & "; new price "
+                           & Harriet.Money.Show
+                             (Manager.Current_Agent_Stock_Price (Commodity)));
+                     end;
                   end if;
                end;
             end if;
