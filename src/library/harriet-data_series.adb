@@ -33,12 +33,14 @@ package body Harriet.Data_Series is
          return;
       end if;
 
-      for P of Container.List loop
-         Sum_XX := Sum_XX + P.X ** 2;
-         Sum_X  := Sum_X + P.X;
-         Sum_XY := Sum_XY + P.X * P.Y;
-         Sum_Y  := Sum_Y + P.Y;
-      end loop;
+      if not Container.List.Is_Empty then
+         for P of Container.List loop
+            Sum_XX := Sum_XX + P.X ** 2;
+            Sum_X  := Sum_X + P.X;
+            Sum_XY := Sum_XY + P.X * P.Y;
+            Sum_Y  := Sum_Y + P.Y;
+         end loop;
+      end if;
 
       Container.Props.all := Series_Properties'
         (Variance   => Sum_XX - Sum_X ** 2 / N,
@@ -46,6 +48,7 @@ package body Harriet.Data_Series is
          X_Mean     => Sum_X / N,
          Y_Mean     => Sum_Y / N,
          Up_To_Date => True);
+
    end Check_Properties;
 
    ----------------
@@ -98,8 +101,14 @@ package body Harriet.Data_Series is
    is
    begin
       return R : Regression do
-         R.B := Covariance (Container) / Variance (Container);
-         R.A := Y_Mean (Container) - R.B * X_Mean (Container);
+         if Container.List.Is_Empty then
+            R := (0.0, 0.0);
+         else
+            R.B := (if Variance (Container) = 0.0
+                    then 0.0
+                    else Covariance (Container) / Variance (Container));
+            R.A := Y_Mean (Container) - R.B * X_Mean (Container);
+         end if;
       end return;
    end Simple_Linear_Regression;
 
