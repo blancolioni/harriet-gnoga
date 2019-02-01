@@ -177,7 +177,7 @@ package body Harriet.Stock is
                 Harriet.Calendar.Clock;
       Historical : constant Db.Historical_Stock.Historical_Stock_Type :=
                      Db.Historical_Stock.Get_By_Historical_Stock
-                       (Stock, Commodity, Harriet.Calendar.To_Real (Clock));
+                       (Stock, Commodity, Clock);
       Quantity   : Harriet.Quantities.Quantity_Type;
       Value      : Harriet.Money.Money_Type;
    begin
@@ -188,7 +188,7 @@ package body Harriet.Stock is
          Historical.Set_Value (Value);
       else
          Harriet.Db.Historical_Stock.Create
-           (Time_Stamp => Harriet.Calendar.To_Real (Clock),
+           (Time_Stamp => Clock,
             Has_Stock  => Stock,
             Commodity  => Commodity,
             Quantity   => Quantity,

@@ -344,10 +344,10 @@ package body Harriet.Managers.Agents is
           .Select_Historical_Stock_Bounded_By_Time_Stamp
             (Has_Stock         => Manager.Has_Stock,
              Commodity         => Commodity,
-             Start_Time_Stamp  => To_Real (Start),
-             Finish_Time_Stamp => To_Real (Now))
+             Start_Time_Stamp  => Start,
+             Finish_Time_Stamp => Now)
       loop
-         Process (To_Time (Historical_Stock.Time_Stamp),
+         Process (Historical_Stock.Time_Stamp,
                   Historical_Stock.Quantity);
       end loop;
    end Scan_Historical_Stock;
