@@ -189,7 +189,7 @@ package body Harriet.Markets is
           (Market, Commodity, 0.0, Real'Last)
       loop
 
-         exit when Ask.Price < Price;
+         exit when Ask.Price > Price;
 
          declare
             This_Quantity : constant Quantity_Type :=
