@@ -8,4 +8,9 @@ record Pop_Group : Commodity is
    Salary           : Price_Type;
 end Pop_Group;
 
+record Pop_Group_Needs is
+   key Pop_Group;
+   Commodity;
+end Pop_Group_Needs;
+
 end Pop_Groups;

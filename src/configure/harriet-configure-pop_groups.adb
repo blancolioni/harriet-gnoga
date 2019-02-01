@@ -1,6 +1,8 @@
 with Harriet.Money;
 
+with Harriet.Db.Consumer_Good;
 with Harriet.Db.Pop_Group;
+with Harriet.Db.Pop_Group_Needs;
 
 package body Harriet.Configure.Pop_Groups is
 
@@ -16,16 +18,32 @@ package body Harriet.Configure.Pop_Groups is
    is
       Price : constant Harriet.Money.Price_Type :=
                 Configure_Price (Config, "salary");
+      Consumer_Quality : constant Positive :=
+                           Config.Child ("quality").Get ("consumer");
+      Service_Quality  : constant Positive :=
+                           Config.Child ("quality").Get ("service");
+      Pop_Group : constant Harriet.Db.Pop_Group_Reference :=
+                           Harriet.Db.Pop_Group.Create
+                             (Available        => True,
+                              Initial_Price    => Price,
+                              Mass             => 1.0,
+                              Density          => 0.0,
+                              Tag              => Config.Config_Name,
+                              Consumer_Quality => Consumer_Quality,
+                              Service_Quality  => Service_Quality,
+                              Salary           => Price);
+
    begin
-      Harriet.Db.Pop_Group.Create
-        (Available        => True,
-         Initial_Price    => Price,
-         Mass             => 1.0,
-         Density          => 0.0,
-         Tag              => Config.Config_Name,
-         Consumer_Quality => Config.Child ("quality").Get ("consumer"),
-         Service_Quality  => Config.Child ("quality").Get ("service"),
-         Salary           => Price);
+
+      for Consumer of
+        Harriet.Db.Consumer_Good.Select_By_Quality
+          (Consumer_Quality)
+      loop
+         Harriet.Db.Pop_Group_Needs.Create
+           (Pop_Group => Pop_Group,
+            Commodity => Consumer.Reference);
+      end loop;
+
    end Configure_Pop_Group;
 
    --------------------------

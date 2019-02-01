@@ -2,10 +2,7 @@ with Harriet.Db.Pop;
 with Harriet.Db.Pop_Group;
 
 with Harriet.Db.Consumer_Good;
-
-with Harriet.Db.Clothing_Commodity;
-with Harriet.Db.Drink_Commodity;
-with Harriet.Db.Food_Commodity;
+with Harriet.Db.Pop_Group_Needs;
 
 package body Harriet.Managers.Pops is
 
@@ -130,26 +127,15 @@ package body Harriet.Managers.Pops is
      (Manager : Root_Pop_Manager;
       Stock   : in out Harriet.Commodities.Stock_Type)
    is
-      Food : constant Harriet.Db.Food_Commodity.Food_Commodity_Type :=
-               Harriet.Db.Food_Commodity.First_By_Quality
-                 (Manager.Consumption_Quality);
-      Drink : constant Harriet.Db.Drink_Commodity.Drink_Commodity_Type :=
-                Harriet.Db.Drink_Commodity.First_By_Quality
-                  (Manager.Consumption_Quality);
-      Clothing : constant Harriet.Db.Clothing_Commodity
-        .Clothing_Commodity_Type :=
-          Harriet.Db.Clothing_Commodity.First_By_Quality
-            (Manager.Consumption_Quality);
    begin
-      Stock.Set_Quantity
-        (Food.Reference, Manager.Size,
-         Manager.Current_Market_Ask_Price (Food.Reference));
-      Stock.Set_Quantity
-        (Drink.Reference, Manager.Size,
-         Manager.Current_Market_Ask_Price (Drink.Reference));
-      Stock.Set_Quantity
-        (Clothing.Reference, Manager.Size,
-         Manager.Current_Market_Ask_Price (Clothing.Reference));
+      for Item of
+        Harriet.Db.Pop_Group_Needs.Select_By_Pop_Group
+          (Manager.Group)
+      loop
+         Stock.Set_Quantity
+           (Item.Commodity, Manager.Size,
+            Manager.Current_Market_Ask_Price (Item.Commodity));
+      end loop;
    end Get_Required_Stock;
 
    ----------
