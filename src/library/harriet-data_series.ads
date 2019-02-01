@@ -23,6 +23,7 @@ package Harriet.Data_Series is
 
    function Has_X_Intercept (Item : Regression) return Boolean;
    function X_Intercept (Item : Regression) return Real;
+   function Gradient (Item : Regression) return Real;
 
 private
 
@@ -58,5 +59,8 @@ private
       record
          A, B : Real;
       end record;
+
+   function Gradient (Item : Regression) return Real
+   is (Item.B);
 
 end Harriet.Data_Series;
