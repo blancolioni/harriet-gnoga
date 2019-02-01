@@ -38,10 +38,30 @@ package Harriet.Managers.Agents is
       Commodity : Harriet.Db.Commodity_Reference)
       return Harriet.Money.Price_Type;
 
+   function Current_Market_Ask_Quantity
+     (Manager   : Root_Agent_Manager'Class;
+      Commodity : Harriet.Db.Commodity_Reference)
+      return Harriet.Quantities.Quantity_Type;
+
    function Current_Market_Bid_Price
      (Manager   : Root_Agent_Manager'Class;
       Commodity : Harriet.Db.Commodity_Reference)
       return Harriet.Money.Price_Type;
+
+   function Current_Market_Bid_Quantity
+     (Manager   : Root_Agent_Manager'Class;
+      Commodity : Harriet.Db.Commodity_Reference)
+      return Harriet.Quantities.Quantity_Type;
+
+   function Current_Agent_Stock_Price
+     (Manager   : Root_Agent_Manager'Class;
+      Commodity : Harriet.Db.Commodity_Reference)
+      return Harriet.Money.Price_Type;
+
+   procedure Set_Agent_Stock_Price
+     (Manager   : Root_Agent_Manager'Class;
+      Commodity : Harriet.Db.Commodity_Reference;
+      Price     : Harriet.Money.Price_Type);
 
    function World
      (Manager : Root_Agent_Manager'Class)

@@ -13,4 +13,11 @@ package Agents is
       unique key Account;
    end Agent;
    
+   record Stock_Price is
+      key Agent;
+      Commodity;
+      Price : Price_Type;
+      unique key Stock_Price with Agent, Commodity;
+   end Stock_Price;
+   
 end Agents;

@@ -6,7 +6,10 @@ with Harriet.Markets;
 with Harriet.Stock;
 with Harriet.Worlds;
 
+with Harriet.Db.Ask_Offer;
+with Harriet.Db.Bid_Offer;
 with Harriet.Db.Historical_Stock;
+with Harriet.Db.Stock_Price;
 
 package body Harriet.Managers.Agents is
 
@@ -184,6 +187,26 @@ package body Harriet.Managers.Agents is
       end if;
    end Create_Market_Offers;
 
+   -------------------------------
+   -- Current_Agent_Stock_Price --
+   -------------------------------
+
+   function Current_Agent_Stock_Price
+     (Manager   : Root_Agent_Manager'Class;
+      Commodity : Harriet.Db.Commodity_Reference)
+      return Harriet.Money.Price_Type
+   is
+      Rec : constant Harriet.Db.Stock_Price.Stock_Price_Type :=
+              Harriet.Db.Stock_Price.Get_By_Stock_Price
+                (Manager.Agent, Commodity);
+   begin
+      if Rec.Has_Element then
+         return Rec.Price;
+      else
+         return Harriet.Commodities.Initial_Price (Commodity);
+      end if;
+   end Current_Agent_Stock_Price;
+
    ------------------------------
    -- Current_Market_Ask_Price --
    ------------------------------
@@ -198,6 +221,27 @@ package body Harriet.Managers.Agents is
         (Manager.Market, Commodity);
    end Current_Market_Ask_Price;
 
+   ---------------------------------
+   -- Current_Market_Ask_Quantity --
+   ---------------------------------
+
+   function Current_Market_Ask_Quantity
+     (Manager   : Root_Agent_Manager'Class;
+      Commodity : Harriet.Db.Commodity_Reference)
+      return Harriet.Quantities.Quantity_Type
+   is
+      use Harriet.Quantities;
+      Quantity : Quantity_Type := Zero;
+   begin
+      for Ask of
+        Harriet.Db.Ask_Offer.Select_Market_Priority_Bounded_By_Priority
+          (Manager.Market, Commodity, 0.0, Real'Last)
+      loop
+         Quantity := Quantity + Ask.Quantity;
+      end loop;
+      return Quantity;
+   end Current_Market_Ask_Quantity;
+
    ------------------------------
    -- Current_Market_Bid_Price --
    ------------------------------
@@ -211,6 +255,27 @@ package body Harriet.Managers.Agents is
       return Harriet.Markets.Current_Bid_Price
         (Manager.Market, Commodity);
    end Current_Market_Bid_Price;
+
+   ---------------------------------
+   -- Current_Market_Bid_Quantity --
+   ---------------------------------
+
+   function Current_Market_Bid_Quantity
+     (Manager   : Root_Agent_Manager'Class;
+      Commodity : Harriet.Db.Commodity_Reference)
+      return Harriet.Quantities.Quantity_Type
+   is
+      use Harriet.Quantities;
+      Quantity : Quantity_Type := Zero;
+   begin
+      for Ask of
+        Harriet.Db.Bid_Offer.Select_Market_Priority_Bounded_By_Priority
+          (Manager.Market, Commodity, 0.0, Real'Last)
+      loop
+         Quantity := Quantity + Ask.Quantity;
+      end loop;
+      return Quantity;
+   end Current_Market_Bid_Quantity;
 
    -------------------
    -- Current_Stock --
@@ -351,6 +416,29 @@ package body Harriet.Managers.Agents is
                   Historical_Stock.Quantity);
       end loop;
    end Scan_Historical_Stock;
+
+   ---------------------------
+   -- Set_Agent_Stock_Price --
+   ---------------------------
+
+   procedure Set_Agent_Stock_Price
+     (Manager   : Root_Agent_Manager'Class;
+      Commodity : Harriet.Db.Commodity_Reference;
+      Price     : Harriet.Money.Price_Type)
+   is
+      Rec : constant Harriet.Db.Stock_Price.Stock_Price_Type :=
+              Harriet.Db.Stock_Price.Get_By_Stock_Price
+                (Manager.Agent, Commodity);
+   begin
+      if Rec.Has_Element then
+         Rec.Set_Price (Price);
+      else
+         Harriet.Db.Stock_Price.Create
+           (Agent     => Manager.Agent,
+            Commodity => Commodity,
+            Price     => Price);
+      end if;
+   end Set_Agent_Stock_Price;
 
    --------------
    -- Try_Bids --
