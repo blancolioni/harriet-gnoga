@@ -6,6 +6,7 @@ package Harriet.Options is
    Randomise               : Boolean;
    Generate_Root_Password  : Boolean;
    Command_Line            : Boolean;
+   Timed_Run               : Natural;
    
    Create                  : Boolean;
    System_Count            : Natural;

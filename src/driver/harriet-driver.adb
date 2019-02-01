@@ -305,7 +305,7 @@ begin
    Updates_Running := True;
 
    if Harriet.Options.Command_Line then
-      if True then
+      if Harriet.Options.Timed_Run = 0 then
          loop
             Ada.Text_IO.Put ("> ");
             Ada.Text_IO.Flush;
@@ -322,7 +322,7 @@ begin
             end;
          end loop;
       else
-         delay 600.0;
+         delay Duration (Harriet.Options.Timed_Run);
       end if;
    else
       Gnoga.Application.Title ("Harriet");
