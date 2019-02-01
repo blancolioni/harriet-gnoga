@@ -144,9 +144,12 @@ package body Harriet.Commodities is
                    Quantity  : Harriet.Quantities.Quantity_Type;
                    Value     : Harriet.Money.Money_Type))
    is
+      use Harriet.Quantities;
    begin
       for Rec of Stock.List loop
-         Process (Rec.Commodity, Rec.Quantity, Rec.Value);
+         if Rec.Quantity > Zero then
+            Process (Rec.Commodity, Rec.Quantity, Rec.Value);
+         end if;
       end loop;
    end Iterate;
 
@@ -158,10 +161,13 @@ package body Harriet.Commodities is
      (Stock     : in out Stock_Type;
       Has_Stock : Harriet.Db.Has_Stock_Reference)
    is
+      use Harriet.Quantities;
    begin
       for Item of Harriet.Db.Stock_Item.Select_By_Has_Stock (Has_Stock) loop
-         Stock.Set_Quantity
-           (Item.Commodity, Item.Quantity, Item.Value);
+         if Item.Quantity > Zero then
+            Stock.Set_Quantity
+              (Item.Commodity, Item.Quantity, Item.Value);
+         end if;
       end loop;
    end Load;
 
