@@ -238,12 +238,16 @@ package body Harriet.Stock is
                    Quantity : Harriet.Quantities.Quantity_Type;
                    Value    : Harriet.Money.Money_Type))
    is
+      use Harriet.Quantities;
    begin
       for Stock_Item of
         Harriet.Db.Stock_Item.Select_By_Has_Stock
           (Has_Stock.Reference)
       loop
-         Process (Stock_Item.Commodity, Stock_Item.Quantity, Stock_Item.Value);
+         if Stock_Item.Quantity > Zero then
+            Process (Stock_Item.Commodity,
+                     Stock_Item.Quantity, Stock_Item.Value);
+         end if;
       end loop;
    end Scan_Stock;
 
