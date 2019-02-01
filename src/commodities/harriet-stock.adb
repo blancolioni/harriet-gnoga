@@ -1,6 +1,8 @@
 with Harriet.Calendar;
 with Harriet.Logging;
 
+with Harriet.Commodities;
+
 with Harriet.Db.Commodity;
 with Harriet.Db.Historical_Stock;
 with Harriet.Db.Stock_Item;
@@ -238,17 +240,10 @@ package body Harriet.Stock is
                    Quantity : Harriet.Quantities.Quantity_Type;
                    Value    : Harriet.Money.Money_Type))
    is
-      use Harriet.Quantities;
+      Stock : Harriet.Commodities.Stock_Type;
    begin
-      for Stock_Item of
-        Harriet.Db.Stock_Item.Select_By_Has_Stock
-          (Has_Stock.Reference)
-      loop
-         if Stock_Item.Quantity > Zero then
-            Process (Stock_Item.Commodity,
-                     Stock_Item.Quantity, Stock_Item.Value);
-         end if;
-      end loop;
+      Stock.Load (Has_Stock.Reference);
+      Stock.Iterate (Process);
    end Scan_Stock;
 
 end Harriet.Stock;
