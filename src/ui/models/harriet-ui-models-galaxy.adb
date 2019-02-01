@@ -42,10 +42,9 @@ package body Harriet.UI.Models.Galaxy is
             begin
                for Near of
                  Harriet.Db.Star_System_Distance
-                   .Select_Bounded_By_Star_System_Range
-                     (Start_From      => Star_System.Reference,
+                   .Select_Star_System_Range_Bounded_By_Distance
+                     (From            => Star_System.Reference,
                       Start_Distance  => 0.0,
-                      Finish_From     => Star_System.Reference,
                       Finish_Distance => 7.0)
                loop
                   Nearest.Append ((Near.To, Near.Distance));

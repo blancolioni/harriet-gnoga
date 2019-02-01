@@ -36,7 +36,8 @@ package body Harriet.Markets is
       Commodity : Harriet.Db.Commodity_Reference;
       Quantity  : Harriet.Quantities.Quantity_Type;
       Price     : Harriet.Money.Price_Type;
-      Message   : String);
+      Message   : String)
+     with Unreferenced;
 
    procedure Log_Market_Bid
      (Market    : Harriet.Db.Market_Reference;
@@ -44,7 +45,8 @@ package body Harriet.Markets is
       Commodity : Harriet.Db.Commodity_Reference;
       Quantity  : Harriet.Quantities.Quantity_Type;
       Price     : Harriet.Money.Price_Type;
-      Message   : String);
+      Message   : String)
+     with Unreferenced;
 
    procedure Execute_Ask_Offer
      (Account   : Harriet.Db.Account_Reference;
@@ -78,16 +80,10 @@ package body Harriet.Markets is
       Remaining : Quantity_Type := Quantity;
    begin
 
-      Log_Market_Ask (Market, Agent, Commodity, Quantity, Price,
-                      "looking for matching bids");
-
-      for Bid of Harriet.Db.Bid_Offer.Select_Bounded_By_Market_Priority
-        (Market, Commodity, 0.0, Market, Commodity, Real'Last)
+      for Bid of
+        Harriet.Db.Bid_Offer.Select_Market_Priority_Bounded_By_Priority
+          (Market, Commodity, 0.0, Real'Last)
       loop
-
-         Log_Market_Bid
-           (Market, Bid.Agent, Commodity, Bid.Quantity, Bid.Price,
-            "checking");
 
          exit when Bid.Price < Price;
 
@@ -188,16 +184,10 @@ package body Harriet.Markets is
       Remaining : Quantity_Type := Quantity;
    begin
 
-      Log_Market_Bid (Market, Agent, Commodity, Quantity, Price,
-                      "looking for matching asks");
-
-      for Ask of Harriet.Db.Ask_Offer.Select_Bounded_By_Market_Priority
-        (Market, Commodity, 0.0, Market, Commodity, Real'Last)
+      for Ask of
+        Harriet.Db.Ask_Offer.Select_Market_Priority_Bounded_By_Priority
+          (Market, Commodity, 0.0, Real'Last)
       loop
-
-         Log_Market_Ask
-           (Market, Ask.Agent, Commodity, Ask.Quantity, Ask.Price,
-            "checking");
 
          exit when Ask.Price < Price;
 
@@ -381,8 +371,9 @@ package body Harriet.Markets is
       return Harriet.Db.Ask_Offer_Reference
    is
    begin
-      for Ask of Harriet.Db.Ask_Offer.Select_Bounded_By_Market_Priority
-        (Market, Commodity, 0.0, Market, Commodity, Real'Last)
+      for Ask of
+        Harriet.Db.Ask_Offer.Select_Market_Priority_Bounded_By_Priority
+          (Market, Commodity, 0.0, Real'Last)
       loop
          return Ask.Reference;
       end loop;
@@ -399,8 +390,9 @@ package body Harriet.Markets is
       return Harriet.Db.Bid_Offer_Reference
    is
    begin
-      for Bid of Harriet.Db.Bid_Offer.Select_Bounded_By_Market_Priority
-        (Market, Commodity, 0.0, Market, Commodity, Real'Last)
+      for Bid of
+        Harriet.Db.Bid_Offer.Select_Market_Priority_Bounded_By_Priority
+        (Market, Commodity, 0.0, Real'Last)
       loop
          return Bid.Reference;
       end loop;
@@ -539,8 +531,9 @@ package body Harriet.Markets is
          This_Quantity : Quantity_Type := Zero;
          This_Cost     : Money_Type    := Zero;
       begin
-         for Ask of Harriet.Db.Ask_Offer.Select_Bounded_By_Market_Priority
-           (Market, Commodity, 0.0, Market, Commodity, Real'Last)
+         for Ask of
+           Harriet.Db.Ask_Offer.Select_Market_Priority_Bounded_By_Priority
+           (Market, Commodity, 0.0, Real'Last)
          loop
             declare
                Bid_Quantity : constant Quantity_Type :=
