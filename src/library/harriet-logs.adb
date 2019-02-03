@@ -8,10 +8,10 @@ with Ada.Text_IO;
 with WL.Processes;
 with WL.String_Maps;
 
-with Concorde.Calendar;
-with Concorde.Options;
+with Harriet.Calendar;
+with Harriet.Options;
 
-package body Concorde.Logs is
+package body Harriet.Logs is
 
    Sep : constant Character := Character'Val (9);
    Ext : constant String := "csv";
@@ -51,7 +51,7 @@ package body Concorde.Logs is
          Line := Line & Sep & Field (I);
       end loop;
       Log_Files (Log_Path).Append
-        (Concorde.Calendar.Image (Concorde.Calendar.Clock, True)
+        (Harriet.Calendar.Image (Harriet.Calendar.Clock, True)
          & To_String (Line));
    end Append_Line;
 
@@ -88,7 +88,7 @@ package body Concorde.Logs is
    ----------------
 
    procedure Flush_Logs (Show_Console_Progress : Boolean) is
-      Base_Path : constant String := Concorde.Options.Log_Folder;
+      Base_Path : constant String := Harriet.Options.Log_Folder;
       Process : WL.Processes.Process_Type;
    begin
       if Log_Files.Is_Empty then
@@ -196,9 +196,9 @@ package body Concorde.Logs is
                   & Field (Field_16);
       begin
          Log_Files (Log_Path).Append
-           (Concorde.Calendar.Image (Concorde.Calendar.Clock, True)
+           (Harriet.Calendar.Image (Harriet.Calendar.Clock, True)
             & Sep & Line);
       end;
    end Log_Fields;
 
-end Concorde.Logs;
+end Harriet.Logs;

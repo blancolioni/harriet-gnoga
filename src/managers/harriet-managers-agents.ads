@@ -114,6 +114,9 @@ package Harriet.Managers.Agents is
      (Manager : Root_Agent_Manager'Class)
       return Harriet.Money.Money_Type;
 
+   procedure Log_Market_State
+     (Manager : Root_Agent_Manager'Class);
+
    procedure Initialize_Agent_Manager
      (Manager : in out Root_Agent_Manager'Class;
       Agent   : Harriet.Db.Agent.Agent_Type;

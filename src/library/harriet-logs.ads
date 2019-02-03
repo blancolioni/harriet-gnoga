@@ -1,4 +1,4 @@
-package Concorde.Logs is
+package Harriet.Logs is
 
    type Log_Interface is limited interface;
 
@@ -43,4 +43,4 @@ package Concorde.Logs is
 
    procedure Flush_Logs (Show_Console_Progress : Boolean);
 
-end Concorde.Logs;
+end Harriet.Logs;

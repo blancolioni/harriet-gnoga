@@ -3,6 +3,7 @@ with Ada.Text_IO;
 with Harriet.Data_Series;
 with Harriet.Logging;
 with Harriet.Money;
+with Harriet.Options;
 with Harriet.Quantities;
 with Harriet.Random;
 with Harriet.Real_Images;
@@ -37,7 +38,8 @@ package body Harriet.Managers.Installations is
    type Hub_Manager is
      new Root_Installation_Manager with
       record
-         Day_Tick : Natural := 0;
+         Day_Tick  : Natural := 0;
+         Log_State : Boolean := False;
       end record;
 
    overriding procedure Create_Market_Offers
@@ -108,6 +110,7 @@ package body Harriet.Managers.Installations is
                          (Harriet.Managers.Agents.Root_Agent_Manager with
                           Installation => Installation.Reference,
                           Facility     => Installation.Facility,
+                          Log_State    => Harriet.Options.Log_Trade_Offers,
                           Day_Tick     => 0);
    begin
       Manager.Initialize_Agent_Manager
@@ -302,8 +305,6 @@ package body Harriet.Managers.Installations is
          end;
       end loop;
 
-      Harriet.Stock.Log_Stock (Installation.Reference);
-
    end Execute_Agent_Tasks;
 
    -------------------------
@@ -471,6 +472,11 @@ package body Harriet.Managers.Installations is
 
          Manager.Day_Tick := 0;
       end if;
+
+      if Manager.Log_State then
+         Manager.Log_Market_State;
+      end if;
+
    end Execute_Agent_Tasks;
 
    ------------------------

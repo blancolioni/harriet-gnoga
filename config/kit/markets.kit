@@ -33,7 +33,7 @@ record Market_Offer is
    key Agent;
    Has_Stock;
    Account;
-   Price       : Price_Type;
+   Price           : Price_Type;
    key Priority    : Long_Float;
    Quantity        : Quantity_Type;
    key Market_Priority with Market, Commodity, Priority;
@@ -52,6 +52,7 @@ record Transaction is
    key Seller : Agent;
    Price : Price_Type;
    Quantity : Quantity_Type;
+   key Transaction with Market, Commodity, Time_Stamp;
 end Transaction;
    
 end Markets;

@@ -23,6 +23,7 @@ with Harriet.Configure;
 with Harriet.Configure.Scenarios;
 with Harriet.Factions.Create;
 with Harriet.Logging;
+with Harriet.Logs;
 
 with Harriet.Commands.Loader;
 with Harriet.Managers.Loader;
@@ -351,9 +352,13 @@ begin
    Harriet.Db.Database.Close;
    Database_Open := False;
 
+   Harriet.Logs.Flush_Logs (True);
+
    Ada.Text_IO.Put_Line ("exit");
 
-   Harriet.Logging.Stop_Logging;
+   if Harriet.Options.Detailed_Logging then
+      Harriet.Logging.Stop_Logging;
+   end if;
 
 exception
 
@@ -364,6 +369,7 @@ exception
       if Database_Open then
          Harriet.Db.Database.Close;
       end if;
+      Harriet.Logs.Flush_Logs (True);
       Harriet.Logging.Stop_Logging;
       raise;
 

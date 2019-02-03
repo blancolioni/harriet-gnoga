@@ -6,3 +6,4 @@ harriet.db.marlowe
 harriet.gpr
 options.txt
 test.txt
+log/*

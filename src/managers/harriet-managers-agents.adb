@@ -1,4 +1,7 @@
+with Ada.Strings.Fixed;
+
 with Harriet.Logging;
+with Harriet.Logs;
 --  with Harriet.Real_Images;
 
 with Harriet.Agents;
@@ -8,10 +11,49 @@ with Harriet.Worlds;
 
 with Harriet.Db.Ask_Offer;
 with Harriet.Db.Bid_Offer;
+with Harriet.Db.Commodity;
 with Harriet.Db.Historical_Stock;
 with Harriet.Db.Stock_Price;
+with Harriet.Db.Transaction;
 
 package body Harriet.Managers.Agents is
+
+   Supply_Field : constant := 1;
+   Demand_Field : constant := 2;
+   Traded_Field : constant := 3;
+   Price_Field  : constant := 4;
+   Last_Field   : constant := Price_Field;
+
+   subtype Market_Log_Field_Index is Positive range 1 .. Last_Field;
+
+   type Market_State_Log is
+     new Harriet.Logs.Log_Interface with
+      record
+         Market    : Harriet.Db.Market_Reference;
+         Commodity : Harriet.Db.Commodity_Reference;
+         Supply    : Harriet.Quantities.Quantity_Type;
+         Demand    : Harriet.Quantities.Quantity_Type;
+         Traded    : Harriet.Quantities.Quantity_Type;
+         Price     : Harriet.Money.Price_Type;
+      end record;
+
+   overriding function Path
+     (Log : Market_State_Log)
+      return String;
+
+   overriding function Field_Count
+     (Log : Market_State_Log)
+      return Natural;
+
+   overriding function Heading
+     (Log   : Market_State_Log;
+      Index : Positive)
+      return String;
+
+   overriding function Value
+     (Log   : Market_State_Log;
+      Index : Positive)
+      return String;
 
    --------------
    -- Activate --
@@ -302,6 +344,42 @@ package body Harriet.Managers.Agents is
       return Harriet.Stock.Get_Quantity (Manager.Has_Stock, Commodity);
    end Current_Stock;
 
+   -----------------
+   -- Field_Count --
+   -----------------
+
+   overriding function Field_Count
+     (Log : Market_State_Log)
+      return Natural
+   is
+      pragma Unreferenced (Log);
+   begin
+      return Last_Field;
+   end Field_Count;
+
+   -------------
+   -- Heading --
+   -------------
+
+   overriding function Heading
+     (Log   : Market_State_Log;
+      Index : Positive)
+      return String
+   is
+      pragma Unreferenced (Log);
+   begin
+      case Market_Log_Field_Index (Index) is
+         when Supply_Field =>
+            return "Supply";
+         when Demand_Field =>
+            return "Demand";
+         when Traded_Field =>
+            return "Traded";
+         when Price_Field =>
+            return "Price";
+      end case;
+   end Heading;
+
    ------------------------------
    -- Initialize_Agent_Manager --
    ------------------------------
@@ -319,6 +397,49 @@ package body Harriet.Managers.Agents is
       Manager.World := World;
    end Initialize_Agent_Manager;
 
+   ----------------------
+   -- Log_Market_State --
+   ----------------------
+
+   procedure Log_Market_State
+     (Manager : Root_Agent_Manager'Class)
+   is
+      use Harriet.Calendar;
+      Now : constant Time := Clock;
+   begin
+      for Commodity of Harriet.Db.Commodity.Scan_By_Tag loop
+         declare
+            use Harriet.Money, Harriet.Quantities;
+            Traded : Quantity_Type := Zero;
+            Value  : Money_Type := Zero;
+         begin
+            for Transaction of
+              Harriet.Db.Transaction.Select_Transaction_Bounded_By_Time_Stamp
+                (Manager.Market, Commodity.Reference,
+                 Now - Days (1.0), Now)
+            loop
+               Traded := Traded + Transaction.Quantity;
+               Value := Value
+                 + Total (Transaction.Price, Transaction.Quantity);
+            end loop;
+
+            declare
+               Log : constant Market_State_Log :=
+                       Market_State_Log'
+                         (Market    => Manager.Market,
+                          Commodity => Commodity.Reference,
+                          Supply    => Zero,
+                          Demand    => Zero,
+                          Traded    => Traded,
+                          Price     => Price (Value, Traded));
+            begin
+               Log.Log;
+            end;
+         end;
+      end loop;
+
+   end Log_Market_State;
+
    -------------------------
    -- Next_Sleep_Duration --
    -------------------------
@@ -331,6 +452,22 @@ package body Harriet.Managers.Agents is
    begin
       return Harriet.Calendar.Days (1.0);
    end Next_Sleep_Duration;
+
+   ----------
+   -- Path --
+   ----------
+
+   overriding function Path
+     (Log : Market_State_Log)
+      return String
+   is
+   begin
+      return "markets/"
+        & Ada.Strings.Fixed.Trim (Harriet.Db.To_String (Log.Market),
+                                  Ada.Strings.Both)
+        & "/"
+        & Harriet.Db.Commodity.Get (Log.Commodity).Tag;
+   end Path;
 
    ---------------
    -- Place_Ask --
@@ -455,6 +592,28 @@ package body Harriet.Managers.Agents is
          Wanted    => Stock,
          Available => Available);
    end Try_Bids;
+
+   -----------
+   -- Value --
+   -----------
+
+   overriding function Value
+     (Log   : Market_State_Log;
+      Index : Positive)
+      return String
+   is
+   begin
+      case Market_Log_Field_Index (Index) is
+         when Supply_Field =>
+            return Harriet.Quantities.Show (Log.Supply);
+         when Demand_Field =>
+            return Harriet.Quantities.Show (Log.Demand);
+         when Traded_Field =>
+            return Harriet.Quantities.Show (Log.Traded);
+         when Price_Field =>
+            return Harriet.Money.Image (Log.Price);
+      end case;
+   end Value;
 
    -----------
    -- World --
