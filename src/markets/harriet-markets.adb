@@ -12,6 +12,9 @@ with Harriet.Db.Bid_Offer;
 with Harriet.Db.Market_Offer;
 with Harriet.Db.Transaction;
 
+with Harriet.Db.Historical_Ask;
+with Harriet.Db.Historical_Bid;
+
 package body Harriet.Markets is
 
    function First_Ask
@@ -79,6 +82,14 @@ package body Harriet.Markets is
       use Harriet.Quantities;
       Remaining : Quantity_Type := Quantity;
    begin
+
+      Harriet.Db.Historical_Ask.Create
+        (Time_Stamp => Harriet.Calendar.Clock,
+         Market     => Market,
+         Commodity  => Commodity,
+         Agent      => Agent,
+         Quantity   => Quantity,
+         Price      => Price);
 
       for Bid of
         Harriet.Db.Bid_Offer.Select_Market_Priority_Bounded_By_Priority
@@ -183,6 +194,14 @@ package body Harriet.Markets is
       use Harriet.Quantities;
       Remaining : Quantity_Type := Quantity;
    begin
+
+      Harriet.Db.Historical_Bid.Create
+        (Time_Stamp => Harriet.Calendar.Clock,
+         Market     => Market,
+         Commodity  => Commodity,
+         Agent      => Agent,
+         Quantity   => Quantity,
+         Price      => Price);
 
       for Ask of
         Harriet.Db.Ask_Offer.Select_Market_Priority_Bounded_By_Priority

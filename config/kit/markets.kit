@@ -44,6 +44,21 @@ record Ask_Offer : Market_Offer;
 
 record Bid_Offer : Market_Offer;
 
+record Historical_Offer is
+   Time_Stamp : Time;
+   Market;
+   Commodity;
+   Agent;
+   Quantity   : Quantity_Type;
+   Price      : Price_Type;
+   key Historical_Offer with Market, Commodity, Time_Stamp;
+   key Historical_Agent_Offer with Market, Agent, Commodity, Time_Stamp;
+end Historical_Offer;
+
+record Historical_Ask : Historical_Offer;
+
+record Historical_Bid : Historical_Offer;
+
 record Transaction is
    key Time_Stamp : Time;
    key Market;
