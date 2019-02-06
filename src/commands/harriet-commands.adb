@@ -1,3 +1,4 @@
+with Ada.Characters.Handling;
 with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
@@ -41,6 +42,11 @@ package body Harriet.Commands is
      (Argument_Line : String)
       return Argument_List;
 
+   procedure Iterate_Words
+     (Text : String;
+      Process : not null access
+        procedure (Word : String));
+
    --------------------------
    -- Execute_Command_Line --
    --------------------------
@@ -82,6 +88,82 @@ package body Harriet.Commands is
       end;
 
    end Execute_Command_Line;
+
+   -------------------
+   -- Iterate_Words --
+   -------------------
+
+   procedure Iterate_Words
+     (Text    : String;
+      Process : not null access
+        procedure (Word : String))
+   is
+      use Ada.Characters.Handling;
+      Double_Quote : Boolean := False;
+      Single_Quote : Boolean := False;
+      Escape       : Boolean := False;
+      Skipping     : Boolean := True;
+      Buffer       : String (Text'Range);
+      Index        : Natural := 0;
+
+      procedure Add (Ch : Character);
+
+      ---------
+      -- Add --
+      ---------
+
+      procedure Add (Ch : Character) is
+      begin
+         Index := Index + 1;
+         Buffer (Index) := Ch;
+      end Add;
+
+   begin
+      for Ch of Text loop
+         if Skipping then
+            if not Is_Space (Ch) then
+               Skipping := False;
+               Index := Buffer'First - 1;
+            end if;
+         end if;
+
+         if not Skipping then
+            if Escape then
+               Add (Ch);
+               Escape := False;
+            elsif Double_Quote then
+               if Ch = '"' then
+                  Double_Quote := False;
+               else
+                  Add (Ch);
+               end if;
+            elsif Single_Quote then
+               if Ch = ''' then
+                  Single_Quote := False;
+               else
+                  Add (Ch);
+               end if;
+            elsif Ch = '\' then
+               Escape := True;
+            elsif Ch = ''' then
+               Single_Quote := True;
+            elsif Ch = '"' then
+               Double_Quote := True;
+            elsif Is_Space (Ch) then
+               Process (Buffer (Buffer'First .. Index));
+               Index := 0;
+               Skipping := True;
+            else
+               Add (Ch);
+            end if;
+         end if;
+      end loop;
+
+      if not Skipping then
+         Process (Buffer (Buffer'First .. Index));
+      end if;
+
+   end Iterate_Words;
 
    -----------------
    -- Null_Writer --
@@ -140,56 +222,58 @@ package body Harriet.Commands is
      (Argument_Line : String)
       return Argument_List
    is
-      use Ada.Strings, Ada.Strings.Fixed;
-      Extended_Line : constant String :=
-                        Trim (Argument_Line, Both) & ' ';
-      First         : Natural := Extended_Line'First;
-      Last          : Natural := Index (Extended_Line, " ") - 1;
-   begin
-      return Arguments : Argument_List do
-         while First > 0 and then Last >= First loop
-            declare
-               Arg : constant String := Extended_Line (First .. Last);
-            begin
-               First := Index_Non_Blank (Extended_Line, Last + 1);
-               Last := (if First = 0 then 0
-                        else Index (Extended_Line, " ", First) - 1);
 
-               if Arg = "-" or else Arg = "--" then
-                  null;
-               elsif Arg (Arg'First) = '-'
-                 and then Arg (Arg'First + 1) = '-'
-               then
-                  declare
-                     Equal_Index : constant Natural :=
-                                     Index (Arg, "=");
-                  begin
-                     if Equal_Index = 0 then
-                        Set_Flag (Arguments, Arg (Arg'First + 2 .. Arg'Last));
-                     else
-                        declare
-                           Name : constant String :=
-                                    Arg (Arg'First + 2 .. Equal_Index - 1);
-                           Value : constant String :=
-                                     Arg (Equal_Index + 1 .. Arg'Last);
-                        begin
-                           Set_Named_Value
-                             (Arguments => Arguments,
-                              Name      => Name,
-                              Value     => Value);
-                        end;
-                     end if;
-                  end;
-               elsif Arg (Arg'First) = '-' then
-                  for Ch of Arg (Arg'First + 1 .. Arg'Last) loop
-                     Set_Flag (Arguments, (1 => Ch));
-                  end loop;
+      Arguments : Argument_List;
+
+      procedure Process_Argument
+        (Arg : String);
+
+      ----------------------
+      -- Process_Argument --
+      ----------------------
+
+      procedure Process_Argument
+        (Arg : String)
+      is
+      begin
+         if Arg = "-" or else Arg = "--" then
+            null;
+         elsif Arg (Arg'First) = '-'
+           and then Arg (Arg'First + 1) = '-'
+         then
+            declare
+               Equal_Index : constant Natural :=
+                               Ada.Strings.Fixed.Index (Arg, "=");
+            begin
+               if Equal_Index = 0 then
+                  Set_Flag (Arguments, Arg (Arg'First + 2 .. Arg'Last));
                else
-                  Set_Value (Arguments, Arg);
+                  declare
+                     Name  : constant String :=
+                               Arg (Arg'First + 2 .. Equal_Index - 1);
+                     Value : constant String :=
+                               Arg (Equal_Index + 1 .. Arg'Last);
+                  begin
+                     Set_Named_Value
+                       (Arguments => Arguments,
+                        Name      => Name,
+                        Value     => Value);
+                  end;
                end if;
             end;
-         end loop;
-      end return;
+         elsif Arg (Arg'First) = '-' then
+            for Ch of Arg (Arg'First + 1 .. Arg'Last) loop
+               Set_Flag (Arguments, (1 => Ch));
+            end loop;
+         else
+            Set_Value (Arguments, Arg);
+         end if;
+
+      end Process_Argument;
+
+   begin
+      Iterate_Words (Argument_Line, Process_Argument'Access);
+      return Arguments;
    end Scan_Arguments;
 
    --------------
