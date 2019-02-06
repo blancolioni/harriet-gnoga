@@ -1,5 +1,8 @@
 with Ada.Calendar.Formatting;
 
+with Marlowe.Version;
+with Kit.Version;
+
 with Harriet.Version;
 
 with Harriet.Calendar;
@@ -32,6 +35,7 @@ package body Harriet.Commands.System is
 
    type Status_Command_Type is
      (Pause_Server, Resume_Server, Stop_Server,
+      Update_Speed,
       Show_Status);
 
    type Status_Command (Command : Status_Command_Type) is
@@ -155,6 +159,38 @@ package body Harriet.Commands.System is
             Writer.Put_Line
               (Session.User_Name
                & ": server stopped via stop-server command");
+         when Update_Speed =>
+
+            if Argument_Count (Arguments) > 1 then
+               Writer.Put_Error ("Usage: update-speed [time factor]");
+               return;
+            end if;
+
+            if Argument_Count (Arguments) = 1 then
+               declare
+                  Value : Duration;
+               begin
+                  Value := Duration'Value (Argument (Arguments, 1));
+                  Harriet.Updates.Control.Set_Advance_Speed (Value);
+               exception
+                  when Constraint_Error =>
+                     Writer.Put_Error ("Usage: update-speed [time factor]");
+                     return;
+               end;
+            end if;
+
+            declare
+               Paused             : Boolean;
+               Advance_Per_Second : Duration;
+               Start_Time         : Ada.Calendar.Time;
+            begin
+               Harriet.Updates.Control.Get_Status
+                 (Start_Time, Paused, Advance_Per_Second);
+               Writer.Put_Line
+                 ("time acceleration:"
+                  & Natural'Image (Natural (Advance_Per_Second)));
+            end;
+
          when Show_Status =>
             declare
                Paused             : Boolean;
@@ -167,10 +203,17 @@ package body Harriet.Commands.System is
                Writer.Put_Line
                  (Harriet.Version.Name
                   & " version "
-                  & Harriet.Version.Version_String
-                  & " started "
-                  & Ada.Calendar.Formatting.Image
-                    (Start_Time));
+                  & Harriet.Version.Version_String);
+               Writer.Put_Line
+                 ("kit     "
+                  & Kit.Version.Version_String);
+               Writer.Put_Line
+                 ("marlowe "
+                  & Marlowe.Version.Version_String);
+               Writer.Put_Line
+                  ("Server started "
+                   & Ada.Calendar.Formatting.Image
+                     (Start_Time));
                Writer.Put_Line
                  ("status: " & (if Paused then "paused" else "running"));
                Writer.Put_Line
@@ -189,18 +232,20 @@ package body Harriet.Commands.System is
    --------------------------
 
    procedure Load_System_Commands is
-      Change_Scope       : Change_Scope_Command;
-      List               : List_Command;
-      Pause_Command      : Status_Command (Pause_Server);
-      Resume_Command     : Status_Command (Resume_Server);
-      Stop_Command       : Status_Command (Stop_Server);
-      Get_Status_Command : Status_Command (Show_Status);
+      Change_Scope         : Change_Scope_Command;
+      List                 : List_Command;
+      Pause_Command        : Status_Command (Pause_Server);
+      Resume_Command       : Status_Command (Resume_Server);
+      Stop_Command         : Status_Command (Stop_Server);
+      Get_Status_Command   : Status_Command (Show_Status);
+      Update_Speed_Command : Status_Command (Update_Speed);
    begin
       Register ("cd", Change_Scope);
       Register ("change-scope", Change_Scope);
       Register ("ls", List);
       Register ("pause", Pause_Command);
       Register ("resume", Resume_Command);
+      Register ("update-speed", Update_Speed_Command);
       Register ("stop-server", Stop_Command);
       Register ("status", Get_Status_Command);
    end Load_System_Commands;
