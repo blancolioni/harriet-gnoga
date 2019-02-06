@@ -1,3 +1,4 @@
+with Ada.Calendar;
 with Ada.Containers.Indefinite_Holders;
 with Ada.Exceptions;
 with Ada.Text_IO;
@@ -120,6 +121,10 @@ package body Harriet.Updates.Tasks is
    -----------------
 
    task body Update_Task is
+      Advance  : Duration := 60.0;
+      Paused   : Boolean := True;
+      Stopping : Boolean := False;
+      Previous_Tick : Ada.Calendar.Time;
    begin
 
       select
@@ -130,28 +135,83 @@ package body Harriet.Updates.Tasks is
 
       Ada.Text_IO.Put_Line ("Update task starting");
 
-      loop
-         select
-            accept Stop;
-            exit;
-         else
-            delay 0.1;
-            Harriet.Calendar.Advance (3600.0);
-            Broadcast_Task.Broadcast
-              (Harriet.Sessions.Signal_Clock_Tick);
+      while not Stopping loop
 
-            declare
-               List  : Update_Lists.List;
-               Clock : constant Harriet.Calendar.Time :=
-                         Harriet.Calendar.Clock;
-            begin
-               Update_Map.Get_Updates (Clock, List);
+         if Paused then
+            select
+               accept Resume;
+               Paused := False;
+            or
+               accept Stop;
+               Stopping := True;
+               exit;
+            or
+               accept Current_State
+                 (Is_Paused : out Boolean;
+                  Advance_Speed : out Duration)
+               do
+                  Is_Paused := True;
+                  Advance_Speed := Advance;
+               end Current_State;
+            or
+               accept Set_Speed (Advance_Per_Second : Duration) do
+                  Advance := Advance_Per_Second;
+               end Set_Speed;
+            or
+               terminate;
+            end select;
+         end if;
 
-               if not List.Is_Empty then
-                  Dispatch_Task.Dispatch (List);
-               end if;
-            end;
-         end select;
+         Previous_Tick := Ada.Calendar.Clock;
+
+         loop
+            select
+               accept Stop;
+               Stopping := True;
+               exit;
+            or
+               accept Pause;
+               Paused := True;
+               exit;
+            or
+               accept Set_Speed (Advance_Per_Second : in Duration) do
+                  Advance := Advance_Per_Second;
+               end Set_Speed;
+            or
+               accept Current_State
+                 (Is_Paused : out Boolean;
+                  Advance_Speed : out Duration)
+               do
+                  Is_Paused := False;
+                  Advance_Speed := Advance;
+               end Current_State;
+            else
+               delay 0.1;
+
+               declare
+                  use type Ada.Calendar.Time;
+               begin
+                  Harriet.Calendar.Advance
+                    (Advance * (Ada.Calendar.Clock - Previous_Tick));
+               end;
+
+               Previous_Tick := Ada.Calendar.Clock;
+               Broadcast_Task.Broadcast
+                 (Harriet.Sessions.Signal_Clock_Tick);
+
+               declare
+                  List  : Update_Lists.List;
+                  Clock : constant Harriet.Calendar.Time :=
+                            Harriet.Calendar.Clock;
+               begin
+                  Update_Map.Get_Updates (Clock, List);
+
+                  if not List.Is_Empty then
+                     Dispatch_Task.Dispatch (List);
+                  end if;
+               end;
+            end select;
+         end loop;
       end loop;
       Ada.Text_IO.Put_Line ("Update task stopping");
    end Update_Task;

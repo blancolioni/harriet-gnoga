@@ -1,19 +1,16 @@
+with Ada.Calendar.Formatting;
+
+with Harriet.Version;
+
+with Harriet.Calendar;
 with Harriet.Contexts;
+with Harriet.Updates.Control;
 
 with Harriet.UI.Gnoga_UI;
 
 with Harriet.Db.Has_Name;
 
 package body Harriet.Commands.System is
-
-   type Stop_Server_Command is
-     new Root_Harriet_Command with null record;
-
-   overriding procedure Execute
-     (Command   : Stop_Server_Command;
-      Session   : Harriet.Sessions.Harriet_Session;
-      Writer    : Writer_Interface'Class;
-      Arguments : Argument_List);
 
    type Change_Scope_Command is
      new Root_Harriet_Command with null record;
@@ -33,24 +30,18 @@ package body Harriet.Commands.System is
       Writer    : Writer_Interface'Class;
       Arguments : Argument_List);
 
-   -------------
-   -- Execute --
-   -------------
+   type Status_Command_Type is
+     (Pause_Server, Resume_Server, Stop_Server,
+      Show_Status);
+
+   type Status_Command (Command : Status_Command_Type) is
+     new Root_Harriet_Command with null record;
 
    overriding procedure Execute
-     (Command   : Stop_Server_Command;
+     (Command   : Status_Command;
       Session   : Harriet.Sessions.Harriet_Session;
       Writer    : Writer_Interface'Class;
-      Arguments : Argument_List)
-   is
-      pragma Unreferenced (Command);
-   begin
-      Harriet.UI.Gnoga_UI.Stop_Server
-        (Argument (Arguments, "message", "stop server command"));
-      Writer.Put_Line
-        (Session.User_Name
-         & ": server stopped via stop-server command");
-   end Execute;
+      Arguments : Argument_List);
 
    -------------
    -- Execute --
@@ -142,19 +133,76 @@ package body Harriet.Commands.System is
       end if;
    end Execute;
 
+   -------------
+   -- Execute --
+   -------------
+
+   overriding procedure Execute
+     (Command   : Status_Command;
+      Session   : Harriet.Sessions.Harriet_Session;
+      Writer    : Writer_Interface'Class;
+      Arguments : Argument_List)
+   is
+   begin
+      case Command.Command is
+         when Pause_Server =>
+            Harriet.Updates.Control.Pause_Updates;
+         when Resume_Server =>
+            Harriet.Updates.Control.Resume_Updates;
+         when Stop_Server =>
+            Harriet.UI.Gnoga_UI.Stop_Server
+              (Argument (Arguments, "message", "stop server command"));
+            Writer.Put_Line
+              (Session.User_Name
+               & ": server stopped via stop-server command");
+         when Show_Status =>
+            declare
+               Paused             : Boolean;
+               Advance_Per_Second : Duration;
+               Start_Time         : Ada.Calendar.Time;
+            begin
+               Writer.Put_Line ("logged in as " & Session.User_Name);
+               Harriet.Updates.Control.Get_Status
+                 (Start_Time, Paused, Advance_Per_Second);
+               Writer.Put_Line
+                 (Harriet.Version.Name
+                  & " version "
+                  & Harriet.Version.Version_String
+                  & " started "
+                  & Ada.Calendar.Formatting.Image
+                    (Start_Time));
+               Writer.Put_Line
+                 ("status: " & (if Paused then "paused" else "running"));
+               Writer.Put_Line
+                 ("current server date: "
+                  & Harriet.Calendar.Image
+                    (Harriet.Calendar.Clock));
+               Writer.Put_Line
+                 ("time acceleration:"
+                  & Natural'Image (Natural (Advance_Per_Second)));
+            end;
+      end case;
+   end Execute;
+
    --------------------------
    -- Load_System_Commands --
    --------------------------
 
    procedure Load_System_Commands is
-      Change_Scope : Change_Scope_Command;
-      List         : List_Command;
-      Stop_Server  : Stop_Server_Command;
+      Change_Scope       : Change_Scope_Command;
+      List               : List_Command;
+      Pause_Command      : Status_Command (Pause_Server);
+      Resume_Command     : Status_Command (Resume_Server);
+      Stop_Command       : Status_Command (Stop_Server);
+      Get_Status_Command : Status_Command (Show_Status);
    begin
       Register ("cd", Change_Scope);
       Register ("change-scope", Change_Scope);
       Register ("ls", List);
-      Register ("stop-server", Stop_Server);
+      Register ("pause", Pause_Command);
+      Register ("resume", Resume_Command);
+      Register ("stop-server", Stop_Command);
+      Register ("status", Get_Status_Command);
    end Load_System_Commands;
 
 end Harriet.Commands.System;

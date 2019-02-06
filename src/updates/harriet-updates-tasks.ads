@@ -20,6 +20,13 @@ private package Harriet.Updates.Tasks is
    task Update_Task is
       entry Start;
       entry Stop;
+      entry Pause;
+      entry Resume;
+      entry Current_State
+        (Is_Paused     : out Boolean;
+         Advance_Speed : out Duration);
+      entry Set_Speed
+        (Advance_Per_Second : Duration);
    end Update_Task;
 
    task Broadcast_Task is
