@@ -67,6 +67,7 @@ package body Harriet.Commands is
       begin
          if not Map.Contains (Command_Name) then
             Writer.Put_Error (Command_Name & ": command not found");
+            return;
          end if;
 
          declare
