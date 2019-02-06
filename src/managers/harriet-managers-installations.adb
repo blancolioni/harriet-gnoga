@@ -457,12 +457,6 @@ package body Harriet.Managers.Installations is
    begin
       Manager.Day_Tick := Manager.Day_Tick + 1;
       if Manager.Day_Tick = 7 then
-         Ada.Text_IO.Put_Line
-           (Harriet.Calendar.Image (Harriet.Calendar.Clock)
-            & ": hub on "
-            & Harriet.Worlds.Name (Manager.World)
-            & ": checking stock trends");
-
          for Item of Harriet.Db.Consumer_Good.Scan_By_Tag loop
             Check_Trend (Item.Reference);
          end loop;
