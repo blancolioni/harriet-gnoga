@@ -159,31 +159,37 @@ package body Harriet.Sessions is
       Session.Faction :=
         Harriet.Db.Faction.First_Reference_By_User (User);
 
+      Harriet.Contexts.Initialize_Context
+        (Session.Context, Session.Faction);
+
       Ada.Text_IO.Put_Line
         ("session started for user " & Session.User_Name);
-      declare
-         Main_Model : constant Harriet.UI.Models.Dashboard.Dashboard_Model :=
-                        Harriet.UI.Models.Dashboard.Create_Dashboard_Model
-                          (Session);
-         Main_View  : constant Harriet.UI.Views.View_Type :=
-                        Harriet.UI.Views.Dashboard.Dashboard_View
-                          (Main_Model);
-      begin
-         Session.Current_View.Gnoga_View.Visible (False);
-         Harriet.UI.Views.Destroy
-           (Harriet.UI.Views.View_Type (Session.Current_View));
-         Main_View.Create (Session, Session.Main_Window.all, "dashboard");
-         Session.Main_Window.Set_View (Main_View.Gnoga_View.all);
-         Session.Current_View := View_Access (Main_View);
-         Session.Views.Append (View_Access (Main_View));
-         Main_View.Gnoga_View.On_Destroy_Handler
-           (On_Main_View_Destroyed'Access);
-         Main_View.Gnoga_View.Focus;
-         Harriet.Commands.Execute_Command_Line
-           ("load-galaxy-view",
-            Harriet.Sessions.Harriet_Session (Session),
-            Harriet.Commands.Null_Writer);
-      end;
+
+      if Session.Is_Gnoga then
+         declare
+            use Harriet.UI.Models.Dashboard;
+            Main_Model : constant Dashboard_Model :=
+                           Create_Dashboard_Model (Session);
+            Main_View  : constant Harriet.UI.Views.View_Type :=
+                           Harriet.UI.Views.Dashboard.Dashboard_View
+                             (Main_Model);
+         begin
+            Session.Current_View.Gnoga_View.Visible (False);
+            Harriet.UI.Views.Destroy
+              (Harriet.UI.Views.View_Type (Session.Current_View));
+            Main_View.Create (Session, Session.Main_Window.all, "dashboard");
+            Session.Main_Window.Set_View (Main_View.Gnoga_View.all);
+            Session.Current_View := View_Access (Main_View);
+            Session.Views.Append (View_Access (Main_View));
+            Main_View.Gnoga_View.On_Destroy_Handler
+              (On_Main_View_Destroyed'Access);
+            Main_View.Gnoga_View.Focus;
+            Harriet.Commands.Execute_Command_Line
+              ("load-galaxy-view",
+               Harriet.Sessions.Harriet_Session (Session),
+               Harriet.Commands.Null_Writer);
+         end;
+      end if;
 
    end Login;
 
@@ -197,23 +203,46 @@ package body Harriet.Sessions is
       Session.Show_Login_View;
    end Logout;
 
-   -----------------
-   -- New_Session --
-   -----------------
+   -----------------------
+   -- New_Gnoga_Session --
+   -----------------------
 
-   function New_Session return Harriet_Session is
+   function New_Gnoga_Session return Harriet_Session is
    begin
       return Session : constant Harriet_Session :=
         new Root_Harriet_Session'
           (Id => WL.Guids.New_Guid,
            others => <>)
       do
+         Session.Is_Gnoga := True;
          Map.Insert (Session.Id, Session);
          Ada.Text_IO.Put_Line
            ("new session: "
             & WL.Guids.To_String (Session.Id));
       end return;
-   end New_Session;
+   end New_Gnoga_Session;
+
+   ----------------------
+   -- New_Repl_Session --
+   ----------------------
+
+   function New_Repl_Session
+     (User : Harriet.Db.User_Reference)
+      return Harriet_Session
+   is
+   begin
+      return Session : constant Harriet_Session :=
+        new Root_Harriet_Session'
+          (Id     => WL.Guids.New_Guid,
+           others => <>)
+      do
+         Session.Login (User);
+         Map.Insert (Session.Id, Session);
+         Ada.Text_IO.Put_Line
+           ("new session: "
+            & WL.Guids.To_String (Session.Id));
+      end return;
+   end New_Repl_Session;
 
    ----------------------------
    -- On_Main_View_Destroyed --
@@ -302,6 +331,18 @@ package body Harriet.Sessions is
       Session.Main_Window.Set_View (Login_View.Gnoga_View.all);
       Session.Current_View := View_Access (Login_View);
    end Show_Login_View;
+
+   --------------------
+   -- Update_Context --
+   --------------------
+
+   procedure Update_Context
+     (Session : in out Root_Harriet_Session'Class;
+      Context : Harriet.Contexts.Context_Type)
+   is
+   begin
+      Session.Context := Context;
+   end Update_Context;
 
    ---------------
    -- User_Name --

@@ -15,7 +15,7 @@ package body Harriet.UI.Gnoga_UI is
    is
       pragma Unreferenced (Connection);
       Session : constant Harriet.Sessions.Harriet_Session :=
-                  Harriet.Sessions.New_Session;
+                  Harriet.Sessions.New_Gnoga_Session;
    begin
       Main_Window.Connection_Data (Session);
 

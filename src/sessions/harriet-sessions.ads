@@ -9,6 +9,7 @@ private with WL.Guids;
 
 limited with Harriet.UI.Views;
 
+with Harriet.Contexts;
 with Harriet.Signals;
 
 with Harriet.Db;
@@ -69,9 +70,21 @@ package Harriet.Sessions is
      (Session : in out Root_Harriet_Session'Class;
       View    : access Harriet.UI.Views.Root_View_Type'Class);
 
+   function Current_Context
+     (Session : Root_Harriet_Session'Class)
+      return Harriet.Contexts.Context_Type;
+
+   procedure Update_Context
+     (Session : in out Root_Harriet_Session'Class;
+      Context : Harriet.Contexts.Context_Type);
+
    type Harriet_Session is access all Root_Harriet_Session'Class;
 
-   function New_Session return Harriet_Session;
+   function New_Gnoga_Session return Harriet_Session;
+   function New_Repl_Session
+     (User : Harriet.Db.User_Reference)
+      return Harriet_Session;
+
    procedure End_Session (Session : in out Harriet_Session);
 
    procedure End_All_Sessions;
@@ -91,11 +104,13 @@ private
      and Harriet.Signals.Signaler with
       record
          Id            : WL.Guids.Guid;
+         Is_Gnoga      : Boolean := False;
          Main_Window   : Gnoga.Gui.Window.Pointer_To_Window_Class;
          User          : Harriet.Db.User_Reference :=
                            Harriet.Db.Null_User_Reference;
          Faction       : Harriet.Db.Faction_Reference :=
                            Harriet.Db.Null_Faction_Reference;
+         Context       : Harriet.Contexts.Context_Type;
          Current_View  : View_Access;
          Active_View   : View_Access;
          Views         : View_Lists.List;
@@ -106,6 +121,11 @@ private
      (Session : Root_Harriet_Session'Class)
       return Harriet.Db.Faction_Reference
    is (Session.Faction);
+
+   function Current_Context
+     (Session : Root_Harriet_Session'Class)
+      return Harriet.Contexts.Context_Type
+   is (Session.Context);
 
    function Main_View
      (Session : Root_Harriet_Session'Class)

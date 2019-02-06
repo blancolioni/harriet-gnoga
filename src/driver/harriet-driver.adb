@@ -24,6 +24,8 @@ with Harriet.Configure.Scenarios;
 with Harriet.Factions.Create;
 with Harriet.Logging;
 with Harriet.Logs;
+with Harriet.Repl;
+with Harriet.Sessions;
 
 with Harriet.Commands.Loader;
 with Harriet.Managers.Loader;
@@ -306,22 +308,17 @@ begin
    Updates_Running := True;
 
    if Harriet.Options.Command_Line then
+      Ada.Text_IO.Put_Line ("H A R R I E T");
       if Harriet.Options.Timed_Run = 0 then
-         loop
-            Ada.Text_IO.Put ("> ");
-            Ada.Text_IO.Flush;
-
-            begin
-               declare
-                  Line : constant String := Ada.Text_IO.Get_Line;
-               begin
-                  exit when Line = "exit";
-               end;
-            exception
-               when Ada.Text_IO.End_Error =>
-                  exit;
-            end;
-         end loop;
+         declare
+            User    : constant Harriet.Db.User_Reference :=
+                        Harriet.Db.User.Get_Reference_By_Login ("root");
+            Session : Harriet.Sessions.Harriet_Session :=
+                        Harriet.Sessions.New_Repl_Session (User);
+         begin
+            Harriet.Repl.Execute (Session);
+            Harriet.Sessions.End_Session (Session);
+         end;
       else
          delay Duration (Harriet.Options.Timed_Run);
       end if;
