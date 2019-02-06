@@ -7,6 +7,7 @@ package Harriet.Contexts is
    function Show (Context : Context_Type) return String;
 
    function Is_Root (Context : Context_Type) return Boolean;
+   function Root return Context_Type;
 
    procedure Initialize_Context
      (Context : in out Context_Type;
@@ -34,5 +35,7 @@ private
          Ship        : Harriet.Db.Ship_Reference :=
                          Harriet.Db.Null_Ship_Reference;
       end record;
+
+   function Root return Context_Type is (others => <>);
 
 end Harriet.Contexts;

@@ -43,7 +43,7 @@ package body Harriet.Contexts is
                              (if Context.Faction = Null_Faction_Reference
                               then "/"
                               else Harriet.Factions.Name
-                                (Context.Faction) & ":/");
+                                (Context.Faction) & ":");
       Star_System_Prompt : constant String :=
                              (if Context.Star_System
                               = Null_Star_System_Reference
