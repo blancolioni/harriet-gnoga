@@ -20,6 +20,16 @@ package Harriet.Contexts is
       Child_Name : String;
       Success    : out Boolean);
 
+   procedure Change_Scope
+     (Context    : in out Context_Type;
+      Scope_Path : String;
+      Success    : out Boolean);
+
+   procedure Iterate_Contents
+     (Context : Context_Type;
+      Process : not null access
+        procedure (Item : Harriet.Db.Has_Name_Reference));
+
 private
 
    type Context_Type is
