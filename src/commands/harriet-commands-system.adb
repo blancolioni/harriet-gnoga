@@ -11,6 +11,9 @@ with Harriet.Updates.Control;
 
 with Harriet.UI.Gnoga_UI;
 
+with Marlowe.Database;
+with Harriet.Db.Marlowe_Keys;
+
 with Harriet.Db.Has_Name;
 
 package body Harriet.Commands.System is
@@ -36,7 +39,7 @@ package body Harriet.Commands.System is
    type Status_Command_Type is
      (Pause_Server, Resume_Server, Stop_Server,
       Update_Speed,
-      Show_Status);
+      Show_Status, Show_Database_Statistics);
 
    type Status_Command (Command : Status_Command_Type) is
      new Root_Harriet_Command with null record;
@@ -224,6 +227,28 @@ package body Harriet.Commands.System is
                  ("time acceleration:"
                   & Natural'Image (Natural (Advance_Per_Second)));
             end;
+
+         when Show_Database_Statistics =>
+            declare
+               use Harriet.Db.Marlowe_Keys;
+               Info : constant Marlowe.Database.Database_Information :=
+                        Handle.Get_Data_Store_Information;
+            begin
+               Writer.Put_Line
+                 ("blocks:   " & Info.Blocks'Image);
+               Writer.Put_Line
+                 ("pages:    " & Info.Pages'Image);
+               Writer.Put_Line
+                 ("records:  " & Info.Record_Count'Image);
+               Writer.Put_Line
+                 ("hits:     " & Info.Hits'Image);
+               Writer.Put_Line
+                 ("misses:   " & Info.Misses'Image);
+               Writer.Put_Line
+                 ("reads:    " & Info.Reads'Image);
+               Writer.Put_Line
+                 ("writes:   " & Info.Writes'Image);
+            end;
       end case;
    end Execute;
 
@@ -232,13 +257,14 @@ package body Harriet.Commands.System is
    --------------------------
 
    procedure Load_System_Commands is
-      Change_Scope         : Change_Scope_Command;
-      List                 : List_Command;
-      Pause_Command        : Status_Command (Pause_Server);
-      Resume_Command       : Status_Command (Resume_Server);
-      Stop_Command         : Status_Command (Stop_Server);
-      Get_Status_Command   : Status_Command (Show_Status);
-      Update_Speed_Command : Status_Command (Update_Speed);
+      Change_Scope          : Change_Scope_Command;
+      List                  : List_Command;
+      Pause_Command         : Status_Command (Pause_Server);
+      Resume_Command        : Status_Command (Resume_Server);
+      Stop_Command          : Status_Command (Stop_Server);
+      Get_Status_Command    : Status_Command (Show_Status);
+      Get_Db_Status_Command : Status_Command (Show_Database_Statistics);
+      Update_Speed_Command  : Status_Command (Update_Speed);
    begin
       Register ("cd", Change_Scope);
       Register ("change-scope", Change_Scope);
@@ -248,6 +274,7 @@ package body Harriet.Commands.System is
       Register ("update-speed", Update_Speed_Command);
       Register ("stop-server", Stop_Command);
       Register ("status", Get_Status_Command);
+      Register ("db-status", Get_Db_Status_Command);
    end Load_System_Commands;
 
 end Harriet.Commands.System;
