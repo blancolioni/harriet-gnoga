@@ -1,8 +1,8 @@
-with Ada.Strings.Fixed;
-
 with Harriet.Contexts;
 
 with Harriet.UI.Gnoga_UI;
+
+with Harriet.Db.Has_Name;
 
 package body Harriet.Commands.System is
 
@@ -20,6 +20,15 @@ package body Harriet.Commands.System is
 
    overriding procedure Execute
      (Command   : Change_Scope_Command;
+      Session   : Harriet.Sessions.Harriet_Session;
+      Writer    : Writer_Interface'Class;
+      Arguments : Argument_List);
+
+   type List_Command is
+     new Root_Harriet_Command with null record;
+
+   overriding procedure Execute
+     (Command   : List_Command;
       Session   : Harriet.Sessions.Harriet_Session;
       Writer    : Writer_Interface'Class;
       Arguments : Argument_List);
@@ -68,49 +77,69 @@ package body Harriet.Commands.System is
       end if;
 
       declare
-         use Ada.Strings.Fixed;
-         Path : constant String := Argument (Arguments, 1) & "/";
-         Start : Positive := Path'First;
-         Finish : Natural := Index (Path, "/", Start);
+         Success : Boolean;
+         Scope   : constant String := Argument (Arguments, 1);
       begin
-         if Path (Path'First) = '/' then
-            Context := Harriet.Contexts.Root;
+         Harriet.Contexts.Change_Scope (Context, Scope, Success);
+         if not Success then
+            Writer.Put_Error
+              ("No such context: " & Scope);
+            return;
          end if;
-
-         while Finish > 0 loop
-            declare
-               Element : constant String := Path (Start .. Finish - 1);
-            begin
-               if Element = "" then
-                  null;
-               elsif Element = "." then
-                  null;
-               elsif Element = ".." then
-                  if Harriet.Contexts.Is_Root (Context) then
-                     null;
-                  else
-                     Harriet.Contexts.To_Parent (Context);
-                  end if;
-               else
-                  declare
-                     Success : Boolean;
-                  begin
-                     Harriet.Contexts.To_Child (Context, Element, Success);
-                     if not Success then
-                        Writer.Put_Error
-                          ("No such context: "
-                           & Path (Path'First .. Finish - 1));
-                        return;
-                     end if;
-                  end;
-               end if;
-            end;
-            Start := Finish + 1;
-            Finish := Index (Path, "/", Start);
-         end loop;
-
-         Session.Update_Context (Context);
       end;
+
+      Session.Update_Context (Context);
+
+   end Execute;
+
+   -------------
+   -- Execute --
+   -------------
+
+   overriding procedure Execute
+     (Command   : List_Command;
+      Session   : Harriet.Sessions.Harriet_Session;
+      Writer    : Writer_Interface'Class;
+      Arguments : Argument_List)
+   is
+      pragma Unreferenced (Command);
+
+      procedure Put_Item (Item : Harriet.Db.Has_Name_Reference);
+
+      --------------
+      -- Put_Item --
+      --------------
+
+      procedure Put_Item (Item : Harriet.Db.Has_Name_Reference) is
+      begin
+         Writer.Put_Line
+           (Harriet.Db.Has_Name.Get (Item).Name);
+      end Put_Item;
+
+   begin
+      if Argument_Count (Arguments) = 0 then
+         Harriet.Contexts.Iterate_Contents
+           (Session.Current_Context, Put_Item'Access);
+      elsif Argument_Count (Arguments) = 1 then
+         declare
+            Success : Boolean;
+            Context : Harriet.Contexts.Context_Type :=
+                        Session.Current_Context;
+         begin
+            Harriet.Contexts.Change_Scope
+              (Context, Argument (Arguments, 1), Success);
+            if not Success then
+               Writer.Put_Error
+                 ("Cannot list " & Argument (Arguments, 1));
+            else
+               Harriet.Contexts.Iterate_Contents
+                 (Session.Current_Context, Put_Item'Access);
+            end if;
+         end;
+      else
+         Writer.Put_Error
+           ("Usage: ls [scope-path]");
+      end if;
    end Execute;
 
    --------------------------
@@ -119,9 +148,12 @@ package body Harriet.Commands.System is
 
    procedure Load_System_Commands is
       Change_Scope : Change_Scope_Command;
+      List         : List_Command;
       Stop_Server  : Stop_Server_Command;
    begin
       Register ("cd", Change_Scope);
+      Register ("change-scope", Change_Scope);
+      Register ("ls", List);
       Register ("stop-server", Stop_Server);
    end Load_System_Commands;
 
