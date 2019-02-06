@@ -147,7 +147,7 @@ package body Harriet.Commands is
       Last          : Natural := Index (Extended_Line, " ") - 1;
    begin
       return Arguments : Argument_List do
-         while Last > First loop
+         while First > 0 and then Last >= First loop
             declare
                Arg : constant String := Extended_Line (First .. Last);
             begin
