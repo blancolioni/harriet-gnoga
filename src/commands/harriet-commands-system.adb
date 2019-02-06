@@ -56,6 +56,12 @@ package body Harriet.Commands.System is
       pragma Unreferenced (Command);
       Context : Harriet.Contexts.Context_Type := Session.Current_Context;
    begin
+      if Argument_Count (Arguments) = 0 then
+         Harriet.Contexts.Initialize_Context (Context, Session.Faction);
+         Session.Update_Context (Context);
+         return;
+      end if;
+
       if Argument_Count (Arguments) /= 1 then
          Writer.Put_Error ("Usage: cd <path>");
          return;
@@ -67,6 +73,10 @@ package body Harriet.Commands.System is
          Start : Positive := Path'First;
          Finish : Natural := Index (Path, "/", Start);
       begin
+         if Path (Path'First) = '/' then
+            Context := Harriet.Contexts.Root;
+         end if;
+
          while Finish > 0 loop
             declare
                Element : constant String := Path (Start .. Finish - 1);
