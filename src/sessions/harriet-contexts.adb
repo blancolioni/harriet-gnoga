@@ -1,4 +1,5 @@
 with Ada.Strings.Fixed;
+with Ada.Strings.Unbounded;
 
 with Harriet.Contexts.Errors;
 with Harriet.Contexts.Root;
@@ -100,9 +101,6 @@ package body Harriet.Contexts is
    begin
       Names.Clear;
       Context.Iterate_Contexts (Add_Name'Access);
-      for Id of Context.Get_Content_Ids loop
-         Names.Append (Id);
-      end loop;
    end Get_Child_Names;
 
    -----------------
@@ -110,27 +108,30 @@ package body Harriet.Contexts is
    -----------------
 
    function Get_Content
-     (Context : Root_Context_Type;
-      Id      : String)
+     (Context : Root_Context_Type'Class)
       return String
    is
-      pragma Unreferenced (Context, Id);
+      use Ada.Strings.Unbounded;
+      Result : Unbounded_String;
+
+      procedure Add_Line (Line : String);
+
+      --------------
+      -- Add_Line --
+      --------------
+
+      procedure Add_Line (Line : String) is
+      begin
+         if Result /= "" then
+            Result := Result & Character'Val (10);
+         end if;
+         Result := Result & Line;
+      end Add_Line;
+
    begin
-      return "";
+      Context.Iterate_Content_Lines (Add_Line'Access);
+      return To_String (Result);
    end Get_Content;
-
-   ---------------------
-   -- Get_Content_Ids --
-   ---------------------
-
-   function Get_Content_Ids
-     (Context : Root_Context_Type)
-      return Child_Name_Lists.List
-   is
-      pragma Unreferenced (Context);
-   begin
-      return List : Child_Name_Lists.List;
-   end Get_Content_Ids;
 
    --------
    -- Go --
@@ -248,6 +249,23 @@ package body Harriet.Contexts is
          Process (Name);
       end loop;
    end Iterate_Child_Names;
+
+   ---------------------------
+   -- Iterate_Content_Lines --
+   ---------------------------
+
+   procedure Iterate_Content_Lines
+     (Context : Root_Context_Type;
+      Process : not null access
+        procedure (Line : String))
+   is
+      List : Child_Name_Lists.List;
+   begin
+      Root_Context_Type'Class (Context).Get_Child_Names (List);
+      for Name of List loop
+         Process (Name);
+      end loop;
+   end Iterate_Content_Lines;
 
    ----------------------
    -- Iterate_Contexts --

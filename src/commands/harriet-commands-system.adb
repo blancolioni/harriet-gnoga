@@ -16,6 +16,15 @@ with Harriet.Db.Marlowe_Keys;
 
 package body Harriet.Commands.System is
 
+   type Cat_Command is
+     new Root_Harriet_Command with null record;
+
+   overriding procedure Perform
+     (Command   : Cat_Command;
+      Session   : Harriet.Sessions.Harriet_Session;
+      Writer    : Writer_Interface'Class;
+      Arguments : Argument_List);
+
    type Change_Scope_Command is
      new Root_Harriet_Command with null record;
 
@@ -58,6 +67,7 @@ package body Harriet.Commands.System is
    --------------------------
 
    procedure Load_System_Commands is
+      Cat                   : Cat_Command;
       Change_Scope          : Change_Scope_Command;
       List                  : List_Command;
       Pause_Command         : Status_Command (Pause_Server);
@@ -67,6 +77,7 @@ package body Harriet.Commands.System is
       Get_Db_Status_Command : Status_Command (Show_Database_Statistics);
       Update_Speed_Command  : Status_Command (Update_Speed);
    begin
+      Register ("cat", Cat);
       Register ("cd", Change_Scope);
       Register ("change-scope", Change_Scope);
       Register ("ls", List);
@@ -77,6 +88,39 @@ package body Harriet.Commands.System is
       Register ("status", Get_Status_Command);
       Register ("db-status", Get_Db_Status_Command);
    end Load_System_Commands;
+
+   -------------
+   -- Perform --
+   -------------
+
+   overriding procedure Perform
+     (Command   : Cat_Command;
+      Session   : Harriet.Sessions.Harriet_Session;
+      Writer    : Writer_Interface'Class;
+      Arguments : Argument_List)
+   is
+      pragma Unreferenced (Command);
+   begin
+      if Argument_Count (Arguments) = 0 then
+         Writer.Put_Error ("Usage: cat file [ files ... ]");
+         return;
+      end if;
+
+      for I in 1 .. Argument_Count (Arguments) loop
+         declare
+            Context : constant Harriet.Contexts.Context_Type :=
+                        Session.Current_Context.Go
+                          (Argument (Arguments, I));
+         begin
+            if not Context.Is_Valid then
+               Writer.Put_Error (Argument (Arguments, I) & ": not found");
+            else
+               Writer.Put_Line
+                 (Context.Get_Content);
+            end if;
+         end;
+      end loop;
+   end Perform;
 
    -------------
    -- Perform --

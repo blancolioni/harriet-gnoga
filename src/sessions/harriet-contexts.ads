@@ -22,19 +22,19 @@ package Harriet.Contexts is
       Children : in out Context_List'Class)
    is abstract;
 
-   function Get_Content_Ids
-     (Context : Root_Context_Type)
-     return Child_Name_Lists.List;
-
    function Get_Content
-     (Context : Root_Context_Type;
-      Id      : String)
+     (Context : Root_Context_Type'Class)
       return String;
 
    procedure Iterate_Contexts
      (Context : Root_Context_Type'Class;
       Process : not null access
         procedure (Context : Context_Type));
+
+   procedure Iterate_Content_Lines
+     (Context : Root_Context_Type;
+      Process : not null access
+        procedure (Line : String));
 
    function Is_Root (Context : Root_Context_Type) return Boolean;
    function Is_Valid (Context : Root_Context_Type) return Boolean;

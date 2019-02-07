@@ -2,6 +2,8 @@ with Harriet.Contexts.Containers;
 
 with Harriet.Calendar;
 with Harriet.Commodities;
+with Harriet.Money;
+with Harriet.Quantities;
 with Harriet.Worlds;
 
 with Harriet.Db.Commodity;
@@ -49,6 +51,11 @@ package body Harriet.Contexts.Markets is
      (Context : Market_Commodity_Context_Type)
       return String
    is (Harriet.Commodities.Local_Name (Context.Commodity));
+
+   overriding procedure Iterate_Content_Lines
+     (Context : Market_Commodity_Context_Type;
+      Process : not null access
+        procedure (Line : String));
 
    function Market_Commodity_Context
      (Market : Harriet.Db.Market_Reference;
@@ -129,6 +136,36 @@ package body Harriet.Contexts.Markets is
       return Context.Market /= Null_Market_Reference
         and then Context.Commodity /= Null_Commodity_Reference;
    end Is_Valid;
+
+   ---------------------------
+   -- Iterate_Content_Lines --
+   ---------------------------
+
+   overriding procedure Iterate_Content_Lines
+     (Context : Market_Commodity_Context_Type;
+      Process : not null access
+        procedure (Line : String))
+   is
+      use Harriet.Money, Harriet.Quantities;
+      Total_Trade : Quantity_Type := Zero;
+      Last_Trade  : Quantity_Type := Zero;
+      Last_Price  : Price_Type    := Zero;
+   begin
+      for Transaction of
+        Harriet.Db.Transaction.Select_Transaction_Bounded_By_Time_Stamp
+          (Context.Market, Context.Commodity,
+           Harriet.Calendar.Start, Harriet.Calendar.Clock)
+      loop
+         Total_Trade := Total_Trade + Transaction.Quantity;
+         Last_Trade := Transaction.Quantity;
+         Last_Price := Transaction.Price;
+      end loop;
+
+      Process ("total: " & Show (Total_Trade));
+      Process ("last quantity: " & Show (Last_Trade));
+      Process ("last price: " & Show (Last_Price));
+
+   end Iterate_Content_Lines;
 
    ------------------------------
    -- Market_Commodity_Context --
