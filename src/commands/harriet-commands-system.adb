@@ -21,7 +21,7 @@ package body Harriet.Commands.System is
    type Change_Scope_Command is
      new Root_Harriet_Command with null record;
 
-   overriding procedure Execute
+   overriding procedure Perform
      (Command   : Change_Scope_Command;
       Session   : Harriet.Sessions.Harriet_Session;
       Writer    : Writer_Interface'Class;
@@ -30,7 +30,7 @@ package body Harriet.Commands.System is
    type List_Command is
      new Root_Harriet_Command with null record;
 
-   overriding procedure Execute
+   overriding procedure Perform
      (Command   : List_Command;
       Session   : Harriet.Sessions.Harriet_Session;
       Writer    : Writer_Interface'Class;
@@ -44,17 +44,43 @@ package body Harriet.Commands.System is
    type Status_Command (Command : Status_Command_Type) is
      new Root_Harriet_Command with null record;
 
-   overriding procedure Execute
+   overriding function Administrator_Only
+     (Command : Status_Command)
+      return Boolean
+   is (True);
+
+   overriding procedure Perform
      (Command   : Status_Command;
       Session   : Harriet.Sessions.Harriet_Session;
       Writer    : Writer_Interface'Class;
       Arguments : Argument_List);
 
-   -------------
-   -- Execute --
-   -------------
+   --------------------------
+   -- Load_System_Commands --
+   --------------------------
 
-   overriding procedure Execute
+   procedure Load_System_Commands is
+      Change_Scope          : Change_Scope_Command;
+      List                  : List_Command;
+      Pause_Command         : Status_Command (Pause_Server);
+      Resume_Command        : Status_Command (Resume_Server);
+      Stop_Command          : Status_Command (Stop_Server);
+      Get_Status_Command    : Status_Command (Show_Status);
+      Get_Db_Status_Command : Status_Command (Show_Database_Statistics);
+      Update_Speed_Command  : Status_Command (Update_Speed);
+   begin
+      Register ("cd", Change_Scope);
+      Register ("change-scope", Change_Scope);
+      Register ("ls", List);
+      Register ("pause", Pause_Command);
+      Register ("resume", Resume_Command);
+      Register ("update-speed", Update_Speed_Command);
+      Register ("stop-server", Stop_Command);
+      Register ("status", Get_Status_Command);
+      Register ("db-status", Get_Db_Status_Command);
+   end Load_System_Commands;
+
+   overriding procedure Perform
      (Command   : Change_Scope_Command;
       Session   : Harriet.Sessions.Harriet_Session;
       Writer    : Writer_Interface'Class;
@@ -88,13 +114,13 @@ package body Harriet.Commands.System is
 
       Session.Update_Context (Context);
 
-   end Execute;
+   end Perform;
 
    -------------
-   -- Execute --
+   -- Perform --
    -------------
 
-   overriding procedure Execute
+   overriding procedure Perform
      (Command   : List_Command;
       Session   : Harriet.Sessions.Harriet_Session;
       Writer    : Writer_Interface'Class;
@@ -138,13 +164,13 @@ package body Harriet.Commands.System is
          Writer.Put_Error
            ("Usage: ls [scope-path]");
       end if;
-   end Execute;
+   end Perform;
 
    -------------
-   -- Execute --
+   -- Perform --
    -------------
 
-   overriding procedure Execute
+   overriding procedure Perform
      (Command   : Status_Command;
       Session   : Harriet.Sessions.Harriet_Session;
       Writer    : Writer_Interface'Class;
@@ -214,9 +240,9 @@ package body Harriet.Commands.System is
                  ("marlowe "
                   & Marlowe.Version.Version_String);
                Writer.Put_Line
-                  ("Server started "
-                   & Ada.Calendar.Formatting.Image
-                     (Start_Time));
+                 ("Server started "
+                  & Ada.Calendar.Formatting.Image
+                    (Start_Time));
                Writer.Put_Line
                  ("status: " & (if Paused then "paused" else "running"));
                Writer.Put_Line
@@ -250,31 +276,6 @@ package body Harriet.Commands.System is
                  ("file writes:  " & Info.Writes'Image);
             end;
       end case;
-   end Execute;
-
-   --------------------------
-   -- Load_System_Commands --
-   --------------------------
-
-   procedure Load_System_Commands is
-      Change_Scope          : Change_Scope_Command;
-      List                  : List_Command;
-      Pause_Command         : Status_Command (Pause_Server);
-      Resume_Command        : Status_Command (Resume_Server);
-      Stop_Command          : Status_Command (Stop_Server);
-      Get_Status_Command    : Status_Command (Show_Status);
-      Get_Db_Status_Command : Status_Command (Show_Database_Statistics);
-      Update_Speed_Command  : Status_Command (Update_Speed);
-   begin
-      Register ("cd", Change_Scope);
-      Register ("change-scope", Change_Scope);
-      Register ("ls", List);
-      Register ("pause", Pause_Command);
-      Register ("resume", Resume_Command);
-      Register ("update-speed", Update_Speed_Command);
-      Register ("stop-server", Stop_Command);
-      Register ("status", Get_Status_Command);
-      Register ("db-status", Get_Db_Status_Command);
-   end Load_System_Commands;
+   end Perform;
 
 end Harriet.Commands.System;

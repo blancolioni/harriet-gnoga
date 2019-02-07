@@ -2,7 +2,8 @@ package Harriet.Users is
 
 record User is
    unique key Login : String (32);
-   Password : String (32);
+   Password         : String (32);
+   Administrator    : Boolean;
 end User;
 
 record Has_Permission is

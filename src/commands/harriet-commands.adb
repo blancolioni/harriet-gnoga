@@ -47,6 +47,27 @@ package body Harriet.Commands is
       Process : not null access
         procedure (Word : String));
 
+   -------------
+   -- Execute --
+   -------------
+
+   procedure Execute
+     (Command   : Root_Harriet_Command'Class;
+      Session   : Harriet.Sessions.Harriet_Session;
+      Writer    : Writer_Interface'Class;
+      Arguments : Argument_List)
+   is
+   begin
+      if Command.Administrator_Only
+        and then not Session.Administrator
+      then
+         Writer.Put_Error
+           ("You must be an administrator to perform this action");
+         return;
+      end if;
+      Command.Perform (Session, Writer, Arguments);
+   end Execute;
+
    --------------------------
    -- Execute_Command_Line --
    --------------------------

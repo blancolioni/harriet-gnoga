@@ -54,6 +54,10 @@ package Harriet.Sessions is
      (Session : Root_Harriet_Session'Class)
       return String;
 
+   function Administrator
+     (Session : Root_Harriet_Session'Class)
+      return Boolean;
+
    function Faction
      (Session : Root_Harriet_Session'Class)
       return Harriet.Db.Faction_Reference;
@@ -106,6 +110,7 @@ private
          Id            : WL.Guids.Guid;
          Is_Gnoga      : Boolean := False;
          Main_Window   : Gnoga.Gui.Window.Pointer_To_Window_Class;
+         Administrator : Boolean := False;
          User          : Harriet.Db.User_Reference :=
                            Harriet.Db.Null_User_Reference;
          Faction       : Harriet.Db.Faction_Reference :=
@@ -116,6 +121,11 @@ private
          Views         : View_Lists.List;
          Dispatcher    : Harriet.Signals.Signal_Dispatcher;
       end record;
+
+   function Administrator
+     (Session : Root_Harriet_Session'Class)
+      return Boolean
+   is (Session.Administrator);
 
    function Faction
      (Session : Root_Harriet_Session'Class)

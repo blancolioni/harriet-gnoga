@@ -15,7 +15,7 @@ private
       return Harriet.UI.Views.View_Type
       is abstract;
 
-   overriding procedure Execute
+   overriding procedure Perform
      (Command   : Load_View_Command;
       Session   : Harriet.Sessions.Harriet_Session;
       Writer    : Writer_Interface'Class;

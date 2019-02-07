@@ -156,6 +156,9 @@ package body Harriet.Sessions is
    is
    begin
       Session.User := User;
+      Session.Administrator :=
+        Harriet.Db.User.Get (User).Administrator;
+
       Session.Faction :=
         Harriet.Db.Faction.First_Reference_By_User (User);
 

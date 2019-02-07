@@ -248,8 +248,9 @@ package body Harriet.Factions.Create is
             use type Harriet.Db.Faction_Reference;
             User : constant Harriet.Db.User_Reference :=
                      Harriet.Db.User.Create
-                       (Login    => Config.Config_Name,
-                        Password => "");
+                       (Login         => Config.Config_Name,
+                        Password      => "",
+                        Administrator => False);
             Faction : constant Harriet.Db.Faction_Reference :=
                         Create_Faction
                           (User        => User,

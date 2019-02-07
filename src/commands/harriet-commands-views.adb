@@ -153,11 +153,25 @@ package body Harriet.Commands.Views is
 
    end Create_View;
 
+   ------------------------
+   -- Load_View_Commands --
+   ------------------------
+
+   procedure Load_View_Commands is
+      Load_Galaxy      : Load_Galaxy_Command;
+      Load_Star_System : Load_Star_System_Command;
+      Load_World       : Load_World_Command;
+   begin
+      Register ("load-galaxy-view", Load_Galaxy);
+      Register ("load-star-system-view", Load_Star_System);
+      Register ("load-world-view", Load_World);
+   end Load_View_Commands;
+
    -------------
-   -- Execute --
+   -- Perform --
    -------------
 
-   overriding procedure Execute
+   overriding procedure Perform
      (Command   : Load_View_Command;
       Session   : Harriet.Sessions.Harriet_Session;
       Writer    : Writer_Interface'Class;
@@ -173,20 +187,6 @@ package body Harriet.Commands.Views is
       end if;
 
       Session.Main_View.Add_Child (View);
-   end Execute;
-
-   ------------------------
-   -- Load_View_Commands --
-   ------------------------
-
-   procedure Load_View_Commands is
-      Load_Galaxy      : Load_Galaxy_Command;
-      Load_Star_System : Load_Star_System_Command;
-      Load_World       : Load_World_Command;
-   begin
-      Register ("load-galaxy-view", Load_Galaxy);
-      Register ("load-star-system-view", Load_Star_System);
-      Register ("load-world-view", Load_World);
-   end Load_View_Commands;
+   end Perform;
 
 end Harriet.Commands.Views;

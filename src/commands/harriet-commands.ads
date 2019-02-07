@@ -60,12 +60,22 @@ package Harriet.Commands is
 
    type Root_Harriet_Command is abstract tagged private;
 
-   procedure Execute
+   function Administrator_Only
+     (Command : Root_Harriet_Command)
+      return Boolean;
+
+   procedure Perform
      (Command   : Root_Harriet_Command;
       Session   : Harriet.Sessions.Harriet_Session;
       Writer    : Writer_Interface'Class;
       Arguments : Argument_List)
    is abstract;
+
+   procedure Execute
+     (Command   : Root_Harriet_Command'Class;
+      Session   : Harriet.Sessions.Harriet_Session;
+      Writer    : Writer_Interface'Class;
+      Arguments : Argument_List);
 
    procedure Execute_Command_Line
      (Line    : String;
@@ -79,6 +89,11 @@ package Harriet.Commands is
 private
 
    type Root_Harriet_Command is abstract tagged null record;
+
+   function Administrator_Only
+     (Command : Root_Harriet_Command)
+      return Boolean
+   is (False);
 
    package Argument_Vectors is
      new Ada.Containers.Indefinite_Vectors (Positive, String);

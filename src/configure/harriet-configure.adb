@@ -104,10 +104,11 @@ package body Harriet.Configure is
    function Initial_Root_Password return String is
    begin
       if Harriet.Options.Generate_Root_Password then
+         WL.Random.Randomise;
          return Password : String (1 .. 12) do
             for Ch of Password loop
                Ch :=
-                 Character'Val (WL.Random.Random_Number (65, 90));
+                 Character'Val (WL.Random.Random_Number (33, 126));
             end loop;
             Ada.Text_IO.Put_Line ("root password: " & Password);
          end return;
@@ -122,7 +123,7 @@ package body Harriet.Configure is
 
    procedure Initialize_Database is
    begin
-      Harriet.Db.User.Create ("root", Initial_Root_Password);
+      Harriet.Db.User.Create ("root", Initial_Root_Password, True);
       Harriet.Db.Calendar.Create
         (Clock => Harriet.Calendar.Clock);
       Harriet.Configure.Resources.Configure_Atmosphere_Components
