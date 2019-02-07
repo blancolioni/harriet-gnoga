@@ -14,8 +14,6 @@ with Harriet.UI.Gnoga_UI;
 with Marlowe.Database;
 with Harriet.Db.Marlowe_Keys;
 
-with Harriet.Db.Has_Name;
-
 package body Harriet.Commands.System is
 
    type Change_Scope_Command is
@@ -80,6 +78,10 @@ package body Harriet.Commands.System is
       Register ("db-status", Get_Db_Status_Command);
    end Load_System_Commands;
 
+   -------------
+   -- Perform --
+   -------------
+
    overriding procedure Perform
      (Command   : Change_Scope_Command;
       Session   : Harriet.Sessions.Harriet_Session;
@@ -87,11 +89,12 @@ package body Harriet.Commands.System is
       Arguments : Argument_List)
    is
       pragma Unreferenced (Command);
-      Context : Harriet.Contexts.Context_Type := Session.Current_Context;
+      Context : constant Harriet.Contexts.Context_Path :=
+                  Session.Current_Context;
    begin
       if Argument_Count (Arguments) = 0 then
-         Harriet.Contexts.Initialize_Context (Context, Session.Faction);
-         Session.Update_Context (Context);
+         Session.Update_Context
+           (Harriet.Contexts.Initial_Context_Path (Session.Faction));
          return;
       end if;
 
@@ -101,18 +104,19 @@ package body Harriet.Commands.System is
       end if;
 
       declare
-         Success : Boolean;
          Scope   : constant String := Argument (Arguments, 1);
+         New_Context : constant Harriet.Contexts.Context_Path :=
+                         Context.Go (Scope);
       begin
-         Harriet.Contexts.Change_Scope (Context, Scope, Success);
-         if not Success then
+         if not New_Context.Context.Is_Valid then
             Writer.Put_Error
-              ("No such context: " & Scope);
-            return;
+              ("Invalid context: " & Scope & ": "
+               & New_Context.Context.Name);
+         else
+            Session.Update_Context (New_Context);
          end if;
-      end;
 
-      Session.Update_Context (Context);
+      end;
 
    end Perform;
 
@@ -128,36 +132,32 @@ package body Harriet.Commands.System is
    is
       pragma Unreferenced (Command);
 
-      procedure Put_Item (Item : Harriet.Db.Has_Name_Reference);
+      procedure Put_Item (Item : String);
 
       --------------
       -- Put_Item --
       --------------
 
-      procedure Put_Item (Item : Harriet.Db.Has_Name_Reference) is
+      procedure Put_Item (Item : String) is
       begin
-         Writer.Put_Line
-           (Harriet.Db.Has_Name.Get (Item).Name);
+         Writer.Put_Line (Item);
       end Put_Item;
 
    begin
       if Argument_Count (Arguments) = 0 then
-         Harriet.Contexts.Iterate_Contents
-           (Session.Current_Context, Put_Item'Access);
+         Session.Current_Context.Context.Iterate_Child_Names
+           (Put_Item'Access);
       elsif Argument_Count (Arguments) = 1 then
          declare
-            Success : Boolean;
-            Context : Harriet.Contexts.Context_Type :=
-                        Session.Current_Context;
+            Context : constant Harriet.Contexts.Context_Path :=
+                        Session.Current_Context.Go (Argument (Arguments, 1));
          begin
-            Harriet.Contexts.Change_Scope
-              (Context, Argument (Arguments, 1), Success);
-            if not Success then
+            if not Context.Context.Is_Valid then
                Writer.Put_Error
                  ("Cannot list " & Argument (Arguments, 1));
             else
-               Harriet.Contexts.Iterate_Contents
-                 (Session.Current_Context, Put_Item'Access);
+               Harriet.Contexts.Iterate_Child_Names
+                 (Context, Put_Item'Access);
             end if;
          end;
       else

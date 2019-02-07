@@ -30,8 +30,8 @@ package body Harriet.Repl is
    begin
       loop
          Ada.Text_IO.Put
-           (Harriet.Contexts.Show
-              (Session.Current_Context) & "> ");
+           (Session.Current_Context.Name
+            & (if Session.Administrator then "# " else "> "));
          Ada.Text_IO.Flush;
          begin
             declare
