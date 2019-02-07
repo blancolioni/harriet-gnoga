@@ -111,7 +111,10 @@ package body Harriet.Contexts is
       Scope : String)
       return Context_Path
    is
-      Path    : constant String := Scope & "/";
+      Path    : constant String :=
+                  (if Scope /= "" and then Scope (Scope'Last) = '/'
+                   then Scope
+                   else Scope & "/");
       Current : Positive := Path'First;
       Result  : Context_Path;
 
