@@ -2,6 +2,7 @@ with WL.String_Maps;
 
 with Harriet.Contexts.Faction_Container;
 with Harriet.Contexts.Galaxy;
+with Harriet.Contexts.Markets;
 
 package body Harriet.Contexts.Root is
 
@@ -55,6 +56,7 @@ package body Harriet.Contexts.Root is
       if Top_Level_Context_Map.Is_Empty then
          Add (Harriet.Contexts.Faction_Container.Faction_Container_Context);
          Add (Harriet.Contexts.Galaxy.Galaxy_Context);
+         Add (Harriet.Contexts.Markets.Top_Level_Container);
       end if;
    end Check_Top_Level_Contexts;
 
