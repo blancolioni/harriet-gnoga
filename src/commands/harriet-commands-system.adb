@@ -132,6 +132,8 @@ package body Harriet.Commands.System is
    is
       pragma Unreferenced (Command);
 
+      Ids : Identifier_List;
+
       procedure Put_Item (Item : String);
 
       --------------
@@ -140,13 +142,14 @@ package body Harriet.Commands.System is
 
       procedure Put_Item (Item : String) is
       begin
-         Writer.Put_Line (Item);
+         Add (Ids, Item);
       end Put_Item;
 
    begin
       if Argument_Count (Arguments) = 0 then
          Session.Current_Context.Context.Iterate_Child_Names
            (Put_Item'Access);
+         Writer.Put_Identifier_List (Ids);
       elsif Argument_Count (Arguments) = 1 then
          declare
             Context : constant Harriet.Contexts.Context_Path :=
@@ -158,6 +161,7 @@ package body Harriet.Commands.System is
             else
                Harriet.Contexts.Iterate_Child_Names
                  (Context, Put_Item'Access);
+               Writer.Put_Identifier_List (Ids);
             end if;
          end;
       else

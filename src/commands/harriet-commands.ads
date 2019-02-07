@@ -1,3 +1,4 @@
+private with Ada.Containers.Indefinite_Doubly_Linked_Lists;
 private with Ada.Containers.Indefinite_Vectors;
 private with WL.String_Maps;
 
@@ -24,6 +25,16 @@ package Harriet.Commands is
    procedure Put_Line
      (Writer : Writer_Interface'Class;
       Text   : String);
+
+   type Identifier_List is private;
+
+   procedure Put_Identifier_List
+     (Writer : Writer_Interface'Class;
+      List   : Identifier_List);
+
+   procedure Add
+     (To         : in out Identifier_List;
+      Identifier : String);
 
    function Null_Writer return Writer_Interface'Class;
 
@@ -87,6 +98,14 @@ package Harriet.Commands is
       Command      : Root_Harriet_Command'Class);
 
 private
+
+   package String_Lists is
+     new Ada.Containers.Indefinite_Doubly_Linked_Lists (String);
+
+   type Identifier_List is
+      record
+         List : String_Lists.List;
+      end record;
 
    type Root_Harriet_Command is abstract tagged null record;
 
