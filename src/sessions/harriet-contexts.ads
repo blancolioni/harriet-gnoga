@@ -7,6 +7,9 @@ package Harriet.Contexts is
    type Root_Context_Type is abstract tagged private;
    subtype Context_Type is Root_Context_Type'Class;
 
+   package Child_Name_Lists is
+     new Ada.Containers.Indefinite_Doubly_Linked_Lists (String);
+
    type Context_List is tagged private;
 
    function Name
@@ -18,6 +21,15 @@ package Harriet.Contexts is
      (Context  : Root_Context_Type;
       Children : in out Context_List'Class)
    is abstract;
+
+   function Get_Content_Ids
+     (Context : Root_Context_Type)
+     return Child_Name_Lists.List;
+
+   function Get_Content
+     (Context : Root_Context_Type;
+      Id      : String)
+      return String;
 
    procedure Iterate_Contexts
      (Context : Root_Context_Type'Class;
@@ -38,9 +50,6 @@ package Harriet.Contexts is
       return Context_Type
      with Pre'Class =>
        Root_Context_Type'Class (Context).Has_Child_Context (Name);
-
-   package Child_Name_Lists is
-     new Ada.Containers.Indefinite_Doubly_Linked_Lists (String);
 
    procedure Get_Child_Names
      (Context : Root_Context_Type'Class;

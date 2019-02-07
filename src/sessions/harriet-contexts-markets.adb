@@ -1,8 +1,12 @@
 with Harriet.Contexts.Containers;
 
+with Harriet.Calendar;
+with Harriet.Commodities;
 with Harriet.Worlds;
 
+with Harriet.Db.Commodity;
 with Harriet.Db.Market;
+with Harriet.Db.Transaction;
 
 package body Harriet.Contexts.Markets is
 
@@ -26,6 +30,31 @@ package body Harriet.Contexts.Markets is
    is (Harriet.Worlds.Name
        (Harriet.Db.Market.Get (Context.Market).World));
 
+   type Market_Commodity_Context_Type is
+     new Root_Context_Type with
+      record
+         Market    : Harriet.Db.Market_Reference;
+         Commodity : Harriet.Db.Commodity_Reference;
+      end record;
+
+   overriding function Is_Valid
+     (Context : Market_Commodity_Context_Type)
+      return Boolean;
+
+   overriding procedure Get_Child_Contexts
+     (Context  : Market_Commodity_Context_Type;
+      Children : in out Context_List'Class);
+
+   overriding function Name
+     (Context : Market_Commodity_Context_Type)
+      return String
+   is (Harriet.Commodities.Local_Name (Context.Commodity));
+
+   function Market_Commodity_Context
+     (Market : Harriet.Db.Market_Reference;
+      Commodity : Harriet.Db.Commodity_Reference)
+      return Context_Type;
+
    procedure Scan_Markets
      (Unused  : Boolean;
       Process : not null access
@@ -45,6 +74,30 @@ package body Harriet.Contexts.Markets is
      (Context  : Market_Context_Type;
       Children : in out Context_List'Class)
    is
+   begin
+      Children.Clear;
+      for Commodity of Harriet.Db.Commodity.Scan_By_Tag loop
+         for Offer of
+           Harriet.Db.Transaction.Select_Transaction_Bounded_By_Time_Stamp
+             (Context.Market, Commodity.Reference,
+              Harriet.Calendar.Start, Harriet.Calendar.Clock)
+         loop
+            Children.Append
+              (Market_Commodity_Context
+                 (Context.Market, Commodity.Reference));
+            exit;
+         end loop;
+      end loop;
+   end Get_Child_Contexts;
+
+   ------------------------
+   -- Get_Child_Contexts --
+   ------------------------
+
+   overriding procedure Get_Child_Contexts
+     (Context  : Market_Commodity_Context_Type;
+      Children : in out Context_List'Class)
+   is
       pragma Unreferenced (Context);
    begin
       Children.Clear;
@@ -62,6 +115,35 @@ package body Harriet.Contexts.Markets is
    begin
       return Context.Market /= Harriet.Db.Null_Market_Reference;
    end Is_Valid;
+
+   --------------
+   -- Is_Valid --
+   --------------
+
+   overriding function Is_Valid
+     (Context : Market_Commodity_Context_Type)
+      return Boolean
+   is
+      use Harriet.Db;
+   begin
+      return Context.Market /= Null_Market_Reference
+        and then Context.Commodity /= Null_Commodity_Reference;
+   end Is_Valid;
+
+   ------------------------------
+   -- Market_Commodity_Context --
+   ------------------------------
+
+   function Market_Commodity_Context
+     (Market    : Harriet.Db.Market_Reference;
+      Commodity : Harriet.Db.Commodity_Reference)
+      return Context_Type
+   is
+   begin
+      return Market_Commodity_Context_Type'
+        (Market    => Market,
+         Commodity => Commodity);
+   end Market_Commodity_Context;
 
    --------------------
    -- Market_Context --

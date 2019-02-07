@@ -100,7 +100,37 @@ package body Harriet.Contexts is
    begin
       Names.Clear;
       Context.Iterate_Contexts (Add_Name'Access);
+      for Id of Context.Get_Content_Ids loop
+         Names.Append (Id);
+      end loop;
    end Get_Child_Names;
+
+   -----------------
+   -- Get_Content --
+   -----------------
+
+   function Get_Content
+     (Context : Root_Context_Type;
+      Id      : String)
+      return String
+   is
+      pragma Unreferenced (Context, Id);
+   begin
+      return "";
+   end Get_Content;
+
+   ---------------------
+   -- Get_Content_Ids --
+   ---------------------
+
+   function Get_Content_Ids
+     (Context : Root_Context_Type)
+      return Child_Name_Lists.List
+   is
+      pragma Unreferenced (Context);
+   begin
+      return List : Child_Name_Lists.List;
+   end Get_Content_Ids;
 
    --------
    -- Go --

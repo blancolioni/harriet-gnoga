@@ -179,9 +179,14 @@ package body Harriet.Commodities is
      (Commodity : Harriet_Commodity)
       return String
    is
+      Tag : constant String :=
+              Harriet.Db.Commodity.Get (Commodity).Tag;
    begin
-      return WL.Localisation.Local_Text
-        (Harriet.Db.Commodity.Get (Commodity).Tag);
+      if WL.Localisation.Has_Local_Text (Tag) then
+         return WL.Localisation.Local_Text (Tag);
+      else
+         return Tag;
+      end if;
    end Local_Name;
 
    -------------
