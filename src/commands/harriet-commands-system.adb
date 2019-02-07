@@ -235,19 +235,19 @@ package body Harriet.Commands.System is
                         Handle.Get_Data_Store_Information;
             begin
                Writer.Put_Line
-                 ("blocks:   " & Info.Blocks'Image);
+                 ("new blocks:   " & Info.Blocks'Image);
                Writer.Put_Line
-                 ("pages:    " & Info.Pages'Image);
+                 ("cached pages: " & Info.Pages'Image);
                Writer.Put_Line
-                 ("records:  " & Info.Record_Count'Image);
+                 ("total records:" & Info.Record_Count'Image);
                Writer.Put_Line
-                 ("hits:     " & Info.Hits'Image);
+                 ("cache hits:   " & Info.Hits'Image);
                Writer.Put_Line
-                 ("misses:   " & Info.Misses'Image);
+                 ("cache misses: " & Info.Misses'Image);
                Writer.Put_Line
-                 ("reads:    " & Info.Reads'Image);
+                 ("file reads:   " & Info.Reads'Image);
                Writer.Put_Line
-                 ("writes:   " & Info.Writes'Image);
+                 ("file writes:  " & Info.Writes'Image);
             end;
       end case;
    end Execute;
