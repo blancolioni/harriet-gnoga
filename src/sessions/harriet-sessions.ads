@@ -1,4 +1,5 @@
 private with Ada.Containers.Doubly_Linked_Lists;
+private with Ada.Containers.Indefinite_Holders;
 
 with Gnoga.Types;
 
@@ -76,11 +77,11 @@ package Harriet.Sessions is
 
    function Current_Context
      (Session : Root_Harriet_Session'Class)
-      return Harriet.Contexts.Context_Type;
+      return Harriet.Contexts.Context_Path;
 
    procedure Update_Context
      (Session : in out Root_Harriet_Session'Class;
-      Context : Harriet.Contexts.Context_Type);
+      Context : Harriet.Contexts.Context_Path);
 
    type Harriet_Session is access all Root_Harriet_Session'Class;
 
@@ -103,6 +104,10 @@ private
      new Ada.Containers.Doubly_Linked_Lists
        (View_Access);
 
+   package Context_Holders is
+     new Ada.Containers.Indefinite_Holders
+       (Harriet.Contexts.Context_Type, Harriet.Contexts."=");
+
    type Root_Harriet_Session is
      new Gnoga.Types.Connection_Data_Type
      and Harriet.Signals.Signaler with
@@ -115,7 +120,7 @@ private
                            Harriet.Db.Null_User_Reference;
          Faction       : Harriet.Db.Faction_Reference :=
                            Harriet.Db.Null_Faction_Reference;
-         Context       : Harriet.Contexts.Context_Type;
+         Context       : Harriet.Contexts.Context_Path;
          Current_View  : View_Access;
          Active_View   : View_Access;
          Views         : View_Lists.List;
@@ -134,7 +139,7 @@ private
 
    function Current_Context
      (Session : Root_Harriet_Session'Class)
-      return Harriet.Contexts.Context_Type
+      return Harriet.Contexts.Context_Path
    is (Session.Context);
 
    function Main_View

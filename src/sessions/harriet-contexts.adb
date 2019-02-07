@@ -1,232 +1,326 @@
-with Ada.Containers.Doubly_Linked_Lists;
 with Ada.Strings.Fixed;
 
-with Harriet.Factions;
-with Harriet.Star_Systems;
-with Harriet.Worlds;
+with Harriet.Contexts.Errors;
+with Harriet.Contexts.Root;
 
-with Harriet.Db.Star_System;
-with Harriet.Db.Star_System_Object;
-with Harriet.Db.Faction;
-with Harriet.Db.World;
+with Harriet.Contexts.Faction_Container;
+with Harriet.Contexts.Factions;
 
 package body Harriet.Contexts is
 
-   ------------------
-   -- Change_Scope --
-   ------------------
+   -------------------
+   -- Child_Context --
+   -------------------
 
-   procedure Change_Scope
-     (Context    : in out Context_Type;
-      Scope_Path : String;
-      Success    : out Boolean)
+   function Child_Context
+     (Context : Root_Context_Type;
+      Name    : String)
+      return Context_Type
    is
-      use Ada.Strings.Fixed;
-      Path   : constant String := Scope_Path & "/";
-      Start  : Positive := Path'First;
-      Finish : Natural := Index (Path, "/", Start);
+      Children : Context_List;
    begin
-
-      Success := True;
-
-      if Path (Path'First) = '/' then
-         Context := Harriet.Contexts.Root;
-      end if;
-
-      while Finish > 0 loop
-         declare
-            Element : constant String := Path (Start .. Finish - 1);
-         begin
-            if Element = "" then
-               null;
-            elsif Element = "." then
-               null;
-            elsif Element = ".." then
-               if Harriet.Contexts.Is_Root (Context) then
-                  null;
-               else
-                  Harriet.Contexts.To_Parent (Context);
-               end if;
-            else
-               Harriet.Contexts.To_Child (Context, Element, Success);
-               if not Success then
-                  return;
-               end if;
-            end if;
-         end;
-         Start := Finish + 1;
-         Finish := Index (Path, "/", Start);
+      Root_Context_Type'Class (Context).Get_Child_Contexts (Children);
+      for Child of Children loop
+         if Child.Name = Name then
+            return Child;
+         end if;
       end loop;
+      return Harriet.Contexts.Errors.Error_Context
+        (Name & ": not found in " & Root_Context_Type'Class (Context).Name);
+   end Child_Context;
 
-   end Change_Scope;
+   -------------------
+   -- Child_Context --
+   -------------------
 
-   ------------------------
-   -- Initialize_Context --
-   ------------------------
-
-   procedure Initialize_Context
-     (Context : in out Context_Type;
-      Faction : Harriet.Db.Faction_Reference)
+   overriding function Child_Context
+     (Context : Context_Path;
+      Name    : String)
+      return Context_Type
    is
    begin
-      Context.Faction := Faction;
-      Context.Star_System :=
-        Harriet.Factions.Capital_System (Context.Faction);
-      Context.World :=
-        Harriet.Factions.Capital_World (Context.Faction);
-   end Initialize_Context;
-
-   -------------
-   -- Is_Root --
-   -------------
-
-   function Is_Root (Context : Context_Type) return Boolean is
-   begin
-      return Show (Context) = "/";
-   end Is_Root;
-
-   ----------------------
-   -- Iterate_Contents --
-   ----------------------
-
-   procedure Iterate_Contents
-     (Context : Context_Type;
-      Process : not null access
-        procedure (Item : Harriet.Db.Has_Name_Reference))
-   is
-      use Harriet.Db;
-
-      package Ref_Lists is
-        new Ada.Containers.Doubly_Linked_Lists
-          (Harriet.Db.Has_Name_Reference, Harriet.Db."=");
-
-      Refs : Ref_Lists.List;
-
-      procedure Get_References
-        (Primary : Harriet.Db.Star_System_Object_Reference);
-
-      --------------------
-      -- Get_References --
-      --------------------
-
-      procedure Get_References
-        (Primary : Harriet.Db.Star_System_Object_Reference)
-      is
-      begin
-         for Object of
-           Harriet.Db.Star_System_Object.Select_By_Primary (Primary)
-         loop
-            Refs.Append (Object.Reference);
-         end loop;
-      end Get_References;
-
-   begin
-      if Context.Moon /= Null_World_Reference then
-         Get_References (Harriet.Db.World.Get (Context.Moon).Reference);
-      elsif Context.World /= Null_World_Reference then
-         Get_References (Harriet.Db.World.Get (Context.World).Reference);
-      elsif Context.Star_System /= Null_Star_System_Reference then
-         for World of
-           Harriet.Db.World.Select_By_Star_System (Context.Star_System)
-         loop
-            Refs.Append (World.Reference);
-         end loop;
-      elsif Context.Faction /= Null_Faction_Reference then
-         for Star_System of Harriet.Db.Star_System.Scan_By_Name loop
-            Refs.Append (Star_System.Reference);
-         end loop;
+      if Context.List.Is_Empty then
+         return Harriet.Contexts.Root.Root_Context.Child_Context (Name);
       else
-         for Faction of Harriet.Db.Faction.Scan_By_Name loop
-            Refs.Append (Faction.Reference);
-         end loop;
+         return Context.List.First_Element.Child_Context (Name);
+      end if;
+   end Child_Context;
+
+   -------------
+   -- Context --
+   -------------
+
+   function Context
+     (Path : Context_Path)
+      return Context_Type
+   is
+   begin
+      if Path.List.Is_Empty then
+         return Harriet.Contexts.Root.Root_Context;
+      else
+         return Path.List.First_Element;
+      end if;
+   end Context;
+
+   ------------------------
+   -- Get_Child_Contexts --
+   ------------------------
+
+   overriding procedure Get_Child_Contexts
+     (Context  : Context_Path;
+      Children : in out Context_List'Class)
+   is
+   begin
+      if Context.List.Is_Empty then
+         Harriet.Contexts.Root.Root_Context.Get_Child_Contexts (Children);
+      else
+         Context.List.First_Element.Get_Child_Contexts (Children);
+      end if;
+   end Get_Child_Contexts;
+
+   ---------------------
+   -- Get_Child_Names --
+   ---------------------
+
+   procedure Get_Child_Names
+     (Context : Root_Context_Type'Class;
+      Names   : out Child_Name_Lists.List)
+   is
+      procedure Add_Name (Context : Context_Type);
+
+      --------------
+      -- Add_Name --
+      --------------
+
+      procedure Add_Name (Context : Context_Type) is
+      begin
+         Names.Append (Context.Name);
+      end Add_Name;
+
+   begin
+      Names.Clear;
+      Context.Iterate_Contexts (Add_Name'Access);
+   end Get_Child_Names;
+
+   --------
+   -- Go --
+   --------
+
+   function Go
+     (Start : Context_Path;
+      Scope : String)
+      return Context_Path
+   is
+      Path    : constant String := Scope & "/";
+      Current : Positive := Path'First;
+      Result  : Context_Path;
+
+   begin
+
+      if Path /= "" and then Path (Path'First) = '/' then
+         Result.List.Append (Harriet.Contexts.Root.Root_Context);
+         Current := Current + 1;
+      else
+         Result := Start;
       end if;
 
-      for Ref of Refs loop
-         Process (Ref);
+      while Current <= Path'Last loop
+         declare
+            Index : constant Positive :=
+                      Ada.Strings.Fixed.Index (Path, "/", Current);
+            Next  : Positive := Index + 1;
+            Name  : constant String := Path (Current .. Index - 1);
+         begin
+            if Name = "." then
+               null;
+            elsif Name = ".." then
+               Result.To_Parent;
+            elsif Result.Has_Child_Context (Name) then
+               Result.List.Insert
+                 (Result.List.First,
+                  Result.Child_Context (Name));
+            else
+               Result.List.Insert
+                 (Result.List.First,
+                  Harriet.Contexts.Errors.Error_Context
+                    ("scope not found"));
+               exit;
+            end if;
+
+            while Next <= Path'Last
+              and then Path (Next) = '/'
+            loop
+               Next := Next + 1;
+            end loop;
+
+            Current := Next;
+         end;
       end loop;
-   end Iterate_Contents;
 
-   ----------
-   -- Show --
-   ----------
+      return Result;
 
-   function Show (Context : Context_Type) return String is
-      use Harriet.Db;
-      Faction_Prompt     : constant String :=
-                             (if Context.Faction = Null_Faction_Reference
-                              then "/"
-                              else Harriet.Factions.Name
-                                (Context.Faction) & ":");
-      Star_System_Prompt : constant String :=
-                             (if Context.Star_System
-                              = Null_Star_System_Reference
-                              then ""
-                              else "/"
-                              & Harriet.Star_Systems.Name
-                                (Context.Star_System));
-      World_Prompt       : constant String :=
-                             (if Context.World = Null_World_Reference
-                              then ""
-                              else "/"
-                              & Harriet.Worlds.Name (Context.World));
+   end Go;
+
+   ---------------
+   -- Has_Child --
+   ---------------
+
+   function Has_Child_Context
+     (Context : Root_Context_Type;
+      Name    : String)
+      return Boolean
+   is
+      Children : Child_Name_Lists.List;
    begin
-      return Faction_Prompt & Star_System_Prompt & World_Prompt;
-   end Show;
+      Root_Context_Type'Class (Context).Get_Child_Names (Children);
+      for Child_Name of Children loop
+         if Child_Name = Name then
+            return True;
+         end if;
+      end loop;
+      return False;
+   end Has_Child_Context;
+
+   --------------------------
+   -- Initial_Context_Path --
+   --------------------------
+
+   function Initial_Context_Path
+     (Faction : Harriet.Db.Faction_Reference)
+      return Context_Path
+   is
+      Path : Context_Path;
+   begin
+      Path.List.Append
+        (Harriet.Contexts.Factions.Faction_Context (Faction));
+      Path.List.Append
+        (Harriet.Contexts.Faction_Container.Faction_Container_Context);
+      Path.List.Append (Harriet.Contexts.Root.Root_Context);
+      return Path;
+   end Initial_Context_Path;
+
+   -------------------------
+   -- Iterate_Child_Names --
+   -------------------------
+
+   procedure Iterate_Child_Names
+     (Context : Root_Context_Type'Class;
+      Process : not null access
+        procedure (Name : String))
+   is
+      Children : Child_Name_Lists.List;
+   begin
+      Context.Get_Child_Names (Children);
+      for Name of Children loop
+         Process (Name);
+      end loop;
+   end Iterate_Child_Names;
+
+   ----------------------
+   -- Iterate_Contexts --
+   ----------------------
+
+   procedure Iterate_Contexts
+     (Context : Root_Context_Type'Class;
+      Process : not null access
+        procedure (Context : Context_Type))
+   is
+      Children : Context_List;
+   begin
+      Context.Get_Child_Contexts (Children);
+      for Child of Children loop
+         Process (Child);
+      end loop;
+   end Iterate_Contexts;
+
+   --------------------
+   -- Match_Children --
+   --------------------
+
+   procedure Match_Children
+     (Context : Root_Context_Type'Class;
+      Pattern : String;
+      Matches : out Child_Name_Lists.List)
+   is
+      Children : Child_Name_Lists.List;
+   begin
+      Matches.Clear;
+      Context.Get_Child_Names (Children);
+      for Name of Children loop
+         if Name'Length >= Pattern'Length
+           and then Name (Name'First .. Name'First + Pattern'Length - 1)
+           = Pattern
+         then
+            Matches.Append (Name);
+         end if;
+      end loop;
+   end Match_Children;
+
+   ----------
+   -- Name --
+   ----------
+
+   overriding function Name
+     (Context : Context_Path)
+      return String
+   is
+      function N (Position : Context_Lists.Cursor) return String;
+
+      -------
+      -- N --
+      -------
+
+      function N (Position : Context_Lists.Cursor) return String is
+      begin
+         if not Context_Lists.Has_Element (Position) then
+            return "";
+         elsif not Context_Lists.Has_Element
+           (Context_Lists.Previous (Position))
+         then
+            return Context_Lists.Element (Position).Name;
+         else
+            return Context_Lists.Element (Position).Name
+              & "/" & N (Context_Lists.Previous (Position));
+         end if;
+      end N;
+
+   begin
+      if Context.List.Is_Empty
+        or else Context.List.First_Element.Is_Root
+      then
+         return "/";
+      elsif not Context.List.First_Element.Is_Valid then
+         return Context.List.First_Element.Name;
+      else
+         return N (Context.List.Last);
+      end if;
+   end Name;
 
    --------------
    -- To_Child --
    --------------
 
    procedure To_Child
-     (Context    : in out Context_Type;
-      Child_Name : String;
-      Success    : out Boolean)
+     (Path          : in out Context_Path;
+      Child_Context : Context_Type)
    is
-      use Harriet.Db;
    begin
-      if Context.Moon /= Null_World_Reference then
-         Success := False;
-      elsif Context.World /= Null_World_Reference then
-         Success := False;
-      elsif Context.Star_System /= Null_Star_System_Reference then
-         Success := False;
-         for World of
-           Harriet.Db.World.Select_By_Star_System (Context.Star_System)
-         loop
-            if World.Name = Child_Name then
-               Success := True;
-               Context.World := World.Reference;
-               exit;
-            end if;
-         end loop;
-      elsif Context.Faction /= Null_Faction_Reference then
-         Context.Star_System :=
-           Harriet.Db.Star_System.First_Reference_By_Name (Child_Name);
-         Success := Context.Star_System /= Null_Star_System_Reference;
-      else
-         Context.Faction :=
-           Harriet.Db.Faction.First_Reference_By_Name (Child_Name);
-         Success := Context.Faction /= Null_Faction_Reference;
-      end if;
+      Path.List.Insert (Path.List.First, Child_Context);
    end To_Child;
 
    ---------------
    -- To_Parent --
    ---------------
 
-   procedure To_Parent (Context : in out Context_Type) is
-      use Harriet.Db;
+   procedure To_Parent
+     (Path : in out Context_Path)
+   is
    begin
-      if Context.Faction = Null_Faction_Reference then
-         null;
-      elsif Context.Star_System = Null_Star_System_Reference then
-         Context.Faction := Null_Faction_Reference;
-      elsif Context.World = Null_World_Reference then
-         Context.Star_System := Null_Star_System_Reference;
-      elsif Context.Moon = Null_World_Reference then
-         Context.World := Null_World_Reference;
-      else
-         Context.Moon := Null_World_Reference;
+      if not Path.List.Is_Empty then
+         Path.List.Delete_First;
+      end if;
+      if Path.List.Is_Empty then
+         Path.List.Append (Harriet.Contexts.Root.Root_Context);
       end if;
    end To_Parent;
 

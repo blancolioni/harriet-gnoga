@@ -162,11 +162,13 @@ package body Harriet.Sessions is
       Session.Faction :=
         Harriet.Db.Faction.First_Reference_By_User (User);
 
-      Harriet.Contexts.Initialize_Context
-        (Session.Context, Session.Faction);
+      Session.Context :=
+        Harriet.Contexts.Initial_Context_Path (Session.Faction);
 
       Ada.Text_IO.Put_Line
-        ("session started for user " & Session.User_Name);
+        ("session started for user " & Session.User_Name
+         & "; initial context "
+         & Session.Context.Name);
 
       if Session.Is_Gnoga then
          declare
@@ -341,7 +343,7 @@ package body Harriet.Sessions is
 
    procedure Update_Context
      (Session : in out Root_Harriet_Session'Class;
-      Context : Harriet.Contexts.Context_Type)
+      Context : Harriet.Contexts.Context_Path)
    is
    begin
       Session.Context := Context;
