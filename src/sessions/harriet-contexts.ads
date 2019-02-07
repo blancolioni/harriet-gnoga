@@ -143,4 +143,9 @@ private
      (Context  : Context_Path;
       Children : in out Context_List'Class);
 
+   overriding procedure Iterate_Content_Lines
+     (Context : Context_Path;
+      Process : not null access
+        procedure (Line : String));
+
 end Harriet.Contexts;

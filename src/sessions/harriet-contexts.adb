@@ -280,6 +280,24 @@ package body Harriet.Contexts is
       end loop;
    end Iterate_Content_Lines;
 
+   ---------------------------
+   -- Iterate_Content_Lines --
+   ---------------------------
+
+   overriding procedure Iterate_Content_Lines
+     (Context : Context_Path;
+      Process : not null access
+        procedure (Line : String))
+   is
+   begin
+      if Context.List.Is_Empty then
+         Harriet.Contexts.Root.Root_Context.Iterate_Content_Lines
+           (Process);
+      else
+         Context.List.First_Element.Iterate_Content_Lines (Process);
+      end if;
+   end Iterate_Content_Lines;
+
    ----------------------
    -- Iterate_Contexts --
    ----------------------
