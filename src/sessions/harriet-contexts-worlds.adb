@@ -16,6 +16,11 @@ package body Harriet.Contexts.Worlds is
      (Context  : World_Context_Type;
       Children : in out Context_List'Class);
 
+   overriding function Class
+     (Context : World_Context_Type)
+      return String
+   is ("world");
+
    overriding function Name
      (Context : World_Context_Type)
       return String

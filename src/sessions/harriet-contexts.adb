@@ -47,6 +47,19 @@ package body Harriet.Contexts is
       end if;
    end Child_Context;
 
+   -----------
+   -- Class --
+   -----------
+
+   overriding function Class
+     (Context : Context_Path)
+      return String
+   is
+      pragma Unreferenced (Context);
+   begin
+      return "path";
+   end Class;
+
    -------------
    -- Context --
    -------------

@@ -7,6 +7,11 @@ package body Harriet.Contexts.Faction_Container is
    type Faction_Container_Context_Type is
      new Root_Context_Type with null record;
 
+   overriding function Class
+     (Context : Faction_Container_Context_Type)
+      return String
+   is ("container[faction]");
+
    overriding function Name
      (Context : Faction_Container_Context_Type)
       return String

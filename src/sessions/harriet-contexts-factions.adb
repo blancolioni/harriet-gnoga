@@ -16,6 +16,11 @@ package body Harriet.Contexts.Factions is
      (Context  : Faction_Context_Type;
       Children : in out Context_List'Class);
 
+   overriding function Class
+     (Context : Faction_Context_Type)
+      return String
+   is ("faction");
+
    overriding function Name
      (Context : Faction_Context_Type)
       return String

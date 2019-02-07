@@ -6,6 +6,11 @@ package body Harriet.Contexts.Containers is
          Reference : Context_Reference;
       end record;
 
+   overriding function Class
+     (Context : Container_Context_Type)
+      return String
+   is ("container[" & Container_Name & "]");
+
    overriding function Name
      (Context : Container_Context_Type)
       return String

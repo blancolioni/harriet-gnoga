@@ -12,6 +12,11 @@ package Harriet.Contexts is
 
    type Context_List is tagged private;
 
+   function Class
+     (Context : Root_Context_Type)
+      return String
+      is abstract;
+
    function Name
      (Context : Root_Context_Type)
       return String
@@ -110,6 +115,10 @@ private
       record
          List : Context_Lists.List;
       end record;
+
+   overriding function Class
+     (Context : Context_Path)
+      return String;
 
    overriding function Name
      (Context : Context_Path)

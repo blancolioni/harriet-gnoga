@@ -10,6 +10,11 @@ package body Harriet.Contexts.Star_Systems is
          Star_System : Harriet.Db.Star_System_Reference;
       end record;
 
+   overriding function Class
+     (Context : Star_System_Context_Type)
+      return String
+   is ("star-system");
+
    overriding function Name
      (Context : Star_System_Context_Type)
       return String;

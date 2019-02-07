@@ -26,6 +26,11 @@ package body Harriet.Contexts.Markets is
      (Context  : Market_Context_Type;
       Children : in out Context_List'Class);
 
+   overriding function Class
+     (Context : Market_Context_Type)
+      return String
+   is ("market");
+
    overriding function Name
      (Context : Market_Context_Type)
       return String
@@ -46,6 +51,11 @@ package body Harriet.Contexts.Markets is
    overriding procedure Get_Child_Contexts
      (Context  : Market_Commodity_Context_Type;
       Children : in out Context_List'Class);
+
+   overriding function Class
+     (Context : Market_Commodity_Context_Type)
+      return String
+   is ("market-commodity");
 
    overriding function Name
      (Context : Market_Commodity_Context_Type)

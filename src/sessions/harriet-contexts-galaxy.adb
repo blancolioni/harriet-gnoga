@@ -7,6 +7,11 @@ package body Harriet.Contexts.Galaxy is
    type Galaxy_Context_Type is
      new Root_Context_Type with null record;
 
+   overriding function Class
+     (Context : Galaxy_Context_Type)
+      return String
+   is ("container[star-system]");
+
    overriding function Name
      (Context : Galaxy_Context_Type)
       return String

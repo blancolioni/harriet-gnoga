@@ -16,6 +16,11 @@ package body Harriet.Contexts.Root is
    type Top_Context_Type is
      new Root_Context_Type with null record;
 
+   overriding function Class
+     (Context : Top_Context_Type)
+      return String
+   is ("root");
+
    overriding function Name
      (Context : Top_Context_Type)
       return String

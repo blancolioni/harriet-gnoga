@@ -8,6 +8,11 @@ package body Harriet.Contexts.Errors is
          Message : Ada.Strings.Unbounded.Unbounded_String;
       end record;
 
+   overriding function Class
+     (Context : Error_Context_Type)
+      return String
+   is ("error");
+
    overriding function Name
      (Context : Error_Context_Type)
       return String
