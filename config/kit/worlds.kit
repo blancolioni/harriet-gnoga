@@ -30,7 +30,7 @@ package Worlds is
       key Climate_Terrain with Climate, Terrain;
    end Climate_Terrain;
    
-   record World : Star_System_Object, Has_Name, Is_Generated, Knowable, Order_Target, Surface is
+   record World : Star_System_Object, Has_Name, Is_Generated, Knowable, Order_Target, Surface, Has_Owner is
       Category                 : World_Category;
       Climate;
       Greenhouse_Effect        : Boolean;

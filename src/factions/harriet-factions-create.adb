@@ -32,6 +32,7 @@ with Harriet.Db.Resource;
 with Harriet.Db.Resource_Generator;
 with Harriet.Db.Ship_Design;
 with Harriet.Db.Star_System_Distance;
+with Harriet.Db.World;
 with Harriet.Db.World_Sector;
 with Harriet.Db.User;
 
@@ -218,6 +219,9 @@ package body Harriet.Factions.Create is
                           Harriet.Worlds.Star_System (Capital),
                         Capital_World => Capital);
       begin
+
+         Harriet.Db.World.Get (Capital).Set_Owner
+           (Harriet.Db.Faction.Get (Faction).Reference);
 
          Harriet.Db.Market.Create
            (World => Capital);
