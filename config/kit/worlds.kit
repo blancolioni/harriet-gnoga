@@ -77,6 +77,7 @@ record World_Sector : Sector, Has_Owner is
    key World;
    Terrain;
    Feature;
+   key World_Sector_Owner with World, Owner;
 end World_Sector;
    
 record Deposit is
