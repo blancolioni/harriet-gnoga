@@ -95,7 +95,8 @@ package body Harriet.Employment is
                        Harriet.Db.Pop.Get_Pop (Employee);
       Employed_Pop : constant Harriet.Db.Pop.Pop_Type :=
                        Harriet.Db.Pop.Get_By_Pop_Group_Installation
-                         (Pop.Pop_Group, Installation.Reference);
+                         (Pop.Pop_Group,
+                          Installation.Get_Installation_Reference);
    begin
       if Employed_Pop.Has_Element then
          Employed_Pop.Set_Salary (Salary);
@@ -110,7 +111,7 @@ package body Harriet.Employment is
          begin
             New_Pop.Set_Active (True);
             New_Pop.Set_Next_Event (Pop.Next_Event);
-            New_Pop.Set_Installation (Installation.Reference);
+            New_Pop.Set_Installation (Installation);
             Harriet.Pops.Move_Pops (Pop, New_Pop, Quantity);
          end;
       end if;

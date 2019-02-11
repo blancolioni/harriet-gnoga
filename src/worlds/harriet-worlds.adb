@@ -38,7 +38,7 @@ package body Harriet.Worlds is
               Harriet.Db.Pop.Get_By_Pop_Group_Sector
                 (Group, Sector);
       Commodity : constant Harriet.Db.Commodity_Reference :=
-                    Harriet.Db.Pop_Group.Get (Group).Reference;
+                    Harriet.Db.Pop_Group.Get (Group).Get_Commodity_Reference;
    begin
       if Pop.Has_Element then
          Pop.Set_Size (Pop.Size + Size);
@@ -107,7 +107,7 @@ package body Harriet.Worlds is
          begin
             if This_Score > Best_Score then
                Best_Score := This_Score;
-               Best_Reference := Sector.Reference;
+               Best_Reference := Sector.Get_World_Sector_Reference;
             end if;
          end;
       end loop;
@@ -122,7 +122,7 @@ package body Harriet.Worlds is
      (World : Harriet.Db.World_Reference)
    is
       Is_Gen : constant Harriet.Db.Is_Generated_Reference :=
-                 Harriet.Db.World.Get (World).Reference;
+                 Harriet.Db.World.Get (World).Get_Is_Generated_Reference;
       Gen    : constant Harriet.Db.Generation.Generation_Type :=
                  Harriet.Db.Generation.Get_By_Is_Generated
                    (Is_Gen);
@@ -200,7 +200,7 @@ package body Harriet.Worlds is
           (World)
       loop
          if Test (Sector) then
-            return Sector.Reference;
+            return Sector.Get_World_Sector_Reference;
          end if;
       end loop;
       return Harriet.Db.Null_World_Sector_Reference;
@@ -234,7 +234,7 @@ package body Harriet.Worlds is
    begin
       for Neighbour of
         Harriet.Db.Sector_Neighbour.Select_By_Sector
-          (Harriet.Db.World_Sector.Get (Sector).Reference)
+          (Harriet.Db.World_Sector.Get (Sector).Get_Sector_Reference)
       loop
          Count := Count + 1;
          declare
@@ -244,7 +244,7 @@ package body Harriet.Worlds is
                               Db.World_Sector.Get_World_Sector
                                 (Neighbour_Ref);
             World_Sec_Ref : constant Db.World_Sector_Reference :=
-                              Neighbour_Sec.Reference;
+                              Neighbour_Sec.Get_World_Sector_Reference;
          begin
             Result (Count) := World_Sec_Ref;
          end;
@@ -262,7 +262,7 @@ package body Harriet.Worlds is
    is
    begin
       return Harriet.Db.Faction.Get_Faction
-        (Harriet.Db.World_Sector.Get (Sector).Owner).Reference;
+        (Harriet.Db.World_Sector.Get (Sector).Owner).Get_Faction_Reference;
    end Get_Owner;
 
    ---------------
@@ -275,7 +275,7 @@ package body Harriet.Worlds is
    is
    begin
       for Ship of Harriet.Db.Ship.Select_By_World (World) loop
-         Ships.Append (Harriet.Ships.Get (Ship.Reference));
+         Ships.Append (Harriet.Ships.Get (Ship.Get_Ship_Reference));
       end loop;
    end Get_Ships;
 
@@ -304,7 +304,7 @@ package body Harriet.Worlds is
    begin
       for Vertex of
         Harriet.Db.Sector_Vertex.Select_By_Sector
-          (Harriet.Db.World_Sector.Get (Sector).Reference)
+          (Harriet.Db.World_Sector.Get (Sector).Get_Sector_Reference)
       loop
          Count := Count + 1;
          Result (Count) := (Vertex.X, Vertex.Y, Vertex.Z);
@@ -386,7 +386,7 @@ package body Harriet.Worlds is
       return Harriet.Db.Market_Reference
    is
    begin
-      return Harriet.Db.Market.Get_By_World (World).Reference;
+      return Harriet.Db.Market.Get_By_World (World).Get_Market_Reference;
    end Market;
 
    ----------
@@ -458,7 +458,7 @@ package body Harriet.Worlds is
    begin
       Check_Surface (World);
       for Sector of Harriet.Db.World_Sector.Select_By_World (World) loop
-         Process (Sector.Reference);
+         Process (Sector.Get_World_Sector_Reference);
       end loop;
    end Scan_Surface;
 
@@ -472,7 +472,7 @@ package body Harriet.Worlds is
    is
    begin
       Harriet.Db.World_Sector.Get (Sector).Set_Owner
-        (Harriet.Db.Faction.Get (Faction).Reference);
+        (Harriet.Db.Faction.Get (Faction).Get_Owner_Reference);
    end Set_Owner;
 
    -----------------

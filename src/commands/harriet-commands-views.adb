@@ -132,7 +132,7 @@ package body Harriet.Commands.Views is
          loop
             Index := Index + 1;
             if Index = World_Number then
-               Reference := World.Reference;
+               Reference := World.Get_World_Reference;
                exit;
             end if;
          end loop;

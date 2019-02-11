@@ -51,7 +51,7 @@ package body Harriet.Contexts.Faction_Container is
       for Faction of Harriet.Db.Faction.Scan_By_Name loop
          Children.Append
            (Harriet.Contexts.Factions.Faction_Context
-              (Faction.Reference));
+              (Faction.Get_Faction_Reference));
       end loop;
    end Get_Child_Contexts;
 

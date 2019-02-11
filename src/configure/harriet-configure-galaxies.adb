@@ -52,13 +52,15 @@ package body Harriet.Configure.Galaxies is
 
       for From of Harriet.Db.Star_System.Scan_By_Top_Record loop
          for To of Harriet.Db.Star_System.Scan_By_Top_Record loop
-            if From.Reference /= To.Reference then
+            if From.Get_Star_System_Reference
+              /= To.Get_Star_System_Reference
+            then
                declare
                   use Harriet.Elementary_Functions;
                begin
                   Harriet.Db.Star_System_Distance.Create
-                    (From     => From.Reference,
-                     To       => To.Reference,
+                    (From     => From.Get_Star_System_Reference,
+                     To       => To.Get_Star_System_Reference,
                      Distance =>
                        Sqrt ((To.X - From.X) ** 2 +
                          (To.Y - From.Y) ** 2 +

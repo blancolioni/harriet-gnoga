@@ -173,7 +173,8 @@ package body Harriet.Markets is
       Price     : Harriet.Money.Price_Type)
    is
    begin
-      Ask (Market, Agent.Reference, Agent.Account, Agent.Reference,
+      Ask (Market, Agent.Get_Agent_Reference, Agent.Account,
+           Agent.Get_Has_Stock_Reference,
            Commodity, Quantity, Price);
    end Ask;
 
@@ -289,7 +290,8 @@ package body Harriet.Markets is
       Price     : Harriet.Money.Price_Type)
    is
    begin
-      Bid (Market, Agent.Reference, Agent.Account, Agent.Reference,
+      Bid (Market, Agent.Get_Agent_Reference, Agent.Account,
+           Agent.Get_Has_Stock_Reference,
            Commodity, Quantity, Price);
    end Bid;
 
@@ -394,7 +396,7 @@ package body Harriet.Markets is
         Harriet.Db.Ask_Offer.Select_Market_Priority_Bounded_By_Priority
           (Market, Commodity, 0.0, Real'Last)
       loop
-         return Ask.Reference;
+         return Ask.Get_Ask_Offer_Reference;
       end loop;
       return Harriet.Db.Null_Ask_Offer_Reference;
    end First_Ask;
@@ -413,7 +415,7 @@ package body Harriet.Markets is
         Harriet.Db.Bid_Offer.Select_Market_Priority_Bounded_By_Priority
         (Market, Commodity, 0.0, Real'Last)
       loop
-         return Bid.Reference;
+         return Bid.Get_Bid_Offer_Reference;
       end loop;
       return Harriet.Db.Null_Bid_Offer_Reference;
    end First_Bid;
@@ -508,7 +510,7 @@ package body Harriet.Markets is
         Harriet.Db.Market_Offer.Select_By_Agent_Offer
           (Market, Agent)
       loop
-         Offers.Append (Offer.Reference);
+         Offers.Append (Offer.Get_Market_Offer_Reference);
       end loop;
 
       for Reference of Offers loop

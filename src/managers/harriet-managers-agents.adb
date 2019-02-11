@@ -390,8 +390,8 @@ package body Harriet.Managers.Agents is
       World   : Harriet.Db.World_Reference)
    is
    begin
-      Manager.Agent := Agent.Reference;
-      Manager.Has_Stock := Agent.Reference;
+      Manager.Agent := Agent.Get_Agent_Reference;
+      Manager.Has_Stock := Agent.Get_Has_Stock_Reference;
       Manager.Market := Harriet.Worlds.Market (World);
       Manager.Account := Agent.Account;
       Manager.World := World;
@@ -415,7 +415,7 @@ package body Harriet.Managers.Agents is
          begin
             for Transaction of
               Harriet.Db.Transaction.Select_Transaction_Bounded_By_Time_Stamp
-                (Manager.Market, Commodity.Reference,
+                (Manager.Market, Commodity.Get_Commodity_Reference,
                  Now - Days (1.0), Now)
             loop
                Traded := Traded + Transaction.Quantity;
@@ -427,7 +427,7 @@ package body Harriet.Managers.Agents is
                Log : constant Market_State_Log :=
                        Market_State_Log'
                          (Market    => Manager.Market,
-                          Commodity => Commodity.Reference,
+                          Commodity => Commodity.Get_Commodity_Reference,
                           Supply    => Zero,
                           Demand    => Zero,
                           Traded    => Traded,

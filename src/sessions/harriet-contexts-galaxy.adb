@@ -51,7 +51,7 @@ package body Harriet.Contexts.Galaxy is
       for Star_System of Harriet.Db.Star_System.Scan_By_Name loop
          Children.Append
            (Harriet.Contexts.Star_Systems.Star_System_Context
-              (Star_System.Reference));
+              (Star_System.Get_Star_System_Reference));
       end loop;
    end Get_Child_Contexts;
 

@@ -36,7 +36,7 @@ package body Harriet.Managers.Execution is
         Harriet.Db.Managed.Select_By_Active_Scheduled (True, False)
       loop
          if Register.Contains (Managed.Manager) then
-            List.Append (Managed.Reference);
+            List.Append (Managed.Get_Managed_Reference);
          end if;
       end loop;
 
@@ -72,7 +72,7 @@ package body Harriet.Managers.Execution is
    begin
       for Managed of Harriet.Db.Managed.Scan_By_Top_Record loop
          if Register.Contains (Managed.Manager) then
-            List.Append (Managed.Reference);
+            List.Append (Managed.Get_Managed_Reference);
          end if;
       end loop;
 
@@ -109,7 +109,7 @@ package body Harriet.Managers.Execution is
                     Harriet.Db.Managed.Get (Managed);
          begin
             Manager.Is_Active := Rec.Active;
-            Manager.Managed := Rec.Reference;
+            Manager.Managed := Rec.Get_Managed_Reference;
             Active_Map.Insert (Key, Manager);
             if Rec.Active then
                declare

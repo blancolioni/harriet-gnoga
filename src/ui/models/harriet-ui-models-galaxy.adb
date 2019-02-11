@@ -33,7 +33,7 @@ package body Harriet.UI.Models.Galaxy is
                use Harriet.Solar_System;
                Star : constant Harriet.Db.Star.Star_Type :=
                         Harriet.Db.Star.First_By_Star_System
-                          (Star_System.Reference);
+                          (Star_System.Get_Star_System_Reference);
                Color : constant Harriet.Color.Harriet_Color :=
                          (Star.Red, Star.Green, Star.Blue, 1.0);
                Row   : constant Harriet.UI.Models.Tables.Table_Row_Index :=
@@ -43,7 +43,7 @@ package body Harriet.UI.Models.Galaxy is
                for Near of
                  Harriet.Db.Star_System_Distance
                    .Select_Star_System_Range_Bounded_By_Distance
-                     (From            => Star_System.Reference,
+                     (From            => Star_System.Get_Star_System_Reference,
                       Start_Distance  => 0.0,
                       Finish_Distance => 7.0)
                loop
@@ -52,9 +52,10 @@ package body Harriet.UI.Models.Galaxy is
 
                Model.Vector.Append
                  (Star_Record'
-                    (Reference    => Star_System.Reference,
+                    (Reference    => Star_System.Get_Star_System_Reference,
                      Star_System  =>
-                       Harriet.Star_Systems.Get (Star_System.Reference),
+                       Harriet.Star_Systems.Get
+                         (Star_System.Get_Star_System_Reference),
                      Name         => To_Unbounded_String (Star_System.Name),
                      X            => Star_System.X,
                      Y            => Star_System.Y,

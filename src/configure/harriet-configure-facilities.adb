@@ -146,7 +146,7 @@ package body Harriet.Configure.Facilities is
                for Commodity of Harriet.Db.Building_Module.Scan_By_Tag loop
                   Harriet.Db.Produced_Commodity.Create
                     (Factory   => Factory,
-                     Commodity => Commodity.Reference);
+                     Commodity => Commodity.Get_Commodity_Reference);
                end loop;
             end if;
 
@@ -154,7 +154,7 @@ package body Harriet.Configure.Facilities is
                for Commodity of Harriet.Db.Consumer_Good.Scan_By_Tag loop
                   Harriet.Db.Produced_Commodity.Create
                     (Factory   => Factory,
-                     Commodity => Commodity.Reference);
+                     Commodity => Commodity.Get_Commodity_Reference);
                end loop;
             end if;
 
@@ -162,7 +162,7 @@ package body Harriet.Configure.Facilities is
                for Commodity of Harriet.Db.Industrial_Good.Scan_By_Tag loop
                   Harriet.Db.Produced_Commodity.Create
                     (Factory   => Factory,
-                     Commodity => Commodity.Reference);
+                     Commodity => Commodity.Get_Commodity_Reference);
                end loop;
             end if;
 
@@ -170,7 +170,7 @@ package body Harriet.Configure.Facilities is
                for Commodity of Harriet.Db.Ship_Component.Scan_By_Tag loop
                   Harriet.Db.Produced_Commodity.Create
                     (Factory   => Factory,
-                     Commodity => Commodity.Reference);
+                     Commodity => Commodity.Get_Commodity_Reference);
                end loop;
             end if;
 
@@ -187,49 +187,49 @@ package body Harriet.Configure.Facilities is
                for Fissile of Harriet.Db.Fissile.Scan_By_Tag loop
                   Harriet.Db.Generated_Resource.Create
                     (Resource_Generator => Generator,
-                     Resource           => Fissile.Reference);
+                     Resource           => Fissile.Get_Resource_Reference);
                end loop;
             end if;
             if Fuel then
                for Fuel of Harriet.Db.Fuel.Scan_By_Tag loop
                   Harriet.Db.Generated_Resource.Create
                     (Resource_Generator => Generator,
-                     Resource           => Fuel.Reference);
+                     Resource           => Fuel.Get_Resource_Reference);
                end loop;
             end if;
             if Gas then
                for Gas of Harriet.Db.Gas.Scan_By_Tag loop
                   Harriet.Db.Generated_Resource.Create
                     (Resource_Generator => Generator,
-                     Resource           => Gas.Reference);
+                     Resource           => Gas.Get_Resource_Reference);
                end loop;
             end if;
             if Liquid then
                for Liquid of Harriet.Db.Liquid.Scan_By_Tag loop
                   Harriet.Db.Generated_Resource.Create
                     (Resource_Generator => Generator,
-                     Resource           => Liquid.Reference);
+                     Resource           => Liquid.Get_Resource_Reference);
                end loop;
             end if;
             if Metal then
                for Metal of Harriet.Db.Metal.Scan_By_Tag loop
                   Harriet.Db.Generated_Resource.Create
                     (Resource_Generator => Generator,
-                     Resource           => Metal.Reference);
+                     Resource           => Metal.Get_Resource_Reference);
                end loop;
             end if;
             if Mineral then
                for Mineral of Harriet.Db.Mineral.Scan_By_Tag loop
                   Harriet.Db.Generated_Resource.Create
                     (Resource_Generator => Generator,
-                     Resource           => Mineral.Reference);
+                     Resource           => Mineral.Get_Resource_Reference);
                end loop;
             end if;
             if Organic then
                for Organic of Harriet.Db.Organic.Scan_By_Tag loop
                   Harriet.Db.Generated_Resource.Create
                     (Resource_Generator => Generator,
-                     Resource           => Organic.Reference);
+                     Resource           => Organic.Get_Resource_Reference);
                end loop;
             end if;
          end;

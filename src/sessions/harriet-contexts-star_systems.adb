@@ -42,7 +42,8 @@ package body Harriet.Contexts.Star_Systems is
           (Context.Star_System)
       loop
          Children.Append
-           (Harriet.Contexts.Worlds.World_Context (World.Reference));
+           (Harriet.Contexts.Worlds.World_Context
+              (World.Get_World_Reference));
       end loop;
    end Get_Child_Contexts;
 

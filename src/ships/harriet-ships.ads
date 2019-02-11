@@ -83,7 +83,7 @@ private
    is (Ship_Type'(Reference => Reference));
 
    function Get (Ship : Harriet.Db.Ship.Ship_Type) return Ship_Type
-   is (Ship_Type'(Reference => Ship.Reference));
+   is (Ship_Type'(Reference => Ship.Get_Ship_Reference));
 
    function Name (Ship : Ship_Type'Class) return String
    is (Harriet.Db.Ship.Get (Ship.Reference).Name);

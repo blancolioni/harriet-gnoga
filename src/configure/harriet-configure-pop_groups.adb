@@ -41,7 +41,7 @@ package body Harriet.Configure.Pop_Groups is
       loop
          Harriet.Db.Pop_Group_Needs.Create
            (Pop_Group => Pop_Group,
-            Commodity => Consumer.Reference);
+            Commodity => Consumer.Get_Commodity_Reference);
       end loop;
 
    end Configure_Pop_Group;

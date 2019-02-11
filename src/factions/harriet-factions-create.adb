@@ -150,7 +150,7 @@ package body Harriet.Factions.Create is
                Facility :=
                  Harriet.Db.Resource_Generator.Get
                    (Generated.Resource_Generator)
-                 .Reference;
+                 .Get_Facility_Reference;
             else
                Ada.Text_IO.Put_Line ("no resource generators");
                Facility :=
@@ -221,7 +221,7 @@ package body Harriet.Factions.Create is
       begin
 
          Harriet.Db.World.Get (Capital).Set_Owner
-           (Harriet.Db.Faction.Get (Faction).Reference);
+           (Harriet.Db.Faction.Get (Faction).Get_Owner_Reference);
 
          Harriet.Db.Market.Create
            (World => Capital);
@@ -288,7 +288,7 @@ package body Harriet.Factions.Create is
       Config      : Tropos.Configuration)
    is
       Owner : constant Harriet.Db.Owner_Reference :=
-                Harriet.Db.Faction.Get (Faction).Reference;
+                Harriet.Db.Faction.Get (Faction).Get_Owner_Reference;
       Hub   : Harriet.Db.Installation_Reference :=
                 Harriet.Db.Null_Installation_Reference;
 
@@ -361,7 +361,7 @@ package body Harriet.Factions.Create is
                    (Employee.Pop_Group)
                loop
                   Harriet.Stock.Add_Initial_Stock
-                    (Harriet.Db.Installation.Get (Hub).Reference,
+                    (Harriet.Db.Installation.Get (Hub).Get_Has_Stock_Reference,
                      Needs.Commodity,
                      Harriet.Quantities.Scale (Employee.Quantity, 21.0));
                end loop;
@@ -391,7 +391,8 @@ package body Harriet.Factions.Create is
                          Create_Installation
                            (Facility, Hub_Sector, Cash, Manager);
             Stock    : constant Harriet.Db.Has_Stock_Reference :=
-                         Harriet.Db.Installation.Get (Ref).Reference;
+                         Harriet.Db.Installation.Get (Ref)
+                         .Get_Has_Stock_Reference;
          begin
             for Item of Installation_Config.Child ("stock") loop
                declare
@@ -405,21 +406,21 @@ package body Harriet.Factions.Create is
                        Harriet.Db.Consumer_Good.Select_By_Available (True)
                      loop
                         Harriet.Stock.Add_Initial_Stock
-                          (Stock, Commodity.Reference, Qty);
+                          (Stock, Commodity.Get_Commodity_Reference, Qty);
                      end loop;
                   elsif Tag = "industrial-goods" then
                      for Commodity of
                        Harriet.Db.Industrial_Good.Select_By_Available (True)
                      loop
                         Harriet.Stock.Add_Initial_Stock
-                          (Stock, Commodity.Reference, Qty);
+                          (Stock, Commodity.Get_Commodity_Reference, Qty);
                      end loop;
                   elsif Tag = "resource" then
                      for Commodity of
                        Harriet.Db.Resource.Select_By_Available (True)
                      loop
                         Harriet.Stock.Add_Initial_Stock
-                          (Stock, Commodity.Reference, Qty);
+                          (Stock, Commodity.Get_Commodity_Reference, Qty);
                      end loop;
                   else
                      declare
@@ -564,7 +565,8 @@ package body Harriet.Factions.Create is
 
          declare
             Ns : constant Harriet.Worlds.World_Sector_Array :=
-                   Harriet.Worlds.Get_Neighbours (Sector.Reference);
+                   Harriet.Worlds.Get_Neighbours
+                     (Sector.Get_World_Sector_Reference);
          begin
             for N of Ns loop
                for Deposit of

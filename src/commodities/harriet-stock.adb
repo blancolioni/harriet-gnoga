@@ -45,7 +45,7 @@ package body Harriet.Stock is
    begin
       if Quantity > Zero then
          pragma Assert (Value > Zero);
-         Add_Stock (To.Reference, Item, Quantity, Value);
+         Add_Stock (To.Get_Has_Stock_Reference, Item, Quantity, Value);
       end if;
    end Add_Stock;
 
@@ -242,7 +242,7 @@ package body Harriet.Stock is
    is
       Stock : Harriet.Commodities.Stock_Type;
    begin
-      Stock.Load (Has_Stock.Reference);
+      Stock.Load (Has_Stock.Get_Has_Stock_Reference);
       Stock.Iterate (Process);
    end Scan_Stock;
 

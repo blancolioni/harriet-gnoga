@@ -96,12 +96,12 @@ package body Harriet.Contexts.Markets is
       for Commodity of Harriet.Db.Commodity.Scan_By_Tag loop
          for Offer of
            Harriet.Db.Transaction.Select_Transaction_Bounded_By_Time_Stamp
-             (Context.Market, Commodity.Reference,
+             (Context.Market, Commodity.Get_Commodity_Reference,
               Harriet.Calendar.Start, Harriet.Calendar.Clock)
          loop
             Children.Append
               (Market_Commodity_Context
-                 (Context.Market, Commodity.Reference));
+                 (Context.Market, Commodity.Get_Commodity_Reference));
             exit;
          end loop;
       end loop;
@@ -218,7 +218,7 @@ package body Harriet.Contexts.Markets is
       for Market of
         Harriet.Db.Market.Scan_By_Top_Record
       loop
-         Process (Market_Context (Market.Reference));
+         Process (Market_Context (Market.Get_Market_Reference));
       end loop;
    end Scan_Markets;
 

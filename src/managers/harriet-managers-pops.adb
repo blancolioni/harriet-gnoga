@@ -22,9 +22,9 @@ package body Harriet.Managers.Pops is
                   Harriet.Db.Pop_Group.Get (Pop.Pop_Group);
       Manager : Root_Pop_Manager :=
                   (Harriet.Managers.Agents.Root_Agent_Manager with
-                   Pop                 => Pop.Reference,
+                   Pop                 => Pop.Get_Pop_Reference,
                    Group               => Pop.Pop_Group,
-                   Commodity           => Group.Reference,
+                   Commodity           => Group.Get_Commodity_Reference,
                    Employer            => Pop.Installation,
                    Employed            =>
                      Pop.Installation /= Null_Installation_Reference,
@@ -100,7 +100,7 @@ package body Harriet.Managers.Pops is
       loop
          Consumer_Happiness :=
            Unit_Real'Min (Consumer_Happiness,
-                          Use_Item (Item.Reference));
+                          Use_Item (Item.Get_Commodity_Reference));
       end loop;
 
       declare

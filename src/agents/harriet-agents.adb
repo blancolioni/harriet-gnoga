@@ -119,35 +119,36 @@ package body Harriet.Agents is
       begin
          if not Harriet.Commodities.Is_Pop_Group (Commodity) then
             Log_Agent
-              (From.Reference,
+              (From.Get_Agent_Reference,
                "transferring " & Show (Transfer_Quantity)
                & " " & Harriet.Commodities.Local_Name (Commodity)
                & " of " & Show (Quantity));
             Harriet.Stock.Remove_Stock
-              (From.Reference, Commodity, Transfer_Quantity);
+              (From.Get_Has_Stock_Reference, Commodity, Transfer_Quantity);
             Harriet.Stock.Add_Stock
-              (To.Reference, Commodity, Transfer_Quantity, Transfer_Value);
+              (To.Get_Has_Stock_Reference,
+               Commodity, Transfer_Quantity, Transfer_Value);
          end if;
       end Transfer_Stock;
 
    begin
 
-      Log_Agent (From.Reference,
+      Log_Agent (From.Get_Agent_Reference,
                  "transferring "
                  & Harriet.Real_Images.Approximate_Image (Fraction * 100.0)
                  & "% to agent"
                  & Harriet.Db.To_String
-                   (Harriet.Db.Agent_Reference'(To.Reference)));
+                   (To.Get_Agent_Reference));
 
       From_Account.Set_Cash (From_Account.Cash - Transfer_Cash);
       To_Account.Set_Cash (To_Account.Cash + Transfer_Cash);
 
-      From_Stock.Load (From.Reference);
+      From_Stock.Load (From.Get_Has_Stock_Reference);
       From_Stock.Iterate (Transfer_Stock'Access);
 
    exception
       when others =>
-         Log_Agent (From.Reference,
+         Log_Agent (From.Get_Agent_Reference,
                     "exception during transfer");
          raise;
 --        for Stock of

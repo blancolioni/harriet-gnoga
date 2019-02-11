@@ -74,10 +74,12 @@ package body Harriet.Managers.Installations is
             declare
                Rgen : constant Harriet.Db.Resource_Generator_Reference :=
                         Harriet.Db.Resource_Generator.Get_Resource_Generator
-                          (Installation.Facility).Reference;
+                          (Installation.Facility)
+                          .Get_Resource_Generator_Reference;
                Manager : Resource_Generator_Manager :=
                            (Harriet.Managers.Agents.Root_Agent_Manager with
-                            Installation => Installation.Reference,
+                            Installation =>
+                              Installation.Get_Installation_Reference,
                             Facility        => Installation.Facility,
                             Rgen            => Rgen);
             begin
@@ -108,7 +110,8 @@ package body Harriet.Managers.Installations is
       Manager      : Hub_Manager :=
                        Hub_Manager'
                          (Harriet.Managers.Agents.Root_Agent_Manager with
-                          Installation => Installation.Reference,
+                          Installation =>
+                            Installation.Get_Installation_Reference,
                           Facility     => Installation.Facility,
                           Log_State    => Harriet.Options.Log_Trade_Offers,
                           Day_Tick     => 0);
@@ -136,7 +139,8 @@ package body Harriet.Managers.Installations is
          declare
             use Harriet.Quantities;
             Commodity : constant Harriet.Db.Commodity_Reference :=
-                          Harriet.Db.Resource.Get (Gen.Resource).Reference;
+                          Harriet.Db.Resource.Get (Gen.Resource)
+                          .Get_Commodity_Reference;
             Quantity  : constant Quantity_Type :=
                           Manager.Current_Stock (Commodity);
          begin
@@ -248,10 +252,10 @@ package body Harriet.Managers.Installations is
         (Installation, Add_Ask'Access);
 
       for Item of Harriet.Db.Consumer_Good.Scan_By_Tag loop
-         Add_Bid (Item.Reference);
+         Add_Bid (Item.Get_Commodity_Reference);
       end loop;
       for Item of Harriet.Db.Resource.Scan_By_Tag loop
-         Add_Bid (Item.Reference);
+         Add_Bid (Item.Get_Commodity_Reference);
       end loop;
 
    end Create_Market_Offers;
@@ -282,12 +286,13 @@ package body Harriet.Managers.Installations is
                          Deposit.Resource;
          begin
             if Harriet.Db.Generated_Resource.Is_Generated_Resource
-              (Gen.Reference, Resource)
+              (Gen.Get_Resource_Generator_Reference, Resource)
             then
                declare
                   use Harriet.Quantities;
                   Commodity : constant Harriet.Db.Commodity_Reference :=
-                                Harriet.Db.Resource.Get (Resource).Reference;
+                                Harriet.Db.Resource.Get (Resource)
+                                .Get_Commodity_Reference;
                   Quantity : constant Quantity_Type :=
                                To_Quantity
                                  (Deposit.Accessibility * 20.0
@@ -458,10 +463,10 @@ package body Harriet.Managers.Installations is
       Manager.Day_Tick := Manager.Day_Tick + 1;
       if Manager.Day_Tick = 7 then
          for Item of Harriet.Db.Consumer_Good.Scan_By_Tag loop
-            Check_Trend (Item.Reference);
+            Check_Trend (Item.Get_Commodity_Reference);
          end loop;
          for Item of Harriet.Db.Resource.Scan_By_Tag loop
-            Check_Trend (Item.Reference);
+            Check_Trend (Item.Get_Commodity_Reference);
          end loop;
 
          Manager.Day_Tick := 0;
@@ -489,7 +494,7 @@ package body Harriet.Managers.Installations is
          declare
             Commodity : constant Harriet.Db.Commodity_Reference :=
                           Harriet.Db.Pop_Group.Get (Employee.Pop_Group)
-                          .Reference;
+                          .Get_Commodity_Reference;
             Quantity  : constant Harriet.Quantities.Quantity_Type :=
                           Harriet.Quantities.Scale
                             (Employee.Quantity, Manager.Capacity);

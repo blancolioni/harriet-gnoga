@@ -24,7 +24,8 @@ package body Harriet.Star_Systems is
      (Star_System : Harriet.Db.Star_System_Reference)
    is
       Is_Gen : constant Harriet.Db.Is_Generated_Reference :=
-                 Harriet.Db.Star_System.Get (Star_System).Reference;
+                 Harriet.Db.Star_System.Get (Star_System)
+                 .Get_Is_Generated_Reference;
       Gen    : constant Harriet.Db.Generation.Generation_Type :=
                  Harriet.Db.Generation.Get_By_Is_Generated
                    (Is_Gen);
@@ -248,7 +249,7 @@ package body Harriet.Star_Systems is
            Harriet.Db.World.Select_By_Star_System
              (Star_System)
          loop
-            Selection.Insert (World.Reference);
+            Selection.Insert (World.Get_World_Reference);
          end loop;
       end return;
    end Worlds;

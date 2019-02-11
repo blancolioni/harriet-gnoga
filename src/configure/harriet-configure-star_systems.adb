@@ -470,7 +470,7 @@ package body Harriet.Configure.Star_Systems is
 
                if Amount > 0.0 then
                   Count := Count + 1;
-                  Refs (Count) := Gas.Reference;
+                  Refs (Count) := Gas.Get_Atmosphere_Component_Reference;
                   Amounts (Count) := Amount;
                   Total := Total + Amount;
                end if;
@@ -484,7 +484,7 @@ package body Harriet.Configure.Star_Systems is
 
          for I in 1 .. Count loop
             Harriet.Db.Atmosphere.Create
-              (World      => World.Reference,
+              (World      => World.Get_World_Reference,
                Component  => Refs (I),
                Percentage => Amounts (I) / Total);
          end loop;
@@ -1025,7 +1025,7 @@ package body Harriet.Configure.Star_Systems is
             World : Harriet.Db.World.World_Type :=
                        Harriet.Db.World.Create;
          begin
-            World.Set_Primary (Star.Reference);
+            World.Set_Primary (Star);
             World.Set_Star_System (Star_System);
             World.Set_Semimajor_Axis (Current_Orbit);
             World.Set_Eccentricity (0.0);

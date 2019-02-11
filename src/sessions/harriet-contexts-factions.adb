@@ -95,9 +95,11 @@ package body Harriet.Contexts.Factions is
    begin
       for World of
         Harriet.Db.World.Select_By_Owner
-          (Harriet.Db.Faction.Get (Faction).Reference)
+          (Harriet.Db.Faction.Get (Faction).Get_Owner_Reference)
       loop
-         Process (Harriet.Contexts.Worlds.World_Context (World.Reference));
+         Process
+           (Harriet.Contexts.Worlds.World_Context
+              (World.Get_World_Reference));
       end loop;
    end Scan_Worlds;
 

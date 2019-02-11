@@ -344,7 +344,10 @@ package body Harriet.Configure.Commodities is
          Success := True;
 
          for Commodity of Harriet.Db.Commodity.Scan_By_Top_Record loop
-            if Initial_Price.Element (Commodity.Reference) = Zero then
+            if Initial_Price.Element
+              (Commodity.Get_Commodity_Reference)
+              = Zero
+            then
                Update_Price (Commodity, Success);
             end if;
          end loop;
@@ -362,7 +365,7 @@ package body Harriet.Configure.Commodities is
          Total_Cost : Money_Type := Zero;
          Recipe     : constant Harriet.Db.Recipe_Reference :=
                     Harriet.Db.Recipe.First_Reference_By_Commodity
-                      (Commodity.Reference);
+                      (Commodity.Get_Commodity_Reference);
       begin
          for Input of Harriet.Db.Recipe_Input.Select_By_Recipe (Recipe) loop
             declare
@@ -380,7 +383,7 @@ package body Harriet.Configure.Commodities is
          end loop;
 
          Initial_Price.Replace_Element
-           (Commodity.Reference,
+           (Commodity.Get_Commodity_Reference,
             Price (Adjust (Total_Cost, 1.5), Unit));
 
       end Update_Price;
@@ -390,7 +393,7 @@ package body Harriet.Configure.Commodities is
    begin
       for Commodity of Harriet.Db.Commodity.Scan_By_Top_Record loop
          Initial_Price.Replace_Element
-           (Commodity.Reference, Commodity.Initial_Price);
+           (Commodity.Get_Commodity_Reference, Commodity.Initial_Price);
       end loop;
 
       while not Finished loop
@@ -400,7 +403,7 @@ package body Harriet.Configure.Commodities is
       for Commodity of Harriet.Db.Commodity.Scan_By_Top_Record loop
          Commodity.Set_Initial_Price
            (Initial_Price.Element
-              (Commodity.Reference));
+              (Commodity.Get_Commodity_Reference));
       end loop;
 
    end Configure_Prices;

@@ -55,7 +55,7 @@ package body Harriet.Ships is
                        Next_Event      => Harriet.Calendar.Clock,
                        Manager         => "default",
                        Owner           =>
-                         Harriet.Db.Faction.Get (Owner).Reference,
+                         Harriet.Db.Faction.Get (Owner).Get_Owner_Reference,
                        World           => World,
                        Star_System     => World_Rec.Star_System,
                        Orbit           =>

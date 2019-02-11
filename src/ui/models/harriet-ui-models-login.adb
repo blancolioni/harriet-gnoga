@@ -32,7 +32,7 @@ package body Harriet.UI.Models.Login is
       if User.Has_Element
         and then User.Password = Password
       then
-         Model.Session.Login (User.Reference);
+         Model.Session.Login (User.Get_User_Reference);
          return True;
       else
          return False;

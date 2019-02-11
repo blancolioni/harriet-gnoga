@@ -168,8 +168,8 @@ package body Harriet.Configure.Worlds is
                        Harriet.Db.World_Sector.Create;
             Centre : constant Vector_3 := Surface.Tile_Centre (Tile_Index);
          begin
-            Sector.Set_World (World.Reference);
-            Sector.Set_Surface (World.Reference);
+            Sector.Set_World (World);
+            Sector.Set_Surface (World);
             Sector.Set_X (Centre (1));
             Sector.Set_Y (Centre (2));
             Sector.Set_Z (Centre (3));
@@ -181,7 +181,7 @@ package body Harriet.Configure.Worlds is
             loop
                if Harriet.Random.Unit_Random < Terrain_Resource.Chance then
                   Harriet.Db.Deposit.Create
-                    (World_Sector  => Sector.Reference,
+                    (World_Sector  => Sector.Get_World_Sector_Reference,
                      Resource      => Terrain_Resource.Resource,
                      Accessibility => Harriet.Random.Unit_Random,
                      Abundance     =>
@@ -192,13 +192,13 @@ package body Harriet.Configure.Worlds is
 
             for Point of Surface.Tile_Boundary (Tile_Index) loop
                Harriet.Db.Sector_Vertex.Create
-                 (Sector        => Sector.Reference,
+                 (Sector        => Sector.Get_Sector_Reference,
                   X             => Point (1),
                   Y             => Point (2),
                   Z             => Point (3));
             end loop;
 
-            Tile_Refs (Tile_Index) := Sector.Reference;
+            Tile_Refs (Tile_Index) := Sector.Get_Sector_Reference;
          end;
       end loop;
 

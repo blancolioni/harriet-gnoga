@@ -64,7 +64,7 @@ package body Harriet.UI.Models.Star_System is
 
                Model.Vector.Append
                  (World_Record'
-                    (Reference       => Rec.Reference,
+                    (Reference       => Rec.Get_World_Reference,
                      Name            => +Rec.Name,
                      Category        => Rec.Category,
                      Climate         => Rec.Climate,
