@@ -27,7 +27,18 @@ package Harriet.UI.Views.Toolbar is
       Layout          : Toolbar_Item_Layout := Default_Layout)
       return Toolbar_Item;
 
---     function Localised_Label_Item
+   function Toggle_Button_Item
+     (Session         : Harriet.Sessions.Harriet_Session;
+      Base_Class      : String;
+      False_Class     : String;
+      True_Class      : String;
+      False_Command   : String;
+      True_Command    : String;
+      Start_State     : Boolean;
+      Layout          : Toolbar_Item_Layout := Default_Layout)
+      return Toolbar_Item;
+
+   --     function Localised_Label_Item
 --       (Key    : String;
 --        Layout : Toolbar_Item_Layout := Default_Layout)
 --        return Toolbar_Item;

@@ -8,6 +8,7 @@ with Gnoga.Gui.View;
 with Harriet.UI.Views.Model_Views;
 
 with Harriet.UI.Views.Toolbar.Localised_Button;
+with Harriet.UI.Views.Toolbar.Toggle_Command_Button;
 
 package body Harriet.UI.Views.Toolbar is
 
@@ -127,6 +128,33 @@ package body Harriet.UI.Views.Toolbar is
    begin
       null;
    end Render;
+
+   ------------------------
+   -- Toggle_Button_Item --
+   ------------------------
+
+   function Toggle_Button_Item
+     (Session         : Harriet.Sessions.Harriet_Session;
+      Base_Class      : String;
+      False_Class     : String;
+      True_Class      : String;
+      False_Command   : String;
+      True_Command    : String;
+      Start_State     : Boolean;
+      Layout          : Toolbar_Item_Layout := Default_Layout)
+      return Toolbar_Item
+   is
+   begin
+      return Harriet.UI.Views.Toolbar.Toggle_Command_Button.Create
+        (Session       => Session,
+         Base_Class    => Base_Class,
+         False_Class   => False_Class,
+         True_Class    => True_Class,
+         False_Command => False_Command,
+         True_Command  => True_Command,
+         Start_State   => Start_State,
+         Layout        => Layout);
+   end Toggle_Button_Item;
 
    ------------------
    -- Toolbar_View --

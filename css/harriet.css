@@ -127,3 +127,60 @@ table.darkTable tfoot td {
 #galaxy-canvas {
     border: 1px solid white;
 }
+
+.button-container {
+    background-color: #aaa;
+    border-radius: 3px;
+    border: 2px solid black;
+}
+
+:root {
+    --color: #333;
+    --hover-color: lighten(var(--color), 10%);
+    --width: 24px;
+    --pause-width: 8px;
+    --half-width: 12px;
+    --transition-speed: 200ms;
+}
+
+.playpause {
+  width: var(--width);
+  height: var(--width);
+  box-sizing: border-box;
+  transition: border 200ms;
+  
+  border-top: 0 solid transparent;
+  border-right: 0 solid transparent;
+  border-bottom: 0 solid transparent;
+  border-left: 0 solid transparent;
+}
+
+.playpause.play {
+  border-top-width: var(--half-width);
+  border-top-color: transparent;
+  border-right: 0 solid transparent;
+  border-bottom-width: var(--half-width);
+  border-bottom-color: transparent;
+  border-left-width: var(--width);
+  border-left-color: var(--color);
+}
+
+
+.playpause.play:hover {
+    border-left-color: var(--hover-color);
+}
+
+.playpause.pause {
+  border-top: 0 solid transparent;
+  border-right-width: var(--pause-width);
+  border-right-color:  var(--color);
+  border-bottom: 0 solid transparent;
+  border-left-width: var(--pause-width);
+  border-left-color: var(--color);
+}
+
+.playpause.pause:hover {
+    border-right-color: var(--hover-color);    
+    border-left-color: var(--hover-color);
+}
+

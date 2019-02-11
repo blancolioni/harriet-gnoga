@@ -15,4 +15,12 @@ package Harriet.Updates.Control is
       Paused             : out Boolean;
       Advance_Per_Second : out Duration);
 
+   function Is_Paused return Boolean;
+   function Is_Active return Boolean;
+
+private
+
+   function Is_Active return Boolean
+   is (not Is_Paused);
+
 end Harriet.Updates.Control;

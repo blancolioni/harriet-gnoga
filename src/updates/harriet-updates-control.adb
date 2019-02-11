@@ -18,6 +18,18 @@ package body Harriet.Updates.Control is
       Update_Task.Current_State (Paused, Advance_Per_Second);
    end Get_Status;
 
+   ---------------
+   -- Is_Paused --
+   ---------------
+
+   function Is_Paused return Boolean is
+      Paused             : Boolean;
+      Advance_Per_Second : Duration;
+   begin
+      Update_Task.Current_State (Paused, Advance_Per_Second);
+      return Paused;
+   end Is_Paused;
+
    -------------------
    -- Pause_Updates --
    -------------------
