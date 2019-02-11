@@ -330,16 +330,29 @@ package body Harriet.UI.Views.Dashboard is
 --        Exec_Item    : constant Toolbar_Item :=
 --                         Text_Entry_Item (Exec_Command);
       Stop_Item    : constant Toolbar_Item :=
-                       Localised_Button_Item
-                         (Session         => View.Session,
-                          Key             => "stop-server",
-                          Command         => Exec_Command,
-                          Activation_Text => "stop-server");
+                         Localised_Button_Item
+                           (Session         => View.Session,
+                            Key             => "stop-server",
+                            Command         => Exec_Command,
+                            Activation_Text => "stop-server");
+      Pause_Item     : constant Toolbar_Item :=
+                         Localised_Button_Item
+                           (Session         => View.Session,
+                            Key             => "pause-server",
+                            Command         => Exec_Command,
+                            Activation_Text => "pause");
+      Resume_Item    : constant Toolbar_Item :=
+                         Localised_Button_Item
+                           (Session         => View.Session,
+                            Key             => "resume-server",
+                            Command         => Exec_Command,
+                            Activation_Text => "resume");
       Clock_Item   : constant Toolbar_Item :=
                        Clock.Create (View.Session);
    begin
       View.Top_Toolbar :=
-        Toolbar_View (Model, (Stop_Item, Clock_Item));
+        Toolbar_View (Model, (Pause_Item, Resume_Item,
+                      Stop_Item, Clock_Item));
       View.Top_Toolbar.Create (View.Session, Gnoga_View.all, "top-toolbar");
       Gnoga_View.Top_Dock (View.Top_Toolbar.Gnoga_View);
    end Create_Toolbar;

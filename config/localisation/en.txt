@@ -2,6 +2,8 @@ login-name,Login
 password,Password
 login,Login
 stop-server,Stop Server
+pause-server,Pause Server
+resume-server,Resume Server
 command-name,Command
 galaxy-map,Galaxy Map
 name,Name
