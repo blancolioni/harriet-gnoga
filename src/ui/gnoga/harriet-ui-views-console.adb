@@ -134,9 +134,15 @@ package body Harriet.UI.Views.Console is
       Writer  : Text_Output_Writer;
    begin
       Writer.Item := View.View;
-      Writer.Item.Console_Text.Put_Line
-        (View.View.Session.Current_Context.Name & "> "
-         & View.View.Command_Text.Value);
+      Writer.Item.Console_Text.Put_HTML ("<span>");
+      Writer.Item.Console_Text.Put
+        (View.View.Session.Current_Context.Name & "> ",
+         Class => "console-prompt-text");
+      Writer.Item.Console_Text.Put
+        (View.View.Command_Text.Value,
+         Class => "console-command-text");
+      Writer.Item.Console_Text.Put_HTML ("</span>");
+      Writer.Item.Console_Text.New_Line;
       Harriet.Commands.Execute_Command_Line
         (Line    => View.View.Command_Text.Value,
          Session => View.View.Session,
@@ -155,15 +161,20 @@ package body Harriet.UI.Views.Console is
       Text   : String)
    is
    begin
-      Writer.Item.Console_Text.Put (Text);
+      Writer.Item.Console_Text.Put (Text, Class => "console-output");
    end Put;
+
+   ---------------
+   -- Put_Error --
+   ---------------
 
    overriding procedure Put_Error
      (Writer  : Text_Output_Writer;
       Message : String)
    is
    begin
-      Writer.Item.Console_Text.Put_Line (Message);
+      Writer.Item.Console_Text.Put_Line
+        (Message, Class => "console-error-text");
    end Put_Error;
 
 end Harriet.UI.Views.Console;

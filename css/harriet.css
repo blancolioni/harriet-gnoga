@@ -156,6 +156,20 @@ table.darkTable tfoot td {
     width: 200px;
 }
 
+.console-command-text {
+    color: white;
+    font-weight: bold;
+}
+
+.console-prompt-text {
+    color: green;
+}
+
+.console-error-text {
+    color: red;
+    font-weight: bold;
+}
+    
 :root {
     --color: #333;
     --hover-color: lighten(var(--color), 10%);
