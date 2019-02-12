@@ -22,6 +22,7 @@ body {
 #top-toolbar {
     background-color: rgba(42,127,189,120);
     min-height: 40px;
+    display: flex;
 }
 
 #login-text, #password-text {
@@ -173,9 +174,9 @@ table.darkTable tfoot td {
 :root {
     --color: #333;
     --hover-color: lighten(var(--color), 10%);
-    --width: 24px;
-    --pause-width: 8px;
-    --half-width: 12px;
+    --width: 36px;
+    --pause-width: 12px;
+    --half-width: 18px;
     --transition-speed: 200ms;
 }
 
