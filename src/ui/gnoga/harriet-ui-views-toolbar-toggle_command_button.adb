@@ -57,7 +57,6 @@ package body Harriet.UI.Views.Toolbar.Toggle_Command_Button is
    begin
       Item.Button.Toolbar_Item := Item;
       return Toolbar_Item (Item);
-
    end Create;
 
    ---------------------

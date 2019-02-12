@@ -8,6 +8,7 @@ with Gnoga.Gui.View;
 with Harriet.UI.Views.Model_Views;
 
 with Harriet.UI.Views.Toolbar.Localised_Button;
+with Harriet.UI.Views.Toolbar.Text_Entry;
 with Harriet.UI.Views.Toolbar.Toggle_Command_Button;
 
 package body Harriet.UI.Views.Toolbar is
@@ -128,6 +129,23 @@ package body Harriet.UI.Views.Toolbar is
    begin
       null;
    end Render;
+
+   ---------------------
+   -- Text_Entry_Item --
+   ---------------------
+
+   function Text_Entry_Item
+     (Session : Harriet.Sessions.Harriet_Session;
+      Command : Harriet.UI.Models.Commands.Command_Type;
+      Layout  : Toolbar_Item_Layout := Default_Layout)
+      return Toolbar_Item
+   is
+   begin
+      return Harriet.UI.Views.Toolbar.Text_Entry.Create
+        (Session => Session,
+         Command => Command,
+         Layout  => Layout);
+   end Text_Entry_Item;
 
    ------------------------
    -- Toggle_Button_Item --

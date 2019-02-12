@@ -48,10 +48,12 @@ package Harriet.UI.Views.Toolbar is
 --        Layout : Toolbar_Item_Layout := Default_Layout)
 --        return Toolbar_Item;
 --
---     function Text_Entry_Item
---       (Command : Harriet.UI.Models.Commands.Command_Type;
---        Layout  : Toolbar_Item_Layout := Default_Layout)
---        return Toolbar_Item;
+
+   function Text_Entry_Item
+     (Session : Harriet.Sessions.Harriet_Session;
+      Command : Harriet.UI.Models.Commands.Command_Type;
+      Layout  : Toolbar_Item_Layout := Default_Layout)
+      return Toolbar_Item;
 
    function Toolbar_View
      (Model : not null access

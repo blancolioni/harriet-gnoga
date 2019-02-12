@@ -345,11 +345,15 @@ package body Harriet.UI.Views.Dashboard is
                                  True_Command  => "pause",
                                  Start_State   => True);
       Clock_Item   : constant Toolbar_Item :=
-                       Clock.Create (View.Session);
+                              Clock.Create (View.Session);
+      Command_Item        : constant Toolbar_Item :=
+                              Text_Entry_Item
+                                (Session => View.Session,
+                                 Command => Exec_Command);
    begin
       View.Top_Toolbar :=
         Toolbar_View (Model, (Pause_Resume_Item,
-                      Stop_Item, Clock_Item));
+                      Stop_Item, Clock_Item, Command_Item));
       View.Top_Toolbar.Create (View.Session, Gnoga_View.all, "top-toolbar");
       Gnoga_View.Top_Dock (View.Top_Toolbar.Gnoga_View);
    end Create_Toolbar;

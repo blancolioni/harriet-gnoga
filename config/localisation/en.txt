@@ -1,16 +1,17 @@
-login-name,Login
-password,Password
+category,Category
+climate,Climate
+command-name,Command
+earth-mass,Mass
+earth-radius,Radius
+execute-command,Execute
+g,Surface g
+galaxy-map,Galaxy Map
+lh2,LH₂
 login,Login
-stop-server,Stop Server
+login-name,Login
+name,Name
+password,Password
 pause-server,Pause Server
 resume-server,▶
-command-name,Command
-galaxy-map,Galaxy Map
-name,Name
-earth-radius,Radius
-earth-mass,Mass
-g,Surface g
+stop-server,Stop Server
 temperature,Temperature
-climate,Climate
-category,Category
-lh2,LH₂

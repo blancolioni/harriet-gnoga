@@ -189,10 +189,13 @@ package body Harriet.Sessions is
             Main_View.Gnoga_View.On_Destroy_Handler
               (On_Main_View_Destroyed'Access);
             Main_View.Gnoga_View.Focus;
-            Harriet.Commands.Execute_Command_Line
-              ("load-galaxy-view",
-               Harriet.Sessions.Harriet_Session (Session),
-               Harriet.Commands.Null_Writer);
+
+            if False then
+               Harriet.Commands.Execute_Command_Line
+                 ("load-galaxy-view",
+                  Harriet.Sessions.Harriet_Session (Session),
+                  Harriet.Commands.Null_Writer);
+            end if;
          end;
       end if;
 
