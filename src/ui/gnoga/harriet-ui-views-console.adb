@@ -134,11 +134,14 @@ package body Harriet.UI.Views.Console is
       Writer  : Text_Output_Writer;
    begin
       Writer.Item := View.View;
-      Writer.Item.Console_Text.Put_Line (View.View.Command_Text.Value);
+      Writer.Item.Console_Text.Put_Line
+        (View.View.Session.Current_Context.Name & "> "
+         & View.View.Command_Text.Value);
       Harriet.Commands.Execute_Command_Line
         (Line    => View.View.Command_Text.Value,
          Session => View.View.Session,
          Writer  => Writer);
+      Writer.Item.Console_Text.Scroll_Top (Natural'Last);
       Writer.Item.Command_Text.Value ("");
       Writer.Item.Console_Prompt.Text (View.View.Session.Current_Context.Name);
    end On_Submit;

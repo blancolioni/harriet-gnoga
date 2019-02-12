@@ -143,6 +143,7 @@ table.darkTable tfoot td {
     font: 14pt "Courier New";
     color: #bbb;
     height: 100%;
+    overflow: auto;
 }
 
 .console-prompt {
