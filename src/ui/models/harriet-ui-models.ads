@@ -15,6 +15,10 @@ package Harriet.UI.Models is
       return String
       is abstract;
 
+   procedure Update
+     (Model : in out Root_Harriet_Model)
+   is null;
+
    procedure Add_Watcher
      (Model   : in out Root_Harriet_Model'Class;
       Watcher : not null access Model_Watcher'Class);

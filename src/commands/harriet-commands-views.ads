@@ -11,6 +11,7 @@ private
 
    function Create_View
      (Command   : Load_View_Command;
+      Session   : Harriet.Sessions.Harriet_Session;
       Arguments : Argument_List)
       return Harriet.UI.Views.View_Type
       is abstract;

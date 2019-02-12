@@ -36,6 +36,17 @@ package body Harriet.UI.Models.Tables is
       return Table.Rows.Last_Index;
    end Add_Row;
 
+   ----------------
+   -- Clear_Rows --
+   ----------------
+
+   procedure Clear_Rows
+     (Table : in out Root_Table_Model'Class)
+   is
+   begin
+      Table.Rows.Clear;
+   end Clear_Rows;
+
    -----------------
    -- Column_Name --
    -----------------

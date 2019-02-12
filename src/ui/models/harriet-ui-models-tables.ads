@@ -28,6 +28,9 @@ package Harriet.UI.Models.Tables is
      (Model : Root_Table_Model)
       return String;
 
+   procedure Clear_Rows
+     (Table : in out Root_Table_Model'Class);
+
    function Row_Count
      (Table : Root_Table_Model'Class)
       return Table_Row_Count;

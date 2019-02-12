@@ -1,6 +1,7 @@
 with Harriet.Star_Systems;
 
 with Harriet.UI.Models.Galaxy;
+with Harriet.UI.Models.Market;
 with Harriet.UI.Models.Star_System;
 with Harriet.UI.Models.World;
 
@@ -12,6 +13,7 @@ with Harriet.UI.Views.World;
 with Harriet.UI.Views.Tables;
 
 with Harriet.Db;
+with Harriet.Db.Market;
 with Harriet.Db.World;
 
 package body Harriet.Commands.Views is
@@ -21,6 +23,7 @@ package body Harriet.Commands.Views is
 
    overriding function Create_View
      (Command   : Load_Galaxy_Command;
+      Session   : Harriet.Sessions.Harriet_Session;
       Arguments : Argument_List)
       return Harriet.UI.Views.View_Type;
 
@@ -29,6 +32,7 @@ package body Harriet.Commands.Views is
 
    overriding function Create_View
      (Command   : Load_Star_System_Command;
+      Session   : Harriet.Sessions.Harriet_Session;
       Arguments : Argument_List)
       return Harriet.UI.Views.View_Type;
 
@@ -37,6 +41,16 @@ package body Harriet.Commands.Views is
 
    overriding function Create_View
      (Command   : Load_World_Command;
+      Session   : Harriet.Sessions.Harriet_Session;
+      Arguments : Argument_List)
+      return Harriet.UI.Views.View_Type;
+
+   type Load_Market_Command is
+     new Load_View_Command with null record;
+
+   overriding function Create_View
+     (Command   : Load_Market_Command;
+      Session   : Harriet.Sessions.Harriet_Session;
       Arguments : Argument_List)
       return Harriet.UI.Views.View_Type;
 
@@ -45,6 +59,7 @@ package body Harriet.Commands.Views is
 
    overriding function Create_View
      (Command   : Console_View_Command;
+      Session   : Harriet.Sessions.Harriet_Session;
       Arguments : Argument_List)
       return Harriet.UI.Views.View_Type;
 
@@ -54,10 +69,11 @@ package body Harriet.Commands.Views is
 
    overriding function Create_View
      (Command   : Load_Galaxy_Command;
+      Session   : Harriet.Sessions.Harriet_Session;
       Arguments : Argument_List)
       return Harriet.UI.Views.View_Type
    is
-      pragma Unreferenced (Command);
+      pragma Unreferenced (Command, Session);
    begin
       if Contains (Arguments, "table") then
          return Harriet.UI.Views.Tables.Create_Table_View
@@ -74,10 +90,11 @@ package body Harriet.Commands.Views is
 
    overriding function Create_View
      (Command   : Load_Star_System_Command;
+      Session   : Harriet.Sessions.Harriet_Session;
       Arguments : Argument_List)
       return Harriet.UI.Views.View_Type
    is
-      pragma Unreferenced (Command);
+      pragma Unreferenced (Command, Session);
    begin
       if not Contains (Arguments, "name") then
          return null;
@@ -109,10 +126,11 @@ package body Harriet.Commands.Views is
 
    overriding function Create_View
      (Command   : Load_World_Command;
+      Session   : Harriet.Sessions.Harriet_Session;
       Arguments : Argument_List)
       return Harriet.UI.Views.View_Type
    is
-      pragma Unreferenced (Command);
+      pragma Unreferenced (Command, Session);
    begin
       if not Contains (Arguments, "star-system-name")
         or else not Contains (Arguments, "world-number")
@@ -167,11 +185,56 @@ package body Harriet.Commands.Views is
    -----------------
 
    overriding function Create_View
-     (Command   : Console_View_Command;
+     (Command   : Load_Market_Command;
+      Session   : Harriet.Sessions.Harriet_Session;
       Arguments : Argument_List)
       return Harriet.UI.Views.View_Type
    is
-      pragma Unreferenced (Command, Arguments);
+      pragma Unreferenced (Command);
+   begin
+      if Argument_Count (Arguments) = 1 then
+         declare
+            use Harriet.Db;
+            World : constant Harriet.Db.World_Reference :=
+                      Harriet.Db.World.First_Reference_By_Name
+                        (Argument (Arguments, 1));
+            Market : constant Harriet.Db.Market_Reference :=
+                       (if World = Null_World_Reference
+                        then Null_Market_Reference
+                        else Harriet.Db.Market.Get_Reference_By_World
+                          (World));
+
+         begin
+            if World = Null_World_Reference
+              or else Market = Null_Market_Reference
+            then
+               return null;
+            end if;
+
+            declare
+               Model : constant Harriet.UI.Models.Market.Market_Model :=
+                         Harriet.UI.Models.Market.Create
+                           (Session, Market);
+            begin
+               return Harriet.UI.Views.Tables.Create_Table_View (Model);
+            end;
+         end;
+      else
+         return null;
+      end if;
+   end Create_View;
+
+   -----------------
+   -- Create_View --
+   -----------------
+
+   overriding function Create_View
+     (Command   : Console_View_Command;
+      Session   : Harriet.Sessions.Harriet_Session;
+      Arguments : Argument_List)
+      return Harriet.UI.Views.View_Type
+   is
+      pragma Unreferenced (Command, Arguments, Session);
    begin
       return Harriet.UI.Views.Console.Console_View;
    end Create_View;
@@ -184,11 +247,13 @@ package body Harriet.Commands.Views is
       Load_Galaxy      : Load_Galaxy_Command;
       Load_Star_System : Load_Star_System_Command;
       Load_World       : Load_World_Command;
+      Load_Market      : Load_Market_Command;
       Console          : Console_View_Command;
    begin
       Register ("load-galaxy-view", Load_Galaxy);
       Register ("load-star-system-view", Load_Star_System);
       Register ("load-world-view", Load_World);
+      Register ("show-market", Load_Market);
       Register ("console", Console);
    end Load_View_Commands;
 
@@ -204,7 +269,8 @@ package body Harriet.Commands.Views is
    is
       use Harriet.UI.Views;
       View : constant View_Type :=
-               Load_View_Command'Class (Command).Create_View (Arguments);
+               Load_View_Command'Class (Command)
+               .Create_View (Session, Arguments);
    begin
       if View = null then
          Writer.Put_Error
