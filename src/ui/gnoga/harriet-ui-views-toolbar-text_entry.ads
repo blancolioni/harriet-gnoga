@@ -1,3 +1,4 @@
+private with Gnoga.Gui.Element.Common;
 private with Gnoga.Gui.Element.Form;
 
 with Harriet.Sessions;
@@ -27,6 +28,7 @@ private
          Text_Entry_Item : Text_Entry_Access;
          Input           : Gnoga.Gui.Element.Form.Text_Type;
          Button          : Gnoga.Gui.Element.Form.Submit_Button_Type;
+         Output          : Gnoga.Gui.Element.Common.DIV_Type;
       end record;
 
    type Root_Text_Entry is

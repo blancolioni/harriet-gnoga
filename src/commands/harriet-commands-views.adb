@@ -4,6 +4,7 @@ with Harriet.UI.Models.Galaxy;
 with Harriet.UI.Models.Star_System;
 with Harriet.UI.Models.World;
 
+with Harriet.UI.Views.Console;
 with Harriet.UI.Views.Galaxy;
 with Harriet.UI.Views.Star_System;
 with Harriet.UI.Views.World;
@@ -36,6 +37,14 @@ package body Harriet.Commands.Views is
 
    overriding function Create_View
      (Command   : Load_World_Command;
+      Arguments : Argument_List)
+      return Harriet.UI.Views.View_Type;
+
+   type Console_View_Command is
+     new Load_View_Command with null record;
+
+   overriding function Create_View
+     (Command   : Console_View_Command;
       Arguments : Argument_List)
       return Harriet.UI.Views.View_Type;
 
@@ -153,6 +162,20 @@ package body Harriet.Commands.Views is
 
    end Create_View;
 
+   -----------------
+   -- Create_View --
+   -----------------
+
+   overriding function Create_View
+     (Command   : Console_View_Command;
+      Arguments : Argument_List)
+      return Harriet.UI.Views.View_Type
+   is
+      pragma Unreferenced (Command, Arguments);
+   begin
+      return Harriet.UI.Views.Console.Console_View;
+   end Create_View;
+
    ------------------------
    -- Load_View_Commands --
    ------------------------
@@ -161,10 +184,12 @@ package body Harriet.Commands.Views is
       Load_Galaxy      : Load_Galaxy_Command;
       Load_Star_System : Load_Star_System_Command;
       Load_World       : Load_World_Command;
+      Console          : Console_View_Command;
    begin
       Register ("load-galaxy-view", Load_Galaxy);
       Register ("load-star-system-view", Load_Star_System);
       Register ("load-world-view", Load_World);
+      Register ("console", Console);
    end Load_View_Commands;
 
    -------------

@@ -134,6 +134,27 @@ table.darkTable tfoot td {
     border: 2px solid black;
 }
 
+.console-form {
+    height: calc(100% - 40px);
+}
+
+.console-output {
+    background-color: black;
+    font: 14pt "Courier New";
+    color: #bbb;
+    height: 100%;
+}
+
+.console-prompt {
+    background-color: black;
+    font: 14pt "Courier New";
+    color: #bbb;
+}
+
+.console-command {
+    width: 200px;
+}
+
 :root {
     --color: #333;
     --hover-color: lighten(var(--color), 10%);

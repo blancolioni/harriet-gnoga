@@ -1,6 +1,25 @@
 with WL.Localisation;
 
+with Harriet.Commands;
+
 package body Harriet.UI.Views.Toolbar.Text_Entry is
+
+   type Text_Output_Writer is
+     new Harriet.Commands.Writer_Interface with
+      record
+         Item : Text_Entry_Access;
+      end record;
+
+   overriding procedure Put
+     (Writer : Text_Output_Writer;
+      Text   : String);
+
+   overriding procedure New_Line
+     (Writer : Text_Output_Writer);
+
+   overriding procedure Put_Error
+     (Writer  : Text_Output_Writer;
+      Message : String);
 
    procedure On_Form_Submit
      (Object : in out Gnoga.Gui.Base.Base_Type'Class);
@@ -18,6 +37,8 @@ package body Harriet.UI.Views.Toolbar.Text_Entry is
       Item.Text_Entry.Input.Create (Item.Text_Entry);
       Item.Text_Entry.Button.Create
         (Item.Text_Entry,  WL.Localisation.Local_Text ("execute-command"));
+      Item.Text_Entry.Output.Create (Item.Text_Entry);
+      Item.Text_Entry.Output.Class_Name ("toolbar-text-entry-output");
       Item.Text_Entry.On_Submit_Handler (On_Form_Submit'Access);
    end Attach;
 
@@ -41,6 +62,17 @@ package body Harriet.UI.Views.Toolbar.Text_Entry is
       return Toolbar_Item (Item);
    end Create;
 
+   --------------
+   -- New_Line --
+   --------------
+
+   overriding procedure New_Line
+     (Writer : Text_Output_Writer)
+   is
+   begin
+      Writer.Item.Text_Entry.Output.New_Line;
+   end New_Line;
+
    --------------------
    -- On_Form_Submit --
    --------------------
@@ -51,11 +83,42 @@ package body Harriet.UI.Views.Toolbar.Text_Entry is
       Gnoga_Item : Gnoga_Text_Entry renames Gnoga_Text_Entry (Object);
    begin
       if Gnoga_Item.Input.Value /= "" then
-         Gnoga_Item.Text_Entry_Item.Command.On_Activated
-           (Session => Gnoga_Item.Text_Entry_Item.Session,
-            Value   => Gnoga_Item.Input.Value);
-         Gnoga_Item.Input.Value ("");
+         declare
+            Writer : Text_Output_Writer;
+         begin
+            Writer.Item := Gnoga_Item.Text_Entry_Item;
+            Writer.Item.Text_Entry.Output.Text ("");
+            Harriet.Commands.Execute_Command_Line
+              (Line    => Gnoga_Item.Input.Value,
+               Session => Gnoga_Item.Text_Entry_Item.Session,
+               Writer  => Writer);
+            Gnoga_Item.Input.Value ("");
+         end;
       end if;
    end On_Form_Submit;
+
+   ---------
+   -- Put --
+   ---------
+
+   overriding procedure Put
+     (Writer : Text_Output_Writer;
+      Text   : String)
+   is
+   begin
+      Writer.Item.Text_Entry.Output.Put (Text);
+   end Put;
+
+   ---------------
+   -- Put_Error --
+   ---------------
+
+   overriding procedure Put_Error
+     (Writer  : Text_Output_Writer;
+      Message : String)
+   is
+   begin
+      Writer.Item.Text_Entry.Output.Put_Line (Message, "error-text");
+   end Put_Error;
 
 end Harriet.UI.Views.Toolbar.Text_Entry;
