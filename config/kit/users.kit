@@ -1,3 +1,5 @@
+with Names;
+
 package Harriet.Users is
 
 record User is
@@ -13,5 +15,17 @@ record Has_Permission is
    Write  : Boolean;
    Delete : Boolean;
 end Has_Permission;
+
+record Script : Has_Name is
+   key User;
+   unique key User_Name with User, Name;
+end Script;
+
+record Script_Line is
+   Script;
+   Index   : Positive;
+   Line    : String (100);
+   unique key Script_Line with Script, Index;
+end Script_Line;
 
 end Harriet.Users;

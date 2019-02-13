@@ -37,6 +37,26 @@ package body Harriet.UI.Views.Picture is
       Picture.Commands.Append (Command);
    end Add;
 
+   ------------------------
+   -- Add_Image_Resource --
+   ------------------------
+
+   procedure Add_Image_Resource
+     (Picture : in out Root_Picture_View'Class;
+      Name    : String;
+      Path    : String)
+   is
+      use Gnoga.Gui.Element.Common;
+      Img : constant Pointer_To_IMG_Class :=
+              new IMG_Type;
+   begin
+      Img.Create
+        (Parent           => Picture.Gnoga_View.all,
+         URL_Source       => Path);
+      Img.Display ("none");
+      Picture.Resources.Insert (Name, Img);
+   end Add_Image_Resource;
+
    ----------------------
    -- Background_Color --
    ----------------------
@@ -179,6 +199,23 @@ package body Harriet.UI.Views.Picture is
       Picture.Add
         ((Set_Font, To_Unbounded_String (Family), Size, Bold, Italic));
    end Font;
+
+   -----------
+   -- Image --
+   -----------
+
+   procedure Image
+     (Picture       : in out Root_Picture_View'Class;
+      Resource_Name : String;
+      Center        : Point_Type;
+      Width, Height : Natural)
+   is
+      use Ada.Strings.Unbounded;
+   begin
+      Picture.Move_To (Center);
+      Picture.Add
+        ((Draw_Image, Width, Height, To_Unbounded_String (Resource_Name)));
+   end Image;
 
    -----------
    -- Label --
@@ -674,6 +711,25 @@ package body Harriet.UI.Views.Picture is
                end if;
 
                Current_Position := Command.Polygon.Last_Element;
+
+            when Draw_Image =>
+               Check_Path;
+               Check_Lines;
+
+               declare
+                  use Gnoga.Gui.Element.Common;
+                  Img : constant Pointer_To_IMG_Class :=
+                          View.Resources.Element
+                            (To_String (Command.Image_Name));
+                  W   : constant Natural := Command.Image_Width;
+                  H   : constant Natural := Command.Image_Height;
+                  X   : constant Integer :=
+                          To_Screen_X (Current_Position.X) - W / 2;
+                  Y   : constant Integer :=
+                          To_Screen_Y (Current_Position.Y) - H / 2;
+               begin
+                  Context.Draw_Image (Img.all, X, Y, W, H);
+               end;
 
             when Move_To =>
                if Command.Relative then

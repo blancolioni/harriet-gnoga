@@ -15,6 +15,8 @@ with Harriet.Db;
 
 package body Harriet.UI.Views.World is
 
+   Orbiting_Ship_Resource_Name : constant String := "orbiting-ship";
+
    package Base_View is
      new Harriet.UI.Views.Model_Views
        (Base_View_Type  =>
@@ -124,6 +126,10 @@ package body Harriet.UI.Views.World is
               Data    => Data);
       end;
 
+      Picture_View.Add_Image_Resource
+        (Name => Orbiting_Ship_Resource_Name,
+         Path => "img/icons/spaceship-icon.png");
+
       View.Queue_Render;
 
    end Create;
@@ -217,9 +223,8 @@ package body Harriet.UI.Views.World is
 
                begin
                   if X not in -1.0 .. 1.0 or else Z > 0.0 then
-                     View.Fill_Color
-                       (Harriet.Factions.Get (Ship.Owner).Color);
-                     View.Circle ((X, Y), 0.02, True);
+                     View.Image
+                       (Orbiting_Ship_Resource_Name, (X, Y), 32, 32);
                   end if;
                end;
             end loop;

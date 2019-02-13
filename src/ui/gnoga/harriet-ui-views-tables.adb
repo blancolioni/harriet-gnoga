@@ -20,6 +20,9 @@ package body Harriet.UI.Views.Tables is
          Headings_Down : Boolean;
       end record;
 
+   overriding procedure Model_Changed
+     (View : in out Root_Table_View);
+
    type Table_View_Access is access all Root_Table_View'Class;
 
    overriding procedure Create
@@ -161,5 +164,16 @@ package body Harriet.UI.Views.Tables is
       end if;
 
    end Load_Table;
+
+   -------------------
+   -- Model_Changed --
+   -------------------
+
+   overriding procedure Model_Changed
+     (View : in out Root_Table_View)
+   is
+   begin
+      View.Load_Table;
+   end Model_Changed;
 
 end Harriet.UI.Views.Tables;

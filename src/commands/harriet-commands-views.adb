@@ -132,8 +132,9 @@ package body Harriet.Commands.Views is
    is
       pragma Unreferenced (Command, Session);
    begin
-      if not Contains (Arguments, "star-system-name")
-        or else not Contains (Arguments, "world-number")
+      if (not Contains (Arguments, "star-system-name")
+          or else not Contains (Arguments, "world-number"))
+        and then not Contains (Arguments, "world-name")
       then
          return null;
       end if;
@@ -141,28 +142,37 @@ package body Harriet.Commands.Views is
       declare
          use Harriet.Db;
          Star_System  : constant Star_System_Reference :=
-                          Harriet.Star_Systems.Find_Exact
-                            (Argument (Arguments, "star-system-name"));
-         Reference    : World_Reference := Null_World_Reference;
-         World_Number : constant Positive :=
+                          (if Contains (Arguments, "star-system-name")
+                           then Harriet.Star_Systems.Find_Exact
+                             (Argument (Arguments, "star-system-name"))
+                           else Null_Star_System_Reference);
+         World_Number : constant Natural :=
                           Positive'Value
-                            (Argument (Arguments, "world-number"));
+                            (Argument (Arguments, "world-number", "0"));
+         World_Name   : constant String :=
+                          Argument (Arguments, "world-name", "");
+         Reference    : World_Reference := Null_World_Reference;
          Index        : Natural := 0;
       begin
 
-         if Star_System = Null_Star_System_Reference then
-            return null;
-         end if;
-
-         for World of
-           Harriet.Db.World.Select_By_Star_System (Star_System)
-         loop
-            Index := Index + 1;
-            if Index = World_Number then
-               Reference := World.Get_World_Reference;
-               exit;
+         if World_Name /= "" then
+            Reference :=
+              Harriet.Db.World.First_Reference_By_Name (World_Name);
+         else
+            if Star_System = Null_Star_System_Reference then
+               return null;
             end if;
-         end loop;
+
+            for World of
+              Harriet.Db.World.Select_By_Star_System (Star_System)
+            loop
+               Index := Index + 1;
+               if Index = World_Number then
+                  Reference := World.Get_World_Reference;
+                  exit;
+               end if;
+            end loop;
+         end if;
 
          if Reference = Null_World_Reference then
             return null;

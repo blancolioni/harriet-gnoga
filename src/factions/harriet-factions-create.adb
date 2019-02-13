@@ -30,6 +30,8 @@ with Harriet.Db.Pop_Group;
 with Harriet.Db.Pop_Group_Needs;
 with Harriet.Db.Resource;
 with Harriet.Db.Resource_Generator;
+with Harriet.Db.Script;
+with Harriet.Db.Script_Line;
 with Harriet.Db.Ship_Design;
 with Harriet.Db.Star_System_Distance;
 with Harriet.Db.World;
@@ -217,8 +219,26 @@ package body Harriet.Factions.Create is
                         User          => User,
                         Capital_System =>
                           Harriet.Worlds.Star_System (Capital),
-                        Capital_World => Capital);
+                        Capital_World  => Capital);
+
+         Script     : constant Harriet.Db.Script_Reference :=
+                        Harriet.Db.Script.Create ("rc", User);
+         Line_Index : Natural := 0;
+
       begin
+
+         if not Setup.Contains ("init-script") then
+            Ada.Text_IO.Put_Line
+              ("warning: no initial script in " & Setup.Config_Name);
+         end if;
+
+         for Command of Setup.Child ("init-script") loop
+            Line_Index := Line_Index + 1;
+            Harriet.Db.Script_Line.Create
+              (Script => Script,
+               Index  => Line_Index,
+               Line   => Command.Config_Name);
+         end loop;
 
          Harriet.Db.World.Get (Capital).Set_Owner
            (Harriet.Db.Faction.Get (Faction).Get_Owner_Reference);

@@ -7,6 +7,7 @@ private with Gnoga.Gui.View;
 with Gnoga.Gui.Window;
 
 private with WL.Guids;
+private with WL.String_Maps;
 
 limited with Harriet.UI.Views;
 
@@ -83,6 +84,17 @@ package Harriet.Sessions is
      (Session : in out Root_Harriet_Session'Class;
       Context : Harriet.Contexts.Context_Path);
 
+   function Environment_Value
+     (Session : Root_Harriet_Session'Class;
+      Name    : String;
+      Default : String := "")
+      return String;
+
+   procedure Set_Environment_Value
+     (Session : in out Root_Harriet_Session'Class;
+      Name    : String;
+      Value   : String);
+
    type Harriet_Session is access all Root_Harriet_Session'Class;
 
    function New_Gnoga_Session return Harriet_Session;
@@ -108,6 +120,9 @@ private
      new Ada.Containers.Indefinite_Holders
        (Harriet.Contexts.Context_Type, Harriet.Contexts."=");
 
+   package Environment_Maps is
+     new WL.String_Maps (String);
+
    type Root_Harriet_Session is
      new Gnoga.Types.Connection_Data_Type
      and Harriet.Signals.Signaler with
@@ -125,6 +140,7 @@ private
          Active_View   : View_Access;
          Views         : View_Lists.List;
          Dispatcher    : Harriet.Signals.Signal_Dispatcher;
+         Environment   : Environment_Maps.Map;
       end record;
 
    function Administrator
@@ -155,5 +171,14 @@ private
    function Find_Session
      (Gnoga_View : Gnoga.Gui.View.Pointer_To_View_Base_Class)
       return Harriet_Session;
+
+   function Environment_Value
+     (Session : Root_Harriet_Session'Class;
+      Name    : String;
+      Default : String := "")
+      return String
+   is (if Session.Environment.Contains (Name)
+       then Session.Environment.Element (Name)
+       else Default);
 
 end Harriet.Sessions;

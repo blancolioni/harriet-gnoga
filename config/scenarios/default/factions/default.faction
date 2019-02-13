@@ -15,5 +15,12 @@ installations = {
          industrial-goods = 1000
          resource = 1000
       }
+    }
 }
-   
+
+init-script = {
+   "load-galaxy-view"
+   "load-star-system-view --name=$CAPITAL_SYSTEM"
+   "load-world-view --world-name=$CAPITAL_WORLD"
+   "show-market $CAPITAL_WORLD"
+}
