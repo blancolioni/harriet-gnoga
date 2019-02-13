@@ -39,11 +39,13 @@ package body Harriet.Commands is
       Value     : String);
 
    function Scan_Arguments
-     (Argument_Line : String)
+     (Session       : Harriet.Sessions.Harriet_Session;
+      Argument_Line : String)
       return Argument_List;
 
    procedure Iterate_Words
-     (Text : String;
+     (Session : Harriet.Sessions.Harriet_Session;
+      Text    : String;
       Process : not null access
         procedure (Word : String));
 
@@ -114,7 +116,8 @@ package body Harriet.Commands is
                           Map.Element (Command_Name);
             Arguments : constant Argument_List :=
                           Scan_Arguments
-                            (Extended_Line (Index + 1 .. Extended_Line'Last));
+                            (Session,
+                             Extended_Line (Index + 1 .. Extended_Line'Last));
          begin
             Command.Execute (Session, Writer, Arguments);
          end;
@@ -127,7 +130,8 @@ package body Harriet.Commands is
    -------------------
 
    procedure Iterate_Words
-     (Text    : String;
+     (Session : Harriet.Sessions.Harriet_Session;
+      Text    : String;
       Process : not null access
         procedure (Word : String))
    is
@@ -135,11 +139,15 @@ package body Harriet.Commands is
       Double_Quote : Boolean := False;
       Single_Quote : Boolean := False;
       Escape       : Boolean := False;
+      Variable     : Boolean := False;
       Skipping     : Boolean := True;
-      Buffer       : String (Text'Range);
+      Buffer       : String (1 .. 1024);
       Index        : Natural := 0;
+      Var_Index    : Natural := 0;
 
       procedure Add (Ch : Character);
+
+      procedure Check_Variable;
 
       ---------
       -- Add --
@@ -150,6 +158,27 @@ package body Harriet.Commands is
          Index := Index + 1;
          Buffer (Index) := Ch;
       end Add;
+
+      --------------------
+      -- Check_Variable --
+      --------------------
+
+      procedure Check_Variable is
+      begin
+         if Variable then
+            declare
+               Name : constant String := Buffer (Var_Index .. Index);
+               Value : constant String :=
+                         Session.Environment_Value (Name, "");
+            begin
+               Index := Var_Index - 1;
+               for Ch of Value loop
+                  Add (Ch);
+               end loop;
+            end;
+            Variable := False;
+         end if;
+      end Check_Variable;
 
    begin
       for Ch of Text loop
@@ -168,7 +197,12 @@ package body Harriet.Commands is
                if Ch = '"' then
                   Double_Quote := False;
                else
-                  Add (Ch);
+                  if Ch = '$' then
+                     Variable := True;
+                     Var_Index := Index + 1;
+                  else
+                     Add (Ch);
+                  end if;
                end if;
             elsif Single_Quote then
                if Ch = ''' then
@@ -183,16 +217,29 @@ package body Harriet.Commands is
             elsif Ch = '"' then
                Double_Quote := True;
             elsif Is_Space (Ch) then
+               Check_Variable;
                Process (Buffer (Buffer'First .. Index));
                Index := 0;
                Skipping := True;
             else
-               Add (Ch);
+               if Variable
+                 and then not Is_Alphanumeric (Ch)
+                 and then Ch not in '-' | '_'
+               then
+                  Check_Variable;
+               end if;
+               if Ch = '$' then
+                  Variable := True;
+                  Var_Index := Index + 1;
+               else
+                  Add (Ch);
+               end if;
             end if;
          end if;
       end loop;
 
       if not Skipping then
+         Check_Variable;
          Process (Buffer (Buffer'First .. Index));
       end if;
 
@@ -303,7 +350,8 @@ package body Harriet.Commands is
    --------------------
 
    function Scan_Arguments
-     (Argument_Line : String)
+     (Session       : Harriet.Sessions.Harriet_Session;
+      Argument_Line : String)
       return Argument_List
    is
 
@@ -356,7 +404,7 @@ package body Harriet.Commands is
       end Process_Argument;
 
    begin
-      Iterate_Words (Argument_Line, Process_Argument'Access);
+      Iterate_Words (Session, Argument_Line, Process_Argument'Access);
       return Arguments;
    end Scan_Arguments;
 
