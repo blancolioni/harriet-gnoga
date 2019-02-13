@@ -25,6 +25,15 @@ package body Harriet.Commands.System is
       Writer    : Writer_Interface'Class;
       Arguments : Argument_List);
 
+   type Echo_Command is
+     new Root_Harriet_Command with null record;
+
+   overriding procedure Perform
+     (Command   : Echo_Command;
+      Session   : Harriet.Sessions.Harriet_Session;
+      Writer    : Writer_Interface'Class;
+      Arguments : Argument_List);
+
    type Change_Scope_Command is
      new Root_Harriet_Command with null record;
 
@@ -69,6 +78,7 @@ package body Harriet.Commands.System is
    procedure Load_System_Commands is
       Cat                   : Cat_Command;
       Change_Scope          : Change_Scope_Command;
+      Echo                  : Echo_Command;
       List                  : List_Command;
       Pause_Command         : Status_Command (Pause_Server);
       Resume_Command        : Status_Command (Resume_Server);
@@ -80,6 +90,7 @@ package body Harriet.Commands.System is
       Register ("cat", Cat);
       Register ("cd", Change_Scope);
       Register ("change-scope", Change_Scope);
+      Register ("echo", Echo);
       Register ("ls", List);
       Register ("pause", Pause_Command);
       Register ("resume", Resume_Command);
@@ -161,6 +172,31 @@ package body Harriet.Commands.System is
          end if;
 
       end;
+
+   end Perform;
+
+   -------------
+   -- Perform --
+   -------------
+
+   overriding procedure Perform
+     (Command   : Echo_Command;
+      Session   : Harriet.Sessions.Harriet_Session;
+      Writer    : Writer_Interface'Class;
+      Arguments : Argument_List)
+   is
+      pragma Unreferenced (Command, Session);
+   begin
+      for I in 1 .. Argument_Count (Arguments) loop
+         if I > 1 then
+            Writer.Put (" ");
+         end if;
+         Writer.Put (Argument (Arguments, I));
+      end loop;
+
+      if not Contains (Arguments, "n") then
+         Writer.New_Line;
+      end if;
 
    end Perform;
 
