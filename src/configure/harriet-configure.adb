@@ -102,13 +102,19 @@ package body Harriet.Configure is
    ---------------------------
 
    function Initial_Root_Password return String is
+      Password_Chars : constant String :=
+                         "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                         & "abcdefghijklmnopqrstuvwxyz"
+                         & "0123456789"
+                         & "!@#$%^&*_-=+<>";
    begin
       if Harriet.Options.Generate_Root_Password then
          WL.Random.Randomise;
          return Password : String (1 .. 12) do
             for Ch of Password loop
-               Ch :=
-                 Character'Val (WL.Random.Random_Number (33, 126));
+               Ch := Password_Chars
+                 (WL.Random.Random_Number
+                    (Password_Chars'First, Password_Chars'Last));
             end loop;
             Ada.Text_IO.Put_Line ("root password: " & Password);
          end return;

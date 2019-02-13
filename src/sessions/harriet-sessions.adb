@@ -12,8 +12,10 @@ with Harriet.UI.Views.Login;
 
 with Harriet.Commands;
 
-with Harriet.Db.User;
 with Harriet.Db.Faction;
+with Harriet.Db.Script;
+with Harriet.Db.Script_Line;
+with Harriet.Db.User;
 
 package body Harriet.Sessions is
 
@@ -172,12 +174,16 @@ package body Harriet.Sessions is
 
       if Session.Is_Gnoga then
          declare
+            use Harriet.Db;
             use Harriet.UI.Models.Dashboard;
             Main_Model : constant Dashboard_Model :=
                            Create_Dashboard_Model (Session);
             Main_View  : constant Harriet.UI.Views.View_Type :=
                            Harriet.UI.Views.Dashboard.Dashboard_View
                              (Main_Model);
+            Rc_Script  : constant Harriet.Db.Script_Reference :=
+                           Harriet.Db.Script.Get_Reference_By_User_Name
+                             (User, "rc");
          begin
             Session.Current_View.Gnoga_View.Visible (False);
             Harriet.UI.Views.Destroy
@@ -190,11 +196,16 @@ package body Harriet.Sessions is
               (On_Main_View_Destroyed'Access);
             Main_View.Gnoga_View.Focus;
 
-            if False then
-               Harriet.Commands.Execute_Command_Line
-                 ("load-galaxy-view",
-                  Harriet.Sessions.Harriet_Session (Session),
-                  Harriet.Commands.Null_Writer);
+            if Rc_Script /= Null_Script_Reference then
+               for Line of
+                 Harriet.Db.Script_Line.Select_Script_Line_Bounded_By_Index
+                   (Rc_Script, 1, Positive'Last)
+               loop
+                  Harriet.Commands.Execute_Command_Line
+                    (Line    => Line.Line,
+                     Session => Harriet.Sessions.Harriet_Session (Session),
+                     Writer  => Harriet.Commands.Null_Writer);
+               end loop;
             end if;
          end;
       end if;

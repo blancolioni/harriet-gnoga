@@ -15,5 +15,9 @@ installations = {
          industrial-goods = 1000
          resource = 1000
       }
+    }
 }
-   
+
+init-script = {
+   "console"
+}
