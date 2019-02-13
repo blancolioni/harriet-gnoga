@@ -12,6 +12,10 @@ with Harriet.UI.Views.Login;
 
 with Harriet.Commands;
 
+with Harriet.Factions;
+with Harriet.Star_Systems;
+with Harriet.Worlds;
+
 with Harriet.Db.Faction;
 with Harriet.Db.Script;
 with Harriet.Db.Script_Line;
@@ -172,6 +176,20 @@ package body Harriet.Sessions is
          & "; initial context "
          & Session.Context.Name);
 
+      Session.Set_Environment_Value
+        ("FACTION",
+         Harriet.Factions.Name (Session.Faction));
+
+      Session.Set_Environment_Value
+        ("CAPITAL_SYSTEM",
+         Harriet.Star_Systems.Name
+           (Harriet.Factions.Capital_System (Session.Faction)));
+
+      Session.Set_Environment_Value
+        ("CAPITAL_WORLD",
+         Harriet.Worlds.Name
+           (Harriet.Factions.Capital_World (Session.Faction)));
+
       if Session.Is_Gnoga then
          declare
             use Harriet.Db;
@@ -328,6 +346,23 @@ package body Harriet.Sessions is
    begin
       Session.Dispatcher.Call_Handlers (Session, Signal);
    end Send_Signal;
+
+   ---------------------------
+   -- Set_Environment_Value --
+   ---------------------------
+
+   procedure Set_Environment_Value
+     (Session : in out Root_Harriet_Session'Class;
+      Name    : String;
+      Value   : String)
+   is
+   begin
+      if Session.Environment.Contains (Name) then
+         Session.Environment.Replace (Name, Value);
+      else
+         Session.Environment.Insert (Name, Value);
+      end if;
+   end Set_Environment_Value;
 
    ---------------------
    -- Show_Login_View --
