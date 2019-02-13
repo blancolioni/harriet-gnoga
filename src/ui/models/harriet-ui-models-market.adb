@@ -1,5 +1,3 @@
-with Ada.Text_IO;
-
 with Harriet.Commodities;
 with Harriet.Money;
 
@@ -118,7 +116,6 @@ package body Harriet.UI.Models.Market is
       Model : constant Market_Model :=
                 Market_Signal_Data (Data).Model;
    begin
-      Ada.Text_IO.Put_Line ("updating market");
       Model.Create_Table;
       Model.Notify_Changed;
    end Handle_Clock_Tick;
