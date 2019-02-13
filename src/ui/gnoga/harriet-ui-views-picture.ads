@@ -2,7 +2,10 @@ private with Ada.Containers.Indefinite_Doubly_Linked_Lists;
 private with Ada.Containers.Vectors;
 private with Ada.Strings.Unbounded;
 
+private with WL.String_Maps;
+
 private with Gnoga.Gui.Element.Canvas.Context_2D;
+private with Gnoga.Gui.Element.Common;
 
 with Harriet.Color;
 
@@ -100,6 +103,11 @@ package Harriet.UI.Views.Picture is
      (Picture : in out Root_Picture_View'Class;
       Width   : Non_Negative_Real);
 
+   procedure Add_Image_Resource
+     (Picture : in out Root_Picture_View'Class;
+      Name    : String;
+      Path    : String);
+
    procedure Move_To
      (Picture  : in out Root_Picture_View'Class;
       Position : Point_Type);
@@ -153,13 +161,19 @@ package Harriet.UI.Views.Picture is
       Offset_Y : Integer;
       Text     : String);
 
+   procedure Image
+     (Picture       : in out Root_Picture_View'Class;
+      Resource_Name : String;
+      Center        : Point_Type;
+      Width, Height : Natural);
+
 private
 
    type Draw_Primitive is
      (Set_Draw_Color, Set_Fill_Color, Set_Font, Set_Line_Width,
       Move_To, Set_Fill,
       Draw_Line, Draw_Line_To, Draw_Polygon,
-      Draw_Circle, Draw_Rectangle, Draw_Text);
+      Draw_Circle, Draw_Rectangle, Draw_Text, Draw_Image);
 
    package Point_Vectors is
      new Ada.Containers.Vectors (Positive, Point_Type);
@@ -195,6 +209,10 @@ private
                Offset_X    : Integer;
                Offset_Y    : Integer;
                Text        : Ada.Strings.Unbounded.Unbounded_String;
+            when Draw_Image =>
+               Image_Width  : Natural;
+               Image_Height : Natural;
+               Image_Name   : Ada.Strings.Unbounded.Unbounded_String;
          end case;
       end record;
 
@@ -224,6 +242,10 @@ private
 
    type Render_Task_Access is access Render_Task;
 
+   package Image_Resource_Maps is
+     new WL.String_Maps (Gnoga.Gui.Element.Common.Pointer_To_IMG_Class,
+                         Gnoga.Gui.Element.Common."=");
+
    type Draw_Layer_Record is
       record
          Canvas  : Gnoga.Gui.Element.Canvas.Canvas_Type;
@@ -249,6 +271,7 @@ private
          Previous_Y      : Integer;
          Update          : Update_Queue_Access;
          Renderer        : Render_Task_Access;
+         Resources       : Image_Resource_Maps.Map;
       end record;
 
    procedure Add
