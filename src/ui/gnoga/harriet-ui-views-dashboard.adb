@@ -1,5 +1,4 @@
 with Ada.Containers.Doubly_Linked_Lists;
-with Ada.Text_IO;
 
 with Gnoga.Gui.Element.Common;
 with Gnoga.Gui.View.Docker;
@@ -557,9 +556,6 @@ package body Harriet.UI.Views.Dashboard is
    is
       use Gnoga.Gui.Element;
    begin
-      Ada.Text_IO.Put_Line
-        ("set-layout"
-         & ": width" & Width'Img & "; height" & Height'Img);
       View.Gnoga_View.Position (Absolute);
       View.Gnoga_View.Left (Left);
       View.Gnoga_View.Top (Top);

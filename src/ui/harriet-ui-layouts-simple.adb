@@ -1,5 +1,3 @@
-with Ada.Text_IO;
-
 package body Harriet.UI.Layouts.Simple is
 
    type Simple_Layout_Algorithm is
@@ -206,19 +204,6 @@ package body Harriet.UI.Layouts.Simple is
       for I in 1 .. Layout.Column_Count loop
          Update_Rows (I);
       end loop;
-
-      for Column in 1 .. Layout.Column_Count loop
-         Ada.Text_IO.Put_Line
-           ("column" & Column'Image
-            & Natural'Image (Natural (Layout.Column_Width (Column) * 100.0)));
-         for Row in 1 .. Layout.Row_Count (Column) loop
-            Ada.Text_IO.Put_Line
-              ("      row" & Row'Image
-               & Natural'Image
-                 (Natural (Layout.Row_Height (Column, Row) * 100.0)));
-         end loop;
-      end loop;
-
    end Update_Sizes;
 
    -------------------
