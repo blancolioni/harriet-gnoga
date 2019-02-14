@@ -26,7 +26,17 @@ package body Harriet.Sessions is
    package Session_Maps is
      new WL.Guids.Maps (Harriet_Session);
 
-   Map : Session_Maps.Map;
+   protected Session_Map is
+      function Find_Session
+        (Gnoga_View : Gnoga.Gui.View.Pointer_To_View_Base_Class)
+         return Harriet_Session;
+      procedure End_Session (Session : in out Harriet_Session);
+      procedure End_All_Sessions;
+      procedure Broadcast (Signal : Harriet.Signals.Signal_Type);
+      procedure Add_Session (Session : Harriet_Session);
+   private
+      Map : Session_Maps.Map;
+   end Session_Map;
 
    procedure Show_Login_View
      (Session : not null access Root_Harriet_Session'Class);
@@ -76,9 +86,7 @@ package body Harriet.Sessions is
 
    procedure Broadcast (Signal : Harriet.Signals.Signal_Type) is
    begin
-      for Session of Map loop
-         Session.Send_Signal (Signal);
-      end loop;
+      Session_Map.Broadcast (Signal);
    end Broadcast;
 
    -------------
@@ -101,14 +109,7 @@ package body Harriet.Sessions is
 
    procedure End_All_Sessions is
    begin
-      while not Map.Is_Empty loop
-         declare
-            Session : Harriet_Session :=
-                        Session_Maps.Element (Map.First);
-         begin
-            End_Session (Session);
-         end;
-      end loop;
+      Session_Map.End_All_Sessions;
    end End_All_Sessions;
 
    -----------------
@@ -120,18 +121,8 @@ package body Harriet.Sessions is
       Ada.Text_IO.Put_Line
         ("ending session: "
          & WL.Guids.To_String (Session.Id));
-      Map.Delete (Session.Id);
-      while not Session.Views.Is_Empty loop
-         declare
-            V : Harriet.UI.Views.View_Type :=
-                  Harriet.UI.Views.View_Type (Session.Views.First_Element);
-         begin
-            Harriet.UI.Views.Destroy (V);
-            Session.Views.Delete_First;
-         end;
-      end loop;
+      Session_Map.End_Session (Session);
 
-      Session := null;
    end End_Session;
 
    ------------------
@@ -142,14 +133,8 @@ package body Harriet.Sessions is
      (Gnoga_View : Gnoga.Gui.View.Pointer_To_View_Base_Class)
       return Harriet_Session
    is
-      use type Gnoga.Gui.View.Pointer_To_View_Base_Class;
    begin
-      for Session of Map loop
-         if Session.Main_View.Gnoga_View = Gnoga_View then
-            return Session;
-         end if;
-      end loop;
-      return null;
+      return Session_Map.Find_Session (Gnoga_View);
    end Find_Session;
 
    -----------
@@ -252,7 +237,7 @@ package body Harriet.Sessions is
            others => <>)
       do
          Session.Is_Gnoga := True;
-         Map.Insert (Session.Id, Session);
+         Session_Map.Add_Session (Session);
          Ada.Text_IO.Put_Line
            ("new session: "
             & WL.Guids.To_String (Session.Id));
@@ -274,7 +259,7 @@ package body Harriet.Sessions is
            others => <>)
       do
          Session.Login (User);
-         Map.Insert (Session.Id, Session);
+         Session_Map.Add_Session (Session);
          Ada.Text_IO.Put_Line
            ("new session: "
             & WL.Guids.To_String (Session.Id));
@@ -346,6 +331,94 @@ package body Harriet.Sessions is
    begin
       Session.Dispatcher.Call_Handlers (Session, Signal);
    end Send_Signal;
+
+   -----------------
+   -- Session_Map --
+   -----------------
+
+   protected body Session_Map is
+
+      -----------------
+      -- Add_Session --
+      -----------------
+
+      procedure Add_Session (Session : Harriet_Session) is
+      begin
+         Map.Insert (Session.Id, Session);
+      end Add_Session;
+
+      ---------------
+      -- Broadcast --
+      ---------------
+
+      procedure Broadcast (Signal : Harriet.Signals.Signal_Type) is
+      begin
+         for Session of Map loop
+            Session.Send_Signal (Signal);
+         end loop;
+      end Broadcast;
+
+      procedure End_All_Sessions is
+      begin
+         while not Map.Is_Empty loop
+            declare
+               Session : constant Harriet_Session :=
+                           Session_Maps.Element (Map.First);
+            begin
+               Map.Delete (Session.Id);
+               while not Session.Views.Is_Empty loop
+                  declare
+                     V : Harriet.UI.Views.View_Type :=
+                           Harriet.UI.Views.View_Type
+                             (Session.Views.First_Element);
+                  begin
+                     Harriet.UI.Views.Destroy (V);
+                     Session.Views.Delete_First;
+                  end;
+               end loop;
+            end;
+         end loop;
+      end End_All_Sessions;
+
+      -----------------
+      -- End_Session --
+      -----------------
+
+      procedure End_Session (Session : in out Harriet_Session) is
+      begin
+         Map.Delete (Session.Id);
+         while not Session.Views.Is_Empty loop
+            declare
+               V : Harriet.UI.Views.View_Type :=
+                     Harriet.UI.Views.View_Type (Session.Views.First_Element);
+            begin
+               Harriet.UI.Views.Destroy (V);
+               Session.Views.Delete_First;
+            end;
+         end loop;
+
+         Session := null;
+      end End_Session;
+
+      ------------------
+      -- Find_Session --
+      ------------------
+
+      function Find_Session
+        (Gnoga_View : Gnoga.Gui.View.Pointer_To_View_Base_Class)
+      return Harriet_Session
+      is
+         use type Gnoga.Gui.View.Pointer_To_View_Base_Class;
+      begin
+         for Session of Map loop
+            if Session.Main_View.Gnoga_View = Gnoga_View then
+               return Session;
+            end if;
+         end loop;
+         return null;
+      end Find_Session;
+
+   end Session_Map;
 
    ---------------------------
    -- Set_Environment_Value --
