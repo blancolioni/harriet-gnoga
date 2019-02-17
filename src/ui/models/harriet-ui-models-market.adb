@@ -1,12 +1,12 @@
-with Ada.Text_IO;
-
+with Harriet.Calendar;
 with Harriet.Commodities;
 with Harriet.Money;
 with Harriet.Quantities;
 
-with Harriet.Db.Ask_Offer;
-with Harriet.Db.Bid_Offer;
+with Harriet.Db.Historical_Ask;
+with Harriet.Db.Historical_Bid;
 with Harriet.Db.Commodity;
+with Harriet.Db.Transaction;
 
 package body Harriet.UI.Models.Market is
 
@@ -17,7 +17,7 @@ package body Harriet.UI.Models.Market is
       end record;
 
    procedure Create_Table
-     (Model : in out Root_Market_Model'Class);
+     (Model : Market_Model);
 
    procedure On_Market_Offer
      (Data      : Harriet.Markets.Market_Data'Class;
@@ -30,8 +30,21 @@ package body Harriet.UI.Models.Market is
      (Data      : Harriet.Markets.Market_Data'Class;
       Commodity : Harriet.Db.Commodity_Reference;
       Quantity  : Harriet.Quantities.Quantity_Type;
-      Price     : Harriet.Money.Price_Type)
-   is null;
+      Price     : Harriet.Money.Price_Type);
+
+   Commodity_Column     : constant := 1;
+   Bid_Column           : constant := 2;
+   Ask_Column           : constant := 3;
+   Last_Trade_Column    : constant := 4;
+   Last_Price_Column    : constant := 5;
+   Last_Quantity_Column : constant := 6;
+   Demand_Column        : constant := 7;
+   Supply_Column        : constant := 8;
+
+   procedure Update_Commodity
+     (Model     : Market_Model;
+      Commodity : Harriet.Db.Commodity_Reference;
+      Row       : Harriet.UI.Models.Tables.Table_Row_Index);
 
    ------------
    -- Create --
@@ -48,10 +61,13 @@ package body Harriet.UI.Models.Market is
          Model.Add_Column ("commodity");
          Model.Add_Column ("bid");
          Model.Add_Column ("ask");
+         Model.Add_Column ("last-trade");
+         Model.Add_Column ("last-price");
+         Model.Add_Column ("last-traded");
          Model.Add_Column ("demand");
          Model.Add_Column ("supply");
 
-         Model.Create_Table;
+         Create_Table (Model);
 
          declare
             Data : constant Market_Model_Data :=
@@ -73,49 +89,30 @@ package body Harriet.UI.Models.Market is
    ------------------
 
    procedure Create_Table
-     (Model : in out Root_Market_Model'Class)
+     (Model : Market_Model)
    is
    begin
       Model.Clear_Rows;
       for Commodity of Harriet.Db.Commodity.Scan_By_Tag loop
          declare
-            Row   : constant Harriet.UI.Models.Tables.Table_Row_Index :=
+            use Harriet.UI.Models.Tables;
+            Row   : constant Table_Row_Index :=
                       Model.Add_Row;
          begin
             Model.Commodity_Row.Replace_Element
               (Commodity.Get_Commodity_Reference, Row);
 
             Model.Set_Cell
-              (Row, 1,
+              (Row, Commodity_Column,
                Harriet.Commodities.Local_Name
                  (Commodity.Get_Commodity_Reference));
-            Model.Set_Cell
-              (Row, 2, "-");
-            Model.Set_Cell
-              (Row, 3, "-");
+            for I in Table_Column_Index range Bid_Column .. Supply_Column loop
+               Model.Set_Cell
+                 (Row, I, "-");
+            end loop;
 
-            for Offer of
-              Harriet.Db.Bid_Offer
-                .Select_Market_Priority_Bounded_By_Priority
-                  (Model.Reference, Commodity.Get_Commodity_Reference,
-                   0.0, Real'Last)
-            loop
-               Model.Set_Cell
-                 (Row, 2,
-                  Harriet.Money.Show (Offer.Price));
-               exit;
-            end loop;
-            for Offer of
-              Harriet.Db.Ask_Offer
-                .Select_Market_Priority_Bounded_By_Priority
-                  (Model.Reference, Commodity.Get_Commodity_Reference,
-                   0.0, Real'Last)
-            loop
-               Model.Set_Cell
-                 (Row, 3,
-                  Harriet.Money.Show (Offer.Price));
-               exit;
-            end loop;
+            Update_Commodity (Model, Commodity.Get_Commodity_Reference, Row);
+
          end;
       end loop;
       Model.Clear_Changes;
@@ -132,28 +129,106 @@ package body Harriet.UI.Models.Market is
       Quantity  : Harriet.Quantities.Quantity_Type;
       Price     : Harriet.Money.Price_Type)
    is
+      pragma Unreferenced (Offer, Quantity, Price);
       use Harriet.UI.Models.Tables;
---        pragma Unreferenced (Quantity);
       Model : constant Market_Model :=
                 Market_Model_Data (Data).Model;
       Row   : constant Table_Row_Index :=
                 Model.Commodity_Row.Element (Commodity);
    begin
-      case Offer is
-         when Harriet.Db.Ask =>
-            Model.Set_Cell (Row, 3, Harriet.Money.Show (Price));
-            Ada.Text_IO.Put_Line
-              (Harriet.Commodities.Local_Name (Commodity)
-               & ": ask " & Harriet.Money.Show (Price)
-               & " for " & Harriet.Quantities.Show (Quantity));
-         when Harriet.Db.Bid =>
-            Model.Set_Cell (Row, 2, Harriet.Money.Show (Price));
-            Ada.Text_IO.Put_Line
-              (Harriet.Commodities.Local_Name (Commodity)
-               & ": bid " & Harriet.Money.Show (Price)
-               & " for " & Harriet.Quantities.Show (Quantity));
-      end case;
+      Update_Commodity (Model, Commodity, Row);
       Model.Notify_Changed;
    end On_Market_Offer;
+
+   ---------------------------
+   -- On_Market_Transaction --
+   ---------------------------
+
+   procedure On_Market_Transaction
+     (Data      : Harriet.Markets.Market_Data'Class;
+      Commodity : Harriet.Db.Commodity_Reference;
+      Quantity  : Harriet.Quantities.Quantity_Type;
+      Price     : Harriet.Money.Price_Type)
+   is
+      pragma Unreferenced (Quantity, Price);
+      use Harriet.UI.Models.Tables;
+      Model : constant Market_Model :=
+                Market_Model_Data (Data).Model;
+      Row   : constant Table_Row_Index :=
+                Model.Commodity_Row.Element (Commodity);
+   begin
+      Update_Commodity (Model, Commodity, Row);
+      Model.Notify_Changed;
+   end On_Market_Transaction;
+
+   ----------------------
+   -- Update_Commodity --
+   ----------------------
+
+   procedure Update_Commodity
+     (Model     : Market_Model;
+      Commodity : Harriet.Db.Commodity_Reference;
+      Row       : Harriet.UI.Models.Tables.Table_Row_Index)
+   is
+      use Harriet.Money, Harriet.Quantities;
+      use type Harriet.Calendar.Time;
+      Price    : Price_Type := Zero;
+      Quantity : Quantity_Type := Zero;
+      Now      : constant Harriet.Calendar.Time := Harriet.Calendar.Clock;
+      Date     : Harriet.Calendar.Time := Now;
+   begin
+      for Offer of
+        Harriet.Db.Historical_Bid
+          .Select_Historical_Offer_Bounded_By_Time_Stamp
+            (Model.Reference, Commodity,
+             Now - Harriet.Calendar.Days (1), Now)
+      loop
+         Price := Offer.Price;
+         Quantity := Quantity + Offer.Quantity;
+      end loop;
+
+      Model.Set_Cell
+        (Row, Bid_Column, Harriet.Money.Show (Price));
+      Model.Set_Cell (Row, Demand_Column, Show (Quantity));
+
+      Price := Zero;
+      Quantity := Zero;
+
+      for Offer of
+        Harriet.Db.Historical_Ask
+          .Select_Historical_Offer_Bounded_By_Time_Stamp
+            (Model.Reference, Commodity,
+             Now - Harriet.Calendar.Days (1), Now)
+      loop
+         Price := Offer.Price;
+         Quantity := Quantity + Offer.Quantity;
+      end loop;
+
+      Model.Set_Cell
+        (Row, Ask_Column, Harriet.Money.Show (Price));
+      Model.Set_Cell (Row, Supply_Column, Show (Quantity));
+
+      for Transaction of
+        Harriet.Db.Transaction
+          .Select_Transaction_Bounded_By_Time_Stamp
+            (Model.Reference, Commodity,
+             Now - Harriet.Calendar.Days (7), Now)
+      loop
+         Price := Transaction.Price;
+         Quantity := Transaction.Quantity;
+         Date := Transaction.Time_Stamp;
+      end loop;
+
+      Model.Set_Cell
+        (Row, Last_Trade_Column,
+         Harriet.Calendar.Image (Date));
+      Model.Set_Cell
+        (Row, Last_Price_Column,
+         Harriet.Money.Show (Price));
+      Model.Set_Cell
+        (Row, Last_Quantity_Column,
+         Harriet.Quantities.Show (Quantity));
+
+   end Update_Commodity;
 
 end Harriet.UI.Models.Market;

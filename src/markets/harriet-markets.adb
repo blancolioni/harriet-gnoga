@@ -1,4 +1,3 @@
-with Ada.Text_IO;
 with Ada.Containers.Doubly_Linked_Lists;
 with Ada.Containers.Indefinite_Holders;
 
@@ -45,6 +44,9 @@ package body Harriet.Markets is
 
    procedure Notify_New_Offer
      (Reference : Harriet.Db.Market_Offer_Reference);
+
+   procedure Notify_New_Transaction
+     (Reference : Harriet.Db.Transaction_Reference);
 
    function First_Ask
      (Market    : Harriet.Db.Market_Reference;
@@ -491,6 +493,8 @@ package body Harriet.Markets is
    begin
       Harriet.Db.Market_Offer.On_Market_Offer_Created
         (Notify_New_Offer'Access);
+      Harriet.Db.Transaction.On_Transaction_Created
+        (Notify_New_Transaction'Access);
    end Initialize_Markets;
 
    ----------------
@@ -577,7 +581,6 @@ package body Harriet.Markets is
       Market : constant Harriet.Db.Market_Reference := Offer.Market;
    begin
       if Market_Dispatcher.Contains (Market) then
-         Ada.Text_IO.Put_Line ("new offer");
          for Item of Market_Dispatcher.Element (Market) loop
             Item.On_Offer
               (Item.Data.Element, Offer.Offer,
@@ -585,6 +588,27 @@ package body Harriet.Markets is
          end loop;
       end if;
    end Notify_New_Offer;
+
+   ----------------------------
+   -- Notify_New_Transaction --
+   ----------------------------
+
+   procedure Notify_New_Transaction
+     (Reference : Harriet.Db.Transaction_Reference)
+   is
+      Transaction : constant Harriet.Db.Transaction.Transaction_Type :=
+                      Harriet.Db.Transaction.Get (Reference);
+      Market      : constant Harriet.Db.Market_Reference :=
+                      Transaction.Market;
+   begin
+      if Market_Dispatcher.Contains (Market) then
+         for Item of Market_Dispatcher.Element (Market) loop
+            Item.On_Transaction
+              (Item.Data.Element,
+               Transaction.Commodity, Transaction.Quantity, Transaction.Price);
+         end loop;
+      end if;
+   end Notify_New_Transaction;
 
    ---------------------------
    -- Remove_Market_Watcher --
