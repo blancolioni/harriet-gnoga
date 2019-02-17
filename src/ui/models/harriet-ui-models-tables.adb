@@ -76,12 +76,23 @@ package body Harriet.UI.Models.Tables is
    -----------------
 
    procedure Get_Changes
-     (Model   : in out Root_Table_Model'Class;
-      Changes : out Table_Change_List)
+     (Model       : in out Root_Table_Model'Class;
+      Changes     :    out Table_Change_List;
+      Last_Change : in out Table_Change_Cursor)
    is
+      use Table_Change_Lists;
+      Position : Cursor := Cursor (Last_Change);
    begin
-      Changes := Model.Changes;
-      Model.Changes := (Changes => <>);
+      if Has_Element (Position) then
+         Changes.Changes.Clear;
+         while Has_Element (Next (Position)) loop
+            Next (Position);
+            Changes.Changes.Append (Element (Position));
+         end loop;
+      else
+         Changes := Model.Changes;
+         Last_Change := Table_Change_Cursor (Model.Changes.Changes.Last);
+      end if;
    end Get_Changes;
 
    -----------

@@ -65,12 +65,14 @@ package body Harriet.UI.Views.Tables is
      (Table      : in out Gnoga.Gui.Element.Table.Table_Type;
       Model      : Harriet.UI.Models.Tables.Table_Model;
       Rows       : in out Table_Row_Vectors.Vector;
+      Start      :    out Harriet.UI.Models.Tables.Table_Change_Cursor;
       Properties : Table_Properties);
 
    procedure Update_Table
      (Table      : in out Gnoga.Gui.Element.Table.Table_Type;
       Model      : Harriet.UI.Models.Tables.Table_Model;
       Rows       : in out Table_Row_Vectors.Vector;
+      Previous   : in out Harriet.UI.Models.Tables.Table_Change_Cursor;
       Properties : Table_Properties);
 
    type Table_Gnoga_View is
@@ -131,6 +133,7 @@ package body Harriet.UI.Views.Tables is
      (Table      : in out Gnoga.Gui.Element.Table.Table_Type;
       Model      : Harriet.UI.Models.Tables.Table_Model;
       Rows       : in out Table_Row_Vectors.Vector;
+      Start      :    out Harriet.UI.Models.Tables.Table_Change_Cursor;
       Properties : Table_Properties)
    is
       use Gnoga.Gui.Element.Table;
@@ -213,6 +216,8 @@ package body Harriet.UI.Views.Tables is
          end loop;
       end if;
 
+      Start := Model.Current_Change;
+
    end Load_Table;
 
    -------------------
@@ -231,12 +236,13 @@ package body Harriet.UI.Views.Tables is
    ---------------------
 
    task body Table_View_Task is
-      Gnoga_View    : Gnoga.Gui.View.Pointer_To_View_Class;
-      Properties    : Table_Properties;
-      M             : Harriet.UI.Models.Tables.Table_Model;
-      Div           : Gnoga.Gui.Element.Common.DIV_Type;
-      Table         : Gnoga.Gui.Element.Table.Table_Type;
-      Rows          : Table_Row_Vectors.Vector;
+      Gnoga_View      : Gnoga.Gui.View.Pointer_To_View_Class;
+      Properties      : Table_Properties;
+      M               : Harriet.UI.Models.Tables.Table_Model;
+      Div             : Gnoga.Gui.Element.Common.DIV_Type;
+      Table           : Gnoga.Gui.Element.Table.Table_Type;
+      Rows            : Table_Row_Vectors.Vector;
+      Previous_Change : Harriet.UI.Models.Tables.Table_Change_Cursor;
    begin
       accept Start (Model : in Harriet.UI.Models.Tables.Table_Model;
                     View : in Gnoga.Gui.View.Pointer_To_View_Class;
@@ -253,12 +259,12 @@ package body Harriet.UI.Views.Tables is
       Table.Create (Div);
       Table.Class_Name ("darkTable");
 
-      Load_Table (Table, M, Rows, Properties);
+      Load_Table (Table, M, Rows, Previous_Change, Properties);
 
       loop
          select
             accept Update_Table;
-            Update_Table (Table, M, Rows, Properties);
+            Update_Table (Table, M, Rows, Previous_Change, Properties);
          or
             terminate;
          end select;
@@ -273,6 +279,7 @@ package body Harriet.UI.Views.Tables is
      (Table      : in out Gnoga.Gui.Element.Table.Table_Type;
       Model      : Harriet.UI.Models.Tables.Table_Model;
       Rows       : in out Table_Row_Vectors.Vector;
+      Previous   : in out Harriet.UI.Models.Tables.Table_Change_Cursor;
       Properties : Table_Properties)
    is
       pragma Unreferenced (Table, Properties);
@@ -305,7 +312,7 @@ package body Harriet.UI.Views.Tables is
       Changes : Table_Change_List;
 
    begin
-      Model.Get_Changes (Changes);
+      Model.Get_Changes (Changes, Previous);
       Scan_Changes (Changes, Apply_Change'Access);
    end Update_Table;
 

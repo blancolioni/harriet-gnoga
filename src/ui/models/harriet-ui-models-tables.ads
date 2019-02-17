@@ -101,16 +101,23 @@ package Harriet.UI.Models.Tables is
 
    type Table_Change_List is private;
 
+   type Table_Change_Cursor is private;
+
+   function Current_Change
+     (Model : Root_Table_Model'Class)
+      return Table_Change_Cursor;
+
    procedure Get_Changes
-     (Model   : in out Root_Table_Model'Class;
-      Changes : out Table_Change_List);
+     (Model       : in out Root_Table_Model'Class;
+      Changes     :    out Table_Change_List;
+      Last_Change : in out Table_Change_Cursor);
 
    procedure Clear_Changes
      (Model   : in out Root_Table_Model'Class);
 
    procedure Scan_Changes
-     (List : Table_Change_List;
-      Process : not null access
+     (List        : Table_Change_List;
+      Process     : not null access
         procedure (Change : Table_Change));
 
 private
@@ -130,6 +137,9 @@ private
 
    package Table_Change_Lists is
      new Ada.Containers.Indefinite_Doubly_Linked_Lists (Table_Change);
+
+   type Table_Change_Cursor is
+     new Table_Change_Lists.Cursor;
 
    type Table_Change_List is
       record
@@ -199,5 +209,10 @@ private
       Column : Table_Column_Index)
       return String
    is (Image (Table.Rows (Row).Cells (Column)));
+
+   function Current_Change
+     (Model : Root_Table_Model'Class)
+      return Table_Change_Cursor
+   is (Table_Change_Cursor (Model.Changes.Changes.Last));
 
 end Harriet.UI.Models.Tables;
