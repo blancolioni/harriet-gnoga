@@ -1,3 +1,4 @@
+private with Ada.Containers.Indefinite_Doubly_Linked_Lists;
 private with Ada.Containers.Indefinite_Vectors;
 private with Ada.Containers.Vectors;
 private with Ada.Strings.Unbounded;
@@ -82,7 +83,58 @@ package Harriet.UI.Models.Tables is
      (Table : in out Root_Table_Model'Class)
       return Table_Row_Index;
 
+   type Cell_Position is
+      record
+         Row : Table_Row_Index;
+         Col : Table_Column_Index;
+      end record;
+
+   type Table_Change_Type is
+     (Cell_Contents_Changed,
+      Row_Added,
+      Row_Deleted);
+
+   type Table_Change (Change_Type : Table_Change_Type) is private;
+
+   function Get_Cell_Position (Change : Table_Change) return Cell_Position
+     with Pre => Change.Change_Type = Cell_Contents_Changed;
+
+   type Table_Change_List is private;
+
+   procedure Get_Changes
+     (Model   : in out Root_Table_Model'Class;
+      Changes : out Table_Change_List);
+
+   procedure Clear_Changes
+     (Model   : in out Root_Table_Model'Class);
+
+   procedure Scan_Changes
+     (List : Table_Change_List;
+      Process : not null access
+        procedure (Change : Table_Change));
+
 private
+
+   type Table_Change (Change_Type : Table_Change_Type) is
+      record
+         case Change_Type is
+            when Cell_Contents_Changed =>
+               Position : Cell_Position;
+            when Row_Added | Row_Deleted =>
+               Row      : Table_Row_Index;
+         end case;
+      end record;
+
+   function Get_Cell_Position (Change : Table_Change) return Cell_Position
+   is (Change.Position);
+
+   package Table_Change_Lists is
+     new Ada.Containers.Indefinite_Doubly_Linked_Lists (Table_Change);
+
+   type Table_Change_List is
+      record
+         Changes : Table_Change_Lists.List;
+      end record;
 
    type Cell_Type is
      (String_Cell,
@@ -128,6 +180,7 @@ private
       record
          Column_Names : Column_Name_Vectors.Vector;
          Rows         : Row_Vectors.Vector;
+         Changes      : Table_Change_List;
       end record;
 
    function Row_Count

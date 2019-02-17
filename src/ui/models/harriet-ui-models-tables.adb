@@ -36,6 +36,17 @@ package body Harriet.UI.Models.Tables is
       return Table.Rows.Last_Index;
    end Add_Row;
 
+   -------------------
+   -- Clear_Changes --
+   -------------------
+
+   procedure Clear_Changes
+     (Model   : in out Root_Table_Model'Class)
+   is
+   begin
+      Model.Changes := (Changes => <>);
+   end Clear_Changes;
+
    ----------------
    -- Clear_Rows --
    ----------------
@@ -60,6 +71,19 @@ package body Harriet.UI.Models.Tables is
       return Table.Column_Names.Element (Column);
    end Column_Name;
 
+   -----------------
+   -- Get_Changes --
+   -----------------
+
+   procedure Get_Changes
+     (Model   : in out Root_Table_Model'Class;
+      Changes : out Table_Change_List)
+   is
+   begin
+      Changes := Model.Changes;
+      Model.Changes := (Changes => <>);
+   end Get_Changes;
+
    -----------
    -- Image --
    -----------
@@ -81,6 +105,21 @@ package body Harriet.UI.Models.Tables is
                     else Cell.Abstract_Value.To_String);
       end case;
    end Image;
+
+   ------------------
+   -- Scan_Changes --
+   ------------------
+
+   procedure Scan_Changes
+     (List    : Table_Change_List;
+      Process : not null access
+        procedure (Change : Table_Change))
+   is
+   begin
+      for Item of List.Changes loop
+         Process (Item);
+      end loop;
+   end Scan_Changes;
 
    --------------
    -- Set_Cell --
@@ -140,6 +179,7 @@ package body Harriet.UI.Models.Tables is
    begin
       Table.Rows (Row).Cells.Replace_Element
         (Column, (String_Cell, +Value));
+      Table.Changes.Changes.Append ((Cell_Contents_Changed, (Row, Column)));
    end Set_Cell;
 
    -----------

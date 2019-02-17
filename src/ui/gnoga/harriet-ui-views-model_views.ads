@@ -26,7 +26,7 @@ package Harriet.UI.Views.Model_Views is
       return access View_Model_Type'Class;
 
    procedure Set_Model
-     (View : in out View_Type'Class;
+     (View : not null access View_Type'Class;
       Model : not null access View_Model_Type'Class);
 
 private

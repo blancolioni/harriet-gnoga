@@ -358,6 +358,10 @@ package body Harriet.Sessions is
          end loop;
       end Broadcast;
 
+      ----------------------
+      -- End_All_Sessions --
+      ----------------------
+
       procedure End_All_Sessions is
       begin
          while not Map.Is_Empty loop

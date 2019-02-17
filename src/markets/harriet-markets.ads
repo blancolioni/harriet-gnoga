@@ -57,4 +57,38 @@ package Harriet.Markets is
       Wanted    : Harriet.Commodities.Stock_Type;
       Available : out Harriet.Commodities.Stock_Type);
 
+   procedure Initialize_Markets;
+
+   type Market_Handler_Id is private;
+
+   type Market_Data is interface;
+
+   type Market_Offer_Handler is access
+     procedure (Data      : Market_Data'Class;
+                Offer     : Harriet.Db.Offer_Type;
+                Commodity : Harriet.Db.Commodity_Reference;
+                Quantity  : Harriet.Quantities.Quantity_Type;
+                Price     : Harriet.Money.Price_Type);
+
+   type Market_Transaction_Handler is access
+     procedure (Data      : Market_Data'Class;
+                Commodity : Harriet.Db.Commodity_Reference;
+                Quantity  : Harriet.Quantities.Quantity_Type;
+                Price     : Harriet.Money.Price_Type);
+
+   function Add_Market_Watcher
+     (Market         : Harriet.Db.Market_Reference;
+      Data           : Market_Data'Class;
+      On_Offer       : Market_Offer_Handler;
+      On_Transaction : Market_Transaction_Handler)
+      return Market_Handler_Id;
+
+   procedure Remove_Market_Watcher
+     (Market : Harriet.Db.Market_Reference;
+      Id     : Market_Handler_Id);
+
+private
+
+   type Market_Handler_Id is new Positive;
+
 end Harriet.Markets;

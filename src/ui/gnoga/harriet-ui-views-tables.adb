@@ -1,3 +1,8 @@
+with Ada.Containers.Indefinite_Vectors;
+with Ada.Containers.Vectors;
+
+with Ada.Text_IO;
+
 with WL.Localisation;
 
 with Gnoga.Gui.Element.Common;
@@ -7,17 +12,42 @@ with Harriet.UI.Views.Model_Views;
 
 package body Harriet.UI.Views.Tables is
 
+   subtype Row_Index is Harriet.UI.Models.Tables.Table_Row_Index;
+   subtype Col_Index is Harriet.UI.Models.Tables.Table_Column_Index;
+
    package Base_View is
      new Harriet.UI.Views.Model_Views
        (Base_View_Type  => Root_View_Type,
         View_Model_Type => Harriet.UI.Models.Tables.Root_Table_Model);
 
+   type Table_Properties is
+      record
+         Headings_Down : Boolean;
+      end record;
+
+   task type Table_View_Task is
+      entry Start (Model : Harriet.UI.Models.Tables.Table_Model;
+                   View  : Gnoga.Gui.View.Pointer_To_View_Class;
+                   Props : Table_Properties);
+      entry Update_Table;
+   end Table_View_Task;
+
+   type Table_View_Task_Access is access Table_View_Task;
+
+   package Table_Cell_Vectors is
+     new Ada.Containers.Indefinite_Vectors
+       (Col_Index, Gnoga.Gui.Element.Table.Pointer_To_Table_Column_Class,
+        Gnoga.Gui.Element.Table."=");
+
+   package Table_Row_Vectors is
+     new Ada.Containers.Vectors
+       (Row_Index, Table_Cell_Vectors.Vector, Table_Cell_Vectors."=");
+
    type Root_Table_View is
      new Base_View.View_Type with
       record
-         Div           : Gnoga.Gui.Element.Common.DIV_Type;
-         Table         : Gnoga.Gui.Element.Table.Table_Type;
-         Headings_Down : Boolean;
+         Properties    : Table_Properties;
+         View_Task     : Table_View_Task_Access;
       end record;
 
    overriding procedure Model_Changed
@@ -32,7 +62,16 @@ package body Harriet.UI.Views.Tables is
       Id      : String);
 
    procedure Load_Table
-     (View    : in out  Root_Table_View'Class);
+     (Table      : in out Gnoga.Gui.Element.Table.Table_Type;
+      Model      : Harriet.UI.Models.Tables.Table_Model;
+      Rows       : in out Table_Row_Vectors.Vector;
+      Properties : Table_Properties);
+
+   procedure Update_Table
+     (Table      : in out Gnoga.Gui.Element.Table.Table_Type;
+      Model      : Harriet.UI.Models.Tables.Table_Model;
+      Rows       : in out Table_Row_Vectors.Vector;
+      Properties : Table_Properties);
 
    type Table_Gnoga_View is
      new Gnoga.Gui.View.View_Type with
@@ -58,10 +97,11 @@ package body Harriet.UI.Views.Tables is
       Gnoga_View.Create (Parent, Id);
       Gnoga_View.Table := Table_View_Access (View);
       View.Create_With_Gnoga_View (Session, Gnoga_View);
-      View.Div.Create (Gnoga_View.all);
-      View.Div.Class_Name ("table-view");
-      View.Div.Overflow_Y (Gnoga.Gui.Element.Auto);
-      View.Load_Table;
+      View.View_Task := new Table_View_Task;
+      View.View_Task.Start
+        (Model => View.Model,
+         View  => Gnoga.Gui.View.Pointer_To_View_Class (Gnoga_View),
+         Props => View.Properties);
    end Create;
 
    -----------------------
@@ -76,7 +116,9 @@ package body Harriet.UI.Views.Tables is
    is
       View : constant Table_View_Access := new Root_Table_View;
    begin
-      View.Headings_Down := Headings_Down;
+      View.Properties :=
+        (Headings_Down => Headings_Down);
+
       View.Set_Model (Model);
       return View_Type (View);
    end Create_Table_View;
@@ -86,26 +128,27 @@ package body Harriet.UI.Views.Tables is
    ----------------
 
    procedure Load_Table
-     (View    : in out  Root_Table_View'Class)
+     (Table      : in out Gnoga.Gui.Element.Table.Table_Type;
+      Model      : Harriet.UI.Models.Tables.Table_Model;
+      Rows       : in out Table_Row_Vectors.Vector;
+      Properties : Table_Properties)
    is
       use Gnoga.Gui.Element.Table;
-      Model : constant Harriet.UI.Models.Tables.Table_Model :=
-                Harriet.UI.Models.Tables.Table_Model
-                  (View.Model);
-      Table : Table_Type renames View.Table;
       Header      : Table_Header_Type;
       Tbody       : Table_Body_Type;
    begin
-      Table.Create (View.Div);
-      Table.Class_Name ("darkTable");
+      Ada.Text_IO.Put_Line ("load table");
+      Table.Inner_HTML ("");
+      Rows.Clear;
 
-      if View.Headings_Down then
+      if Properties.Headings_Down then
          Tbody.Create (Table);
 
          for Column_Index in 1 .. Model.Column_Count loop
             declare
-               Row : Table_Row_Type;
-               Heading : Table_Heading_Type;
+               Row         : Table_Row_Type;
+               Heading     : Table_Heading_Type;
+               Cell_Vector : Table_Cell_Vectors.Vector;
             begin
                Row.Create (Tbody);
                Heading.Create
@@ -116,12 +159,15 @@ package body Harriet.UI.Views.Tables is
 
                for Row_Index in 1 .. Model.Row_Count loop
                   declare
-                     Cell : Table_Column_Type;
+                     Cell : Pointer_To_Table_Column_Class;
                   begin
+                     Cell := new Table_Column_Type;
                      Cell.Create
                        (Row, Model.Image (Row_Index, Column_Index));
+                     Cell_Vector.Append (Cell);
                   end;
                end loop;
+               Rows.Append (Cell_Vector);
             end;
          end loop;
       else
@@ -149,16 +195,20 @@ package body Harriet.UI.Views.Tables is
          for Row_Index in 1 .. Model.Row_Count loop
             declare
                Row : Table_Row_Type;
+               Cells : Table_Cell_Vectors.Vector;
             begin
                Row.Create (Tbody);
                for Column_Index in 1 .. Model.Column_Count loop
                   declare
-                     Cell : Table_Column_Type;
+                     Cell : Pointer_To_Table_Column_Class;
                   begin
+                     Cell := new Table_Column_Type;
+                     Cells.Append (Cell);
                      Cell.Create
                        (Row, Model.Image (Row_Index, Column_Index));
                   end;
                end loop;
+               Rows.Append (Cells);
             end;
          end loop;
       end if;
@@ -173,7 +223,90 @@ package body Harriet.UI.Views.Tables is
      (View : in out Root_Table_View)
    is
    begin
-      View.Load_Table;
+      View.View_Task.Update_Table;
    end Model_Changed;
+
+   ---------------------
+   -- Table_View_Task --
+   ---------------------
+
+   task body Table_View_Task is
+      Gnoga_View    : Gnoga.Gui.View.Pointer_To_View_Class;
+      Properties    : Table_Properties;
+      M             : Harriet.UI.Models.Tables.Table_Model;
+      Div           : Gnoga.Gui.Element.Common.DIV_Type;
+      Table         : Gnoga.Gui.Element.Table.Table_Type;
+      Rows          : Table_Row_Vectors.Vector;
+   begin
+      accept Start (Model : in Harriet.UI.Models.Tables.Table_Model;
+                    View : in Gnoga.Gui.View.Pointer_To_View_Class;
+                    Props : in Table_Properties)
+      do
+         M := Model;
+         Gnoga_View := View;
+         Properties := Props;
+      end Start;
+
+      Div.Create (Gnoga_View.all);
+      Div.Class_Name ("table-view");
+      Div.Overflow_Y (Gnoga.Gui.Element.Auto);
+      Table.Create (Div);
+      Table.Class_Name ("darkTable");
+
+      Load_Table (Table, M, Rows, Properties);
+
+      loop
+         select
+            accept Update_Table;
+            Update_Table (Table, M, Rows, Properties);
+         or
+            terminate;
+         end select;
+      end loop;
+   end Table_View_Task;
+
+   ------------------
+   -- Update_Table --
+   ------------------
+
+   procedure Update_Table
+     (Table      : in out Gnoga.Gui.Element.Table.Table_Type;
+      Model      : Harriet.UI.Models.Tables.Table_Model;
+      Rows       : in out Table_Row_Vectors.Vector;
+      Properties : Table_Properties)
+   is
+      pragma Unreferenced (Table, Properties);
+      use Harriet.UI.Models.Tables;
+
+      procedure Apply_Change (Change : Table_Change);
+
+      ------------------
+      -- Apply_Change --
+      ------------------
+
+      procedure Apply_Change (Change : Table_Change) is
+      begin
+         case Change.Change_Type is
+            when Cell_Contents_Changed =>
+               declare
+                  Position : constant Cell_Position :=
+                               Get_Cell_Position (Change);
+               begin
+                  Rows.Element (Position.Row).Element (Position.Col).Text
+                    (Model.Image (Position.Row, Position.Col));
+               end;
+            when Row_Added =>
+               null;
+            when Row_Deleted =>
+               null;
+         end case;
+      end Apply_Change;
+
+      Changes : Table_Change_List;
+
+   begin
+      Model.Get_Changes (Changes);
+      Scan_Changes (Changes, Apply_Change'Access);
+   end Update_Table;
 
 end Harriet.UI.Views.Tables;

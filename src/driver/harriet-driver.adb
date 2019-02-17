@@ -24,6 +24,7 @@ with Harriet.Configure.Scenarios;
 with Harriet.Factions.Create;
 with Harriet.Logging;
 with Harriet.Logs;
+with Harriet.Markets;
 with Harriet.Repl;
 with Harriet.Sessions;
 
@@ -300,6 +301,7 @@ begin
    Ada.Text_IO.Put_Line ("starting server ...");
 
    Harriet.Calendar.Load_Clock;
+   Harriet.Markets.Initialize_Markets;
 
    Ada.Text_IO.Put_Line
      ("Start date: " & Harriet.Calendar.Image (Harriet.Calendar.Clock));

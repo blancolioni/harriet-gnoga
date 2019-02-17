@@ -1,4 +1,6 @@
+with Ada.Text_IO;
 with Ada.Containers.Doubly_Linked_Lists;
+with Ada.Containers.Indefinite_Holders;
 
 with Harriet.Calendar;
 with Harriet.Logging;
@@ -15,7 +17,34 @@ with Harriet.Db.Transaction;
 with Harriet.Db.Historical_Ask;
 with Harriet.Db.Historical_Bid;
 
+with Harriet.Db.Market_Maps;
+
 package body Harriet.Markets is
+
+   package Market_Data_Holder is
+     new Ada.Containers.Indefinite_Holders (Market_Data'Class);
+
+   type Market_Watcher is
+      record
+         Id             : Market_Handler_Id;
+         Data           : Market_Data_Holder.Holder;
+         On_Offer       : Market_Offer_Handler;
+         On_Transaction : Market_Transaction_Handler;
+      end record;
+
+   package Market_Watcher_Lists is
+     new Ada.Containers.Doubly_Linked_Lists (Market_Watcher);
+
+   package Market_Dispatcher_Maps is
+     new Harriet.Db.Market_Maps
+       (Element_Type => Market_Watcher_Lists.List,
+        "="          => Market_Watcher_Lists."=");
+
+   Market_Dispatcher : Market_Dispatcher_Maps.Map;
+   Next_Id : Market_Handler_Id := 1;
+
+   procedure Notify_New_Offer
+     (Reference : Harriet.Db.Market_Offer_Reference);
 
    function First_Ask
      (Market    : Harriet.Db.Market_Reference;
@@ -64,6 +93,38 @@ package body Harriet.Markets is
       Commodity : Harriet.Db.Commodity_Reference;
       Quantity  : Harriet.Quantities.Quantity_Type;
       Price     : Harriet.Money.Price_Type);
+
+   ------------------------
+   -- Add_Market_Watcher --
+   ------------------------
+
+   function Add_Market_Watcher
+     (Market         : Harriet.Db.Market_Reference;
+      Data           : Market_Data'Class;
+      On_Offer       : Market_Offer_Handler;
+      On_Transaction : Market_Transaction_Handler)
+      return Market_Handler_Id
+   is
+      List : Market_Watcher_Lists.List;
+      Is_New : constant Boolean := not Market_Dispatcher.Contains (Market);
+   begin
+      if not Is_New then
+         List := Market_Dispatcher.Element (Market);
+      end if;
+      List.Append
+        (Market_Watcher'
+           (Id             => Next_Id,
+            Data           => Market_Data_Holder.To_Holder (Data),
+            On_Offer       => On_Offer,
+            On_Transaction => On_Transaction));
+      if Is_New then
+         Market_Dispatcher.Insert (Market, List);
+      else
+         Market_Dispatcher.Replace_Element (Market, List);
+      end if;
+      Next_Id := Next_Id + 1;
+      return List.Last_Element.Id;
+   end Add_Market_Watcher;
 
    ---------
    -- Ask --
@@ -152,6 +213,7 @@ package body Harriet.Markets is
          Harriet.Db.Ask_Offer.Create
            (Market    => Market,
             Commodity => Commodity,
+            Offer     => Harriet.Db.Ask,
             Agent     => Agent,
             Has_Stock => Has_Stock,
             Account   => Account,
@@ -268,6 +330,7 @@ package body Harriet.Markets is
          Harriet.Db.Bid_Offer.Create
            (Market    => Market,
             Commodity => Commodity,
+            Offer     => Harriet.Db.Bid,
             Agent     => Agent,
             Has_Stock => Has_Stock,
             Account   => Account,
@@ -420,6 +483,16 @@ package body Harriet.Markets is
       return Harriet.Db.Null_Bid_Offer_Reference;
    end First_Bid;
 
+   ------------------------
+   -- Initialize_Markets --
+   ------------------------
+
+   procedure Initialize_Markets is
+   begin
+      Harriet.Db.Market_Offer.On_Market_Offer_Created
+        (Notify_New_Offer'Access);
+   end Initialize_Markets;
+
    ----------------
    -- Log_Market --
    ----------------
@@ -491,6 +564,36 @@ package body Harriet.Markets is
                   & ": "
                   & Message);
    end Log_Market_Bid;
+
+   ----------------------
+   -- Notify_New_Offer --
+   ----------------------
+
+   procedure Notify_New_Offer
+     (Reference : Harriet.Db.Market_Offer_Reference)
+   is
+      Offer  : constant Harriet.Db.Market_Offer.Market_Offer_Type :=
+                 Harriet.Db.Market_Offer.Get (Reference);
+      Market : constant Harriet.Db.Market_Reference := Offer.Market;
+   begin
+      if Market_Dispatcher.Contains (Market) then
+         Ada.Text_IO.Put_Line ("new offer");
+         for Item of Market_Dispatcher.Element (Market) loop
+            Item.On_Offer
+              (Item.Data.Element, Offer.Offer,
+               Offer.Commodity, Offer.Quantity, Offer.Price);
+         end loop;
+      end if;
+   end Notify_New_Offer;
+
+   ---------------------------
+   -- Remove_Market_Watcher --
+   ---------------------------
+
+   procedure Remove_Market_Watcher
+     (Market : Harriet.Db.Market_Reference;
+      Id     : Market_Handler_Id)
+   is null;
 
    ------------------
    -- Reset_Offers --

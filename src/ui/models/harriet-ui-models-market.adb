@@ -1,5 +1,8 @@
+with Ada.Text_IO;
+
 with Harriet.Commodities;
 with Harriet.Money;
+with Harriet.Quantities;
 
 with Harriet.Db.Ask_Offer;
 with Harriet.Db.Bid_Offer;
@@ -7,26 +10,35 @@ with Harriet.Db.Commodity;
 
 package body Harriet.UI.Models.Market is
 
-   type Market_Signal_Data is
-     new Harriet.Signals.Signal_Data_Interface with
+   type Market_Model_Data is
+     new Harriet.Markets.Market_Data with
       record
          Model : Market_Model;
       end record;
 
-   procedure Handle_Clock_Tick
-     (Object : Harriet.Signals.Signaler'Class;
-      Data   : Harriet.Signals.Signal_Data_Interface'Class);
-
    procedure Create_Table
      (Model : in out Root_Market_Model'Class);
+
+   procedure On_Market_Offer
+     (Data      : Harriet.Markets.Market_Data'Class;
+      Offer     : Harriet.Db.Offer_Type;
+      Commodity : Harriet.Db.Commodity_Reference;
+      Quantity  : Harriet.Quantities.Quantity_Type;
+      Price     : Harriet.Money.Price_Type);
+
+   procedure On_Market_Transaction
+     (Data      : Harriet.Markets.Market_Data'Class;
+      Commodity : Harriet.Db.Commodity_Reference;
+      Quantity  : Harriet.Quantities.Quantity_Type;
+      Price     : Harriet.Money.Price_Type)
+   is null;
 
    ------------
    -- Create --
    ------------
 
    function Create
-     (Session : Harriet.Sessions.Harriet_Session;
-      Market  : Harriet.Db.Market_Reference)
+     (Market  : Harriet.Db.Market_Reference)
       return Market_Model
    is
       use Harriet.UI.Models.Tables;
@@ -42,14 +54,15 @@ package body Harriet.UI.Models.Market is
          Model.Create_Table;
 
          declare
-            Data : constant Market_Signal_Data :=
+            Data : constant Market_Model_Data :=
                      (Model => Model);
          begin
-            Model.Clock_Handler_Id :=
-              Session.Add_Handler
-                (Signal  => Harriet.Sessions.Signal_Clock_Tick,
-                 Handler => Handle_Clock_Tick'Access,
-                 Data    => Data);
+            Model.Market_Watcher_Id :=
+              Harriet.Markets.Add_Market_Watcher
+                (Market         => Market,
+                 Data           => Data,
+                 On_Offer       => On_Market_Offer'Access,
+                 On_Transaction => On_Market_Transaction'Access);
          end;
 
       end return;
@@ -69,6 +82,9 @@ package body Harriet.UI.Models.Market is
             Row   : constant Harriet.UI.Models.Tables.Table_Row_Index :=
                       Model.Add_Row;
          begin
+            Model.Commodity_Row.Replace_Element
+              (Commodity.Get_Commodity_Reference, Row);
+
             Model.Set_Cell
               (Row, 1,
                Harriet.Commodities.Local_Name
@@ -102,22 +118,42 @@ package body Harriet.UI.Models.Market is
             end loop;
          end;
       end loop;
+      Model.Clear_Changes;
    end Create_Table;
 
-   -----------------------
-   -- Handle_Clock_Tick --
-   -----------------------
+   ---------------------
+   -- On_Market_Offer --
+   ---------------------
 
-   procedure Handle_Clock_Tick
-     (Object : Harriet.Signals.Signaler'Class;
-      Data   : Harriet.Signals.Signal_Data_Interface'Class)
+   procedure On_Market_Offer
+     (Data      : Harriet.Markets.Market_Data'Class;
+      Offer     : Harriet.Db.Offer_Type;
+      Commodity : Harriet.Db.Commodity_Reference;
+      Quantity  : Harriet.Quantities.Quantity_Type;
+      Price     : Harriet.Money.Price_Type)
    is
-      pragma Unreferenced (Object);
+      use Harriet.UI.Models.Tables;
+--        pragma Unreferenced (Quantity);
       Model : constant Market_Model :=
-                Market_Signal_Data (Data).Model;
+                Market_Model_Data (Data).Model;
+      Row   : constant Table_Row_Index :=
+                Model.Commodity_Row.Element (Commodity);
    begin
-      Model.Create_Table;
+      case Offer is
+         when Harriet.Db.Ask =>
+            Model.Set_Cell (Row, 3, Harriet.Money.Show (Price));
+            Ada.Text_IO.Put_Line
+              (Harriet.Commodities.Local_Name (Commodity)
+               & ": ask " & Harriet.Money.Show (Price)
+               & " for " & Harriet.Quantities.Show (Quantity));
+         when Harriet.Db.Bid =>
+            Model.Set_Cell (Row, 2, Harriet.Money.Show (Price));
+            Ada.Text_IO.Put_Line
+              (Harriet.Commodities.Local_Name (Commodity)
+               & ": bid " & Harriet.Money.Show (Price)
+               & " for " & Harriet.Quantities.Show (Quantity));
+      end case;
       Model.Notify_Changed;
-   end Handle_Clock_Tick;
+   end On_Market_Offer;
 
 end Harriet.UI.Models.Market;

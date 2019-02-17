@@ -27,10 +27,13 @@ record Market_Price is
    unique key Market_Price with Market, Commodity;
 end Market_Price;
 
+type Offer_Type is (Ask, Bid);
+
 record Market_Offer is
    key Market;
    key Commodity;
    key Agent;
+   Offer : Offer_Type;
    Has_Stock;
    Account;
    Price           : Price_Type;

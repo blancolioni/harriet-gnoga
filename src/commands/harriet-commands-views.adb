@@ -200,7 +200,7 @@ package body Harriet.Commands.Views is
       Arguments : Argument_List)
       return Harriet.UI.Views.View_Type
    is
-      pragma Unreferenced (Command);
+      pragma Unreferenced (Command, Session);
    begin
       if Argument_Count (Arguments) = 1 then
          declare
@@ -223,8 +223,7 @@ package body Harriet.Commands.Views is
 
             declare
                Model : constant Harriet.UI.Models.Market.Market_Model :=
-                         Harriet.UI.Models.Market.Create
-                           (Session, Market);
+                         Harriet.UI.Models.Market.Create (Market);
             begin
                return Harriet.UI.Views.Tables.Create_Table_View (Model);
             end;
