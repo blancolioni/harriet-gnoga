@@ -318,6 +318,9 @@ begin
             Session : Harriet.Sessions.Harriet_Session :=
                         Harriet.Sessions.New_Repl_Session (User);
          begin
+            if Ada.Directories.Exists (".harrietrc") then
+               Harriet.Repl.Read (Session, ".harrietrc");
+            end if;
             Harriet.Repl.Execute (Session);
             Harriet.Sessions.End_Session (Session);
          end;

@@ -88,4 +88,28 @@ package body Harriet.Repl is
         (Ada.Text_IO.Standard_Error, Message);
    end Put_Error;
 
+   ----------
+   -- Read --
+   ----------
+
+   procedure Read
+     (Session : Harriet.Sessions.Harriet_Session;
+      Path    : String)
+   is
+      use Ada.Text_IO;
+      File : File_Type;
+      Writer  : Repl_Writer;
+   begin
+      Open (File, In_File, Path);
+      while not End_Of_File (File) loop
+         declare
+            Line : constant String := Get_Line (File);
+         begin
+            Harriet.Commands.Execute_Command_Line
+              (Line, Session, Writer);
+         end;
+      end loop;
+      Close (File);
+   end Read;
+
 end Harriet.Repl;

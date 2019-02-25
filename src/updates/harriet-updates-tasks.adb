@@ -137,7 +137,7 @@ package body Harriet.Updates.Tasks is
 
       while not Stopping loop
 
-         if Paused then
+         while Paused loop
             select
                accept Resume;
                Paused := False;
@@ -160,7 +160,7 @@ package body Harriet.Updates.Tasks is
             or
                terminate;
             end select;
-         end if;
+         end loop;
 
          Previous_Tick := Ada.Calendar.Clock;
 
