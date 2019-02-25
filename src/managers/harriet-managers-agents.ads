@@ -81,6 +81,13 @@ package Harriet.Managers.Agents is
       Commodity : Harriet.Db.Commodity_Reference;
       Quantity  : Harriet.Quantities.Quantity_Type);
 
+   procedure Scan_Current_Stock
+     (Manager   : Root_Agent_Manager'Class;
+      Process   : not null access
+        procedure (Item     : Harriet.Db.Commodity_Reference;
+                   Quantity : Harriet.Quantities.Quantity_Type;
+                   Value    : Harriet.Money.Money_Type));
+
    procedure Scan_Historical_Stock
      (Manager   : Root_Agent_Manager'Class;
       Commodity : Harriet.Db.Commodity_Reference;

@@ -56,6 +56,13 @@ package Harriet.Stock is
                    Quantity : Harriet.Quantities.Quantity_Type;
                    Value    : Harriet.Money.Money_Type));
 
+   procedure Scan_Stock
+     (Has_Stock : Harriet.Db.Has_Stock_Reference;
+      Process   : not null access
+        procedure (Item     : Harriet.Db.Commodity_Reference;
+                   Quantity : Harriet.Quantities.Quantity_Type;
+                   Value    : Harriet.Money.Money_Type));
+
    procedure Log_Stock
      (Stock : Harriet.Db.Has_Stock_Reference);
 

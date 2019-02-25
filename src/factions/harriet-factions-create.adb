@@ -354,6 +354,7 @@ package body Harriet.Factions.Create is
                          World        => World,
                          World_Sector => Sector,
                          Facility     => Facility,
+                         Production   => Harriet.Db.Null_Commodity_Reference,
                          Active       => True,
                          Scheduled    => False,
                          Next_Event   =>

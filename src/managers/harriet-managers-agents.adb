@@ -525,6 +525,23 @@ package body Harriet.Managers.Agents is
         (Manager.Has_Stock, Commodity, Quantity);
    end Remove_Stock;
 
+   ------------------------
+   -- Scan_Current_Stock --
+   ------------------------
+
+   procedure Scan_Current_Stock
+     (Manager   : Root_Agent_Manager'Class;
+      Process   : not null access
+        procedure (Item     : Harriet.Db.Commodity_Reference;
+                   Quantity : Harriet.Quantities.Quantity_Type;
+                   Value    : Harriet.Money.Money_Type))
+   is
+   begin
+      Harriet.Stock.Scan_Stock
+        (Has_Stock => Manager.Has_Stock,
+         Process   => Process);
+   end Scan_Current_Stock;
+
    ---------------------------
    -- Scan_Historical_Stock --
    ---------------------------

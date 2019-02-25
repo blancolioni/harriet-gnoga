@@ -234,7 +234,7 @@ package body Harriet.Stock is
    ----------------
 
    procedure Scan_Stock
-     (Has_Stock : Harriet.Db.Has_Stock.Has_Stock_Type;
+     (Has_Stock : Harriet.Db.Has_Stock_Reference;
       Process   : not null access
         procedure (Item     : Harriet.Db.Commodity_Reference;
                    Quantity : Harriet.Quantities.Quantity_Type;
@@ -242,8 +242,23 @@ package body Harriet.Stock is
    is
       Stock : Harriet.Commodities.Stock_Type;
    begin
-      Stock.Load (Has_Stock.Get_Has_Stock_Reference);
+      Stock.Load (Has_Stock);
       Stock.Iterate (Process);
+   end Scan_Stock;
+
+   ----------------
+   -- Scan_Stock --
+   ----------------
+
+   procedure Scan_Stock
+     (Has_Stock : Harriet.Db.Has_Stock.Has_Stock_Type;
+      Process   : not null access
+        procedure (Item     : Harriet.Db.Commodity_Reference;
+                   Quantity : Harriet.Quantities.Quantity_Type;
+                   Value    : Harriet.Money.Money_Type))
+   is
+   begin
+      Scan_Stock (Has_Stock.Get_Has_Stock_Reference, Process);
    end Scan_Stock;
 
 end Harriet.Stock;

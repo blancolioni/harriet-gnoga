@@ -18,6 +18,7 @@ with Harriet.Db.Facility_Worker;
 with Harriet.Db.Generated_Resource;
 with Harriet.Db.Installation;
 with Harriet.Db.Pop_Group;
+with Harriet.Db.Recipe_Input;
 with Harriet.Db.Resource;
 with Harriet.Db.Resource_Generator;
 
@@ -34,6 +35,23 @@ package body Harriet.Managers.Installations is
 
    overriding procedure Execute_Agent_Tasks
      (Manager : in out Resource_Generator_Manager);
+
+   type Factory_Manager is
+     new Root_Installation_Manager with
+      record
+         Factory    : Harriet.Db.Factory_Reference;
+         Production : Harriet.Db.Commodity_Reference :=
+                        Harriet.Db.Null_Commodity_Reference;
+         Recipe     : Harriet.Db.Recipe_Reference :=
+                        Harriet.Db.Null_Recipe_Reference;
+      end record;
+
+   overriding procedure Create_Market_Offers
+     (Manager : in out Factory_Manager);
+
+   overriding procedure Execute_Agent_Tasks
+     (Manager : in out Factory_Manager)
+   is null;
 
    type Hub_Manager is
      new Root_Installation_Manager with
@@ -152,6 +170,54 @@ package body Harriet.Managers.Installations is
             end if;
          end;
       end loop;
+
+   end Create_Market_Offers;
+
+   --------------------------
+   -- Create_Market_Offers --
+   --------------------------
+
+   overriding procedure Create_Market_Offers
+     (Manager : in out Factory_Manager)
+   is
+      procedure Add_Ask
+        (Item     : Harriet.Db.Commodity_Reference;
+         Quantity : Harriet.Quantities.Quantity_Type;
+         Value    : Harriet.Money.Money_Type);
+
+      -------------
+      -- Add_Ask --
+      -------------
+
+      procedure Add_Ask
+        (Item     : Harriet.Db.Commodity_Reference;
+         Quantity : Harriet.Quantities.Quantity_Type;
+         Value    : Harriet.Money.Money_Type)
+      is
+         use type Harriet.Db.Commodity_Reference;
+      begin
+         if Item /= Manager.Production
+           and then not Harriet.Db.Recipe_Input.Is_Recipe_Input
+             (Manager.Recipe, Item)
+         then
+            declare
+               use type Harriet.Money.Money_Type;
+               Price : constant Harriet.Money.Price_Type :=
+                         Manager.Current_Market_Bid_Price (Item);
+            begin
+               if Harriet.Money.Total (Price, Quantity) > Value then
+                  Manager.Place_Ask
+                    (Item, Quantity, Price);
+               end if;
+            end;
+         end if;
+      end Add_Ask;
+
+   begin
+      Harriet.Managers.Agents.Root_Agent_Manager (Manager)
+        .Create_Market_Offers;
+
+      Manager.Scan_Current_Stock (Add_Ask'Access);
 
    end Create_Market_Offers;
 
