@@ -19,6 +19,11 @@ with Harriet.Db.World;
 
 package body Harriet.Worlds is
 
+   package World_Sector_Lists is
+     new Ada.Containers.Doubly_Linked_Lists
+       (Harriet.Db.World_Sector_Reference,
+        Harriet.Db."=");
+
    procedure Check_Surface
      (World : Harriet.Db.World_Reference);
 
@@ -455,11 +460,17 @@ package body Harriet.Worlds is
       Process : not null access
         procedure (Sector : Harriet.Db.World_Sector_Reference))
    is
+      List : World_Sector_Lists.List;
    begin
       Check_Surface (World);
       for Sector of Harriet.Db.World_Sector.Select_By_World (World) loop
-         Process (Sector.Get_World_Sector_Reference);
+         List.Append (Sector.Get_World_Sector_Reference);
       end loop;
+
+      for Sector of List loop
+         Process (Sector);
+      end loop;
+
    end Scan_Surface;
 
    ---------------
