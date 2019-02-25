@@ -53,6 +53,20 @@ package body Harriet.Factions is
       return Faction_Type'(Reference => Reference);
    end Get;
 
+   ---------
+   -- Get --
+   ---------
+
+   function Get
+     (Reference : Harriet.Db.Owner_Reference)
+      return Faction_Type'Class
+   is
+      Faction : constant Harriet.Db.Faction.Faction_Type :=
+                  Harriet.Db.Faction.Get_Faction (Reference);
+   begin
+      return Get (Faction.Get_Faction_Reference);
+   end Get;
+
    -----------------
    -- Has_Element --
    -----------------

@@ -10,6 +10,10 @@ package Harriet.Factions is
      (Reference : Harriet.Db.Faction_Reference)
       return Faction_Type'Class;
 
+   function Get
+     (Reference : Harriet.Db.Owner_Reference)
+      return Faction_Type'Class;
+
    function Has_Element
      (Faction : Faction_Type'Class)
      return Boolean;

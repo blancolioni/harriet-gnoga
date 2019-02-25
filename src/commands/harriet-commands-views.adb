@@ -2,6 +2,7 @@ with Harriet.Star_Systems;
 
 with Harriet.UI.Models.Galaxy;
 with Harriet.UI.Models.Market;
+with Harriet.UI.Models.Orbits;
 with Harriet.UI.Models.Star_System;
 with Harriet.UI.Models.World;
 
@@ -50,6 +51,15 @@ package body Harriet.Commands.Views is
 
    overriding function Create_View
      (Command   : Load_Market_Command;
+      Session   : Harriet.Sessions.Harriet_Session;
+      Arguments : Argument_List)
+      return Harriet.UI.Views.View_Type;
+
+   type Show_Orbiting_Ships_Command is
+     new Load_View_Command with null record;
+
+   overriding function Create_View
+     (Command   : Show_Orbiting_Ships_Command;
       Session   : Harriet.Sessions.Harriet_Session;
       Arguments : Argument_List)
       return Harriet.UI.Views.View_Type;
@@ -238,6 +248,42 @@ package body Harriet.Commands.Views is
    -----------------
 
    overriding function Create_View
+     (Command   : Show_Orbiting_Ships_Command;
+      Session   : Harriet.Sessions.Harriet_Session;
+      Arguments : Argument_List)
+      return Harriet.UI.Views.View_Type
+   is
+      pragma Unreferenced (Command, Session);
+   begin
+      if Argument_Count (Arguments) = 1 then
+         declare
+            use Harriet.Db;
+            World  : constant Harriet.Db.World_Reference :=
+                       Harriet.Db.World.First_Reference_By_Name
+                         (Argument (Arguments, 1));
+         begin
+            if World = Null_World_Reference then
+               return null;
+            end if;
+
+            declare
+               Model : constant Harriet.UI.Models.Orbits.Orbiting_Ship_Model :=
+                         Harriet.UI.Models.Orbits.Create
+                           (World);
+            begin
+               return Harriet.UI.Views.Tables.Create_Table_View (Model);
+            end;
+         end;
+      else
+         return null;
+      end if;
+   end Create_View;
+
+   -----------------
+   -- Create_View --
+   -----------------
+
+   overriding function Create_View
      (Command   : Console_View_Command;
       Session   : Harriet.Sessions.Harriet_Session;
       Arguments : Argument_List)
@@ -257,12 +303,14 @@ package body Harriet.Commands.Views is
       Load_Star_System : Load_Star_System_Command;
       Load_World       : Load_World_Command;
       Load_Market      : Load_Market_Command;
+      Show_Orbit       : Show_Orbiting_Ships_Command;
       Console          : Console_View_Command;
    begin
       Register ("load-galaxy-view", Load_Galaxy);
       Register ("load-star-system-view", Load_Star_System);
       Register ("load-world-view", Load_World);
       Register ("show-market", Load_Market);
+      Register ("show-orbit", Show_Orbit);
       Register ("console", Console);
    end Load_View_Commands;
 
