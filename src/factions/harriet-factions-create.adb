@@ -62,6 +62,7 @@ package body Harriet.Factions.Create is
      (Faction     : Harriet.Db.Faction_Reference;
       World       : Harriet.Db.World_Reference;
       Hub_Sector  : Harriet.Db.World_Sector_Reference;
+      Everywhere  : Boolean;
       Config      : Tropos.Configuration);
 
    function Choose_Facility
@@ -250,7 +251,9 @@ package body Harriet.Factions.Create is
            (Faction, Capital, Setup.Child ("ships"));
 
          Create_Initial_Installations
-           (Faction, Capital, Sector, Setup.Child ("installations"));
+           (Faction, Capital, Sector,
+            Setup.Get ("capital"),
+            Setup.Child ("installations"));
 
          return Faction;
       end;
@@ -305,12 +308,16 @@ package body Harriet.Factions.Create is
      (Faction     : Harriet.Db.Faction_Reference;
       World       : Harriet.Db.World_Reference;
       Hub_Sector  : Harriet.Db.World_Sector_Reference;
+      Everywhere  : Boolean;
       Config      : Tropos.Configuration)
    is
       Owner : constant Harriet.Db.Owner_Reference :=
                 Harriet.Db.Faction.Get (Faction).Get_Owner_Reference;
       Hub   : Harriet.Db.Installation_Reference :=
                 Harriet.Db.Null_Installation_Reference;
+
+      procedure Create_Sector_Installation
+        (Sector   : Harriet.Db.World_Sector_Reference);
 
       function Create_Installation
         (Facility : Harriet.Db.Facility_Reference;
@@ -391,6 +398,28 @@ package body Harriet.Factions.Create is
          return Ref;
       end Create_Installation;
 
+      --------------------------------
+      -- Create_Sector_Installation --
+      --------------------------------
+
+      procedure Create_Sector_Installation
+        (Sector   : Harriet.Db.World_Sector_Reference)
+      is
+      begin
+         Harriet.Worlds.Set_Owner (Sector, Faction);
+
+         declare
+            Ref : constant Harriet.Db.Installation_Reference :=
+                    Create_Installation
+                      (Facility => Choose_Facility (Sector),
+                       Sector   => Sector,
+                       Cash     => Harriet.Money.To_Money (1.0E6),
+                       Manager  => "default-installation");
+         begin
+            pragma Unreferenced (Ref);
+         end;
+      end Create_Sector_Installation;
+
    begin
 
       Harriet.Worlds.Set_Owner (Hub_Sector, Faction);
@@ -466,21 +495,32 @@ package body Harriet.Factions.Create is
          end;
       end loop;
 
-      for Neighbour of Harriet.Worlds.Get_Neighbours (Hub_Sector) loop
-
-         Harriet.Worlds.Set_Owner (Neighbour, Faction);
+      if Everywhere then
 
          declare
-            Ref : constant Harriet.Db.Installation_Reference :=
-                    Create_Installation
-                      (Facility => Choose_Facility (Neighbour),
-                       Sector   => Neighbour,
-                       Cash     => Harriet.Money.To_Money (1.0E6),
-                       Manager  => "default-installation");
+            procedure Create (Sector : Harriet.Db.World_Sector_Reference);
+
+            ------------
+            -- Create --
+            ------------
+
+            procedure Create (Sector : Harriet.Db.World_Sector_Reference) is
+               use type Harriet.Db.World_Sector_Reference;
+            begin
+               if Sector /= Hub_Sector then
+                  Create_Sector_Installation (Sector);
+               end if;
+            end Create;
+
          begin
-            pragma Unreferenced (Ref);
+            Harriet.Worlds.Scan_Surface (World, Create'Access);
          end;
-      end loop;
+
+      else
+         for Neighbour of Harriet.Worlds.Get_Neighbours (Hub_Sector) loop
+            Create_Sector_Installation (Neighbour);
+         end loop;
+      end if;
 
    end Create_Initial_Installations;
 
