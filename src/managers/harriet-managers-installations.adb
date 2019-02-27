@@ -8,6 +8,7 @@ with Harriet.Quantities;
 with Harriet.Random;
 with Harriet.Real_Images;
 with Harriet.Stock;
+with Harriet.Weighted_Random_Choices;
 
 with Harriet.Worlds;
 
@@ -15,9 +16,12 @@ with Harriet.Db.Consumer_Good;
 with Harriet.Db.Deposit;
 with Harriet.Db.Facility;
 with Harriet.Db.Facility_Worker;
+with Harriet.Db.Factory;
 with Harriet.Db.Generated_Resource;
 with Harriet.Db.Installation;
 with Harriet.Db.Pop_Group;
+with Harriet.Db.Produced_Commodity;
+with Harriet.Db.Recipe;
 with Harriet.Db.Recipe_Input;
 with Harriet.Db.Resource;
 with Harriet.Db.Resource_Generator;
@@ -53,6 +57,9 @@ package body Harriet.Managers.Installations is
      (Manager : in out Factory_Manager)
    is null;
 
+   procedure Choose_Recipe
+     (Manager : in out Factory_Manager'Class);
+
    type Hub_Manager is
      new Root_Installation_Manager with
       record
@@ -65,6 +72,132 @@ package body Harriet.Managers.Installations is
 
    overriding procedure Execute_Agent_Tasks
      (Manager : in out Hub_Manager);
+
+   -------------------
+   -- Choose_Recipe --
+   -------------------
+
+   procedure Choose_Recipe
+     (Manager : in out Factory_Manager'Class)
+   is
+
+      package Recipe_Choices is
+        new Harriet.Weighted_Random_Choices
+          (Harriet.Db.Recipe_Reference);
+
+      Choices : Recipe_Choices.Weighted_Choice_Set;
+
+      function Score_Production
+        (Commodity : Harriet.Db.Commodity_Reference;
+         Recipe    : Harriet.Db.Recipe_Reference)
+         return Natural;
+
+      ----------------------
+      -- Score_Production --
+      ----------------------
+
+      function Score_Production
+        (Commodity : Harriet.Db.Commodity_Reference;
+         Recipe    : Harriet.Db.Recipe_Reference)
+         return Natural
+      is
+         use Harriet.Money, Harriet.Quantities;
+         Input_Cost  : Money_Type := Zero;
+         Worker_Cost : Money_Type := Zero;
+         Capacity    : constant Quantity_Type :=
+                         Harriet.Db.Facility.Get (Manager.Facility).Capacity;
+         Value : constant Money_Type :=
+                         Total (Manager.Current_Market_Bid_Price (Commodity),
+                                Capacity);
+      begin
+         for Input of Harriet.Db.Recipe_Input.Select_By_Recipe (Recipe) loop
+            Input_Cost := Input_Cost
+              + Total
+              (Manager.Current_Market_Ask_Price (Input.Commodity),
+               Input.Quantity);
+         end loop;
+
+         for Worker of
+           Harriet.Db.Facility_Worker.Select_By_Facility
+             (Manager.Facility)
+         loop
+            Worker_Cost := Worker_Cost
+              + Total
+              (Manager.Current_Market_Ask_Price
+                 (Harriet.Db.Pop_Group.Get (Worker.Pop_Group)
+                  .Get_Commodity_Reference),
+               Worker.Quantity);
+         end loop;
+
+         declare
+            Input_Price : constant Price_Type :=
+                            Price (Input_Cost, Unit);
+            Total_Cost  : constant Money_Type :=
+                            Total (Input_Price, Capacity) + Worker_Cost;
+            Profit      : constant Real :=
+                            (To_Real (Value) / To_Real (Total_Cost) - 1.0);
+            Score       : constant Natural :=
+                            (if Profit > 0.0
+                             then Natural (Profit * 1000.0)
+                             else 0);
+         begin
+            Harriet.Logging.Log
+              (Actor    => Harriet.Db.To_String (Manager.Installation),
+               Location => Harriet.Worlds.Name (Manager.World),
+               Category => "production",
+               Message  =>
+                 Harriet.Commodities.Local_Name (Commodity)
+               & ": input price " & Show (Input_Price)
+               & "; total input cost " & Show (Total (Input_Price, Capacity))
+               & "; worker cost " & Show (Worker_Cost)
+               & "; expected earnings " & Show (Value)
+               & (if Profit <= 0.0 then ""
+                 else "; profit margin "
+                 & Harriet.Real_Images.Approximate_Image (Profit * 100.0)
+                 & "%")
+               & "; score" & Score'Image);
+            return Score;
+         end;
+      end Score_Production;
+
+   begin
+      for Produced of
+        Harriet.Db.Produced_Commodity.Select_By_Factory
+          (Manager.Factory)
+      loop
+         for Recipe of
+           Harriet.Db.Recipe.Select_By_Commodity
+             (Produced.Commodity)
+         loop
+            Choices.Insert
+              (Recipe.Get_Recipe_Reference,
+               Score_Production
+                 (Produced.Commodity,
+                  Recipe.Get_Recipe_Reference));
+         end loop;
+      end loop;
+
+      if not Choices.Is_Empty then
+         declare
+            Choice : constant Harriet.Db.Recipe_Reference :=
+                       Choices.Choose;
+         begin
+            Harriet.Logging.Log
+              (Actor    => Harriet.Db.To_String (Manager.Installation),
+               Location => Harriet.Worlds.Name (Manager.World),
+               Category => "production",
+               Message  =>
+                 "producing: "
+               & Harriet.Commodities.Local_Name
+                 (Harriet.Db.Recipe.Get (Choice).Commodity));
+            Manager.Recipe := Choice;
+            Manager.Production :=
+              Harriet.Db.Recipe.Get (Choice).Commodity;
+            Harriet.Db.Installation.Get (Manager.Installation).Set_Production
+              (Manager.Production);
+         end;
+      end if;
+   end Choose_Recipe;
 
    ----------------------------
    -- Create_Default_Manager --
@@ -105,6 +238,35 @@ package body Harriet.Managers.Installations is
                  (Installation, Installation.World);
                return new Resource_Generator_Manager'(Manager);
             end;
+
+         when Harriet.Db.R_Factory =>
+            Harriet.Logging.Log
+              (Actor    => Facility.Tag,
+               Location => Harriet.Worlds.Name (Installation.World),
+               Category => "manager",
+               Message  => "starting");
+
+            declare
+               Factory : constant Harriet.Db.Factory_Reference :=
+                           Harriet.Db.Factory.Get_Factory
+                             (Installation.Facility)
+                             .Get_Factory_Reference;
+               Manager : Factory_Manager :=
+                           (Harriet.Managers.Agents.Root_Agent_Manager with
+                            Installation    =>
+                              Installation.Get_Installation_Reference,
+                            Facility        => Installation.Facility,
+                            Factory         => Factory,
+                            Production      => Installation.Production,
+                            Recipe          =>
+                              Harriet.Db.Recipe.First_Reference_By_Commodity
+                                (Installation.Production));
+            begin
+               Manager.Initialize_Agent_Manager
+                 (Installation, Installation.World);
+               return new Factory_Manager'(Manager);
+            end;
+
          when others =>
             Ada.Text_IO.Put_Line
               ("warning: "
@@ -180,6 +342,8 @@ package body Harriet.Managers.Installations is
    overriding procedure Create_Market_Offers
      (Manager : in out Factory_Manager)
    is
+      use Harriet.Db;
+
       procedure Add_Ask
         (Item     : Harriet.Db.Commodity_Reference;
          Quantity : Harriet.Quantities.Quantity_Type;
@@ -194,7 +358,6 @@ package body Harriet.Managers.Installations is
          Quantity : Harriet.Quantities.Quantity_Type;
          Value    : Harriet.Money.Money_Type)
       is
-         use type Harriet.Db.Commodity_Reference;
       begin
          if Item /= Manager.Production
            and then not Harriet.Db.Recipe_Input.Is_Recipe_Input
@@ -216,6 +379,10 @@ package body Harriet.Managers.Installations is
    begin
       Harriet.Managers.Agents.Root_Agent_Manager (Manager)
         .Create_Market_Offers;
+
+      if Manager.Recipe = Null_Recipe_Reference then
+         Manager.Choose_Recipe;
+      end if;
 
       Manager.Scan_Current_Stock (Add_Ask'Access);
 
