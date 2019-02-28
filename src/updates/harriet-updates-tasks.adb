@@ -3,7 +3,7 @@ with Ada.Containers.Indefinite_Holders;
 with Ada.Exceptions;
 with Ada.Text_IO;
 
---  with Harriet.Employment;
+with Harriet.Logging;
 with Harriet.Sessions;
 
 package body Harriet.Updates.Tasks is
@@ -54,6 +54,13 @@ package body Harriet.Updates.Tasks is
                      Ada.Text_IO.Put_Line
                        (Ada.Text_IO.Standard_Error,
                         "error while executing update: "
+                        & Ada.Exceptions.Exception_Message (E));
+                     Harriet.Logging.Log
+                       (Actor    => "update task",
+                        Location => "",
+                        Category => "ERROR",
+                        Message  =>
+                           "error while executing update: "
                         & Ada.Exceptions.Exception_Message (E));
                end;
             end loop;

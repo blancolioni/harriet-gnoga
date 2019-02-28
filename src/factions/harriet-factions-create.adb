@@ -340,7 +340,7 @@ package body Harriet.Factions.Create is
          use type Harriet.Db.Installation_Reference;
 
          Capacity : constant Harriet.Quantities.Quantity_Type :=
-                      Harriet.Quantities.To_Quantity (1000.0);
+                      Harriet.Db.Facility.Get (Facility).Capacity;
          Account  : constant Harriet.Db.Account_Reference :=
                       Harriet.Db.Account.Create
                         (Harriet.Db.Null_Account_Reference,

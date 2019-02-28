@@ -19,6 +19,7 @@ with Harriet.Db.Facility_Worker;
 with Harriet.Db.Factory;
 with Harriet.Db.Generated_Resource;
 with Harriet.Db.Installation;
+with Harriet.Db.Pop;
 with Harriet.Db.Pop_Group;
 with Harriet.Db.Produced_Commodity;
 with Harriet.Db.Recipe;
@@ -53,9 +54,12 @@ package body Harriet.Managers.Installations is
    overriding procedure Create_Market_Offers
      (Manager : in out Factory_Manager);
 
+   overriding procedure Get_Required_Stock
+     (Manager : Factory_Manager;
+      Stock   : in out Harriet.Commodities.Stock_Type);
+
    overriding procedure Execute_Agent_Tasks
-     (Manager : in out Factory_Manager)
-   is null;
+     (Manager : in out Factory_Manager);
 
    procedure Choose_Recipe
      (Manager : in out Factory_Manager'Class);
@@ -130,6 +134,7 @@ package body Harriet.Managers.Installations is
          end loop;
 
          declare
+            use type Harriet.Db.Recipe_Reference;
             Input_Price : constant Price_Type :=
                             Price (Input_Cost, Unit);
             Total_Cost  : constant Money_Type :=
@@ -156,7 +161,12 @@ package body Harriet.Managers.Installations is
                  & Harriet.Real_Images.Approximate_Image (Profit * 100.0)
                  & "%")
                & "; score" & Score'Image);
-            return Score;
+            if Recipe = Manager.Recipe then
+               return Score * 2;  --  we don't like change
+            else
+               return Score;
+            end if;
+
          end;
       end Score_Production;
 
@@ -359,19 +369,35 @@ package body Harriet.Managers.Installations is
          Value    : Harriet.Money.Money_Type)
       is
       begin
-         if Item /= Manager.Production
-           and then not Harriet.Db.Recipe_Input.Is_Recipe_Input
-             (Manager.Recipe, Item)
+         if not Harriet.Db.Recipe_Input.Is_Recipe_Input
+           (Manager.Recipe, Item)
          then
             declare
-               use type Harriet.Money.Money_Type;
-               Price : constant Harriet.Money.Price_Type :=
-                         Manager.Current_Market_Bid_Price (Item);
+               Current_Price : constant Harriet.Money.Price_Type :=
+                                 Manager.Current_Market_Bid_Price (Item);
+               Minimum_Price : constant Harriet.Money.Price_Type :=
+                                 Harriet.Money.Adjust_Price
+                                   (Harriet.Money.Price (Value, Quantity),
+                                    1.1);
+               Ask_Price     : constant Harriet.Money.Price_Type :=
+                                 Harriet.Money.Max
+                                   (Current_Price, Minimum_Price);
             begin
-               if Harriet.Money.Total (Price, Quantity) > Value then
-                  Manager.Place_Ask
-                    (Item, Quantity, Price);
-               end if;
+               Manager.Log
+                 ("factory: creating ask for "
+                  & Harriet.Commodities.Local_Name (Item)
+                  & ": quantity "
+                  & Harriet.Quantities.Show (Quantity)
+                  & "; value "
+                  & Harriet.Money.Show (Value)
+                  & "; current price "
+                  & Harriet.Money.Show (Current_Price)
+                  & "; minimum ask price "
+                  & Harriet.Money.Show (Minimum_Price)
+                  & "; ask price "
+                  & Harriet.Money.Show (Ask_Price));
+               Manager.Place_Ask
+                 (Item, Quantity, Ask_Price);
             end;
          end if;
       end Add_Ask;
@@ -416,17 +442,8 @@ package body Harriet.Managers.Installations is
          Quantity : Harriet.Quantities.Quantity_Type;
          Value    : Harriet.Money.Money_Type)
       is
+         pragma Unreferenced (Value);
       begin
-         Harriet.Logging.Log
-           (Actor    => Installation.Identity,
-            Location => Harriet.Worlds.Name (Installation.World),
-            Category => "market",
-            Message  => "creating ask for "
-            & Harriet.Commodities.Local_Name (Item)
-            & ": quantity "
-            & Harriet.Quantities.Show (Quantity)
-            & "; value "
-            & Harriet.Money.Show (Value));
          Manager.Place_Ask
            (Commodity => Item,
             Quantity  => Quantity,
@@ -448,20 +465,6 @@ package body Harriet.Managers.Installations is
                         (Item);
       begin
          if Quantity > Manager.Current_Stock (Item) then
-            Harriet.Logging.Log
-              (Actor    => Installation.Identity,
-               Location => Harriet.Worlds.Name (Installation.World),
-               Category => "market",
-               Message  => "creating bid for "
-               & Harriet.Commodities.Local_Name (Item)
-               & ": quantity "
-               & Harriet.Quantities.Show
-                 (Quantity - Manager.Current_Stock (Item))
-               & "; price "
-               & Harriet.Money.Show
-                 (Harriet.Money.Adjust_Price
-                      (Manager.Current_Agent_Stock_Price (Item),
-                       0.9)));
             Manager.Place_Bid
               (Commodity => Item,
                Quantity  => Quantity - Manager.Current_Stock (Item),
@@ -543,6 +546,111 @@ package body Harriet.Managers.Installations is
          end;
       end loop;
 
+   end Execute_Agent_Tasks;
+
+   -------------------------
+   -- Execute_Agent_Tasks --
+   -------------------------
+
+   overriding procedure Execute_Agent_Tasks
+     (Manager : in out Factory_Manager)
+   is
+      Have      : Harriet.Commodities.Stock_Type;
+   begin
+      Manager.Current_Stock (Have);
+
+      declare
+         use Harriet.Money, Harriet.Quantities;
+         Capacity  : constant Unit_Real :=
+                       Manager.Calculate_Capacity
+                         (Have);
+         Full_Capacity : constant Quantity_Type :=
+                           Harriet.Db.Facility.Get (Manager.Facility)
+                           .Capacity;
+         Current_Capacity : constant Quantity_Type :=
+                              Scale (Full_Capacity, Capacity);
+      begin
+         Manager.Log
+           ("Executing production; capacity: "
+            & Harriet.Real_Images.Approximate_Image (Capacity));
+
+         if Capacity > 0.0 then
+            declare
+               Production_Cost : Money_Type := Zero;
+
+               procedure Consume_Input
+                 (Commodity : Harriet.Db.Commodity_Reference;
+                  Quantity  : Harriet.Quantities.Quantity_Type;
+                  Value     : Harriet.Money.Money_Type);
+
+               -------------------
+               -- Consume_Input --
+               -------------------
+
+               procedure Consume_Input
+                 (Commodity : Harriet.Db.Commodity_Reference;
+                  Quantity  : Harriet.Quantities.Quantity_Type;
+                  Value     : Harriet.Money.Money_Type)
+               is
+               begin
+                  Manager.Log
+                    ("Consuming " & Show (Quantity)
+                     & " "
+                     & Harriet.Commodities.Local_Name (Commodity)
+                     & " value "
+                     & Show (Value));
+                  Manager.Remove_Stock (Commodity, Quantity);
+                  Production_Cost := Production_Cost + Value;
+               end Consume_Input;
+
+            begin
+
+               for Input of
+                 Harriet.Db.Recipe_Input.Select_By_Recipe (Manager.Recipe)
+               loop
+                  declare
+                     Quantity : constant Quantity_Type :=
+                                  Input.Quantity * Current_Capacity;
+                     Price    : constant Price_Type :=
+                                  Manager.Current_Agent_Stock_Price
+                                    (Input.Commodity);
+                     Value    : constant Money_Type :=
+                                  Total (Price, Quantity);
+                  begin
+                     Consume_Input
+                       (Commodity => Input.Commodity,
+                        Quantity  => Quantity,
+                        Value     => Value);
+                  end;
+               end loop;
+
+               for Workers of
+                 Harriet.Db.Pop.Select_By_Installation
+                   (Manager.Installation)
+               loop
+                  Manager.Log ("salary for " & Show (Workers.Size)
+                               & " "
+                               & Harriet.Db.Pop_Group.Get (Workers.Pop_Group)
+                               .Tag
+                               & " "
+                               & Show (Workers.Salary)
+                               & " total "
+                               & Show (Total (Workers.Salary, Workers.Size)));
+                  Production_Cost := Production_Cost
+                    + Total (Workers.Salary, Workers.Size);
+               end loop;
+
+               Manager.Log ("producing " & Show (Current_Capacity)
+                            & " "
+                            & Harriet.Commodities.Local_Name
+                              (Manager.Production)
+                               & " for " & Show (Production_Cost));
+
+               Manager.Add_Stock
+                 (Manager.Production, Current_Capacity, Production_Cost);
+            end;
+         end if;
+      end;
    end Execute_Agent_Tasks;
 
    -------------------------
@@ -736,6 +844,39 @@ package body Harriet.Managers.Installations is
          begin
             Stock.Set_Quantity
               (Commodity, Quantity, Harriet.Money.Total (Price, Quantity));
+         end;
+      end loop;
+   end Get_Required_Stock;
+
+   ------------------------
+   -- Get_Required_Stock --
+   ------------------------
+
+   overriding procedure Get_Required_Stock
+     (Manager : Factory_Manager;
+      Stock   : in out Harriet.Commodities.Stock_Type)
+   is
+   begin
+      for Input of
+        Harriet.Db.Recipe_Input.Select_By_Recipe
+          (Manager.Recipe)
+      loop
+         declare
+            use Harriet.Quantities;
+            Capacity : constant Quantity_Type :=
+                         Harriet.Db.Factory.Get (Manager.Factory).Capacity;
+            Quantity : constant Quantity_Type := Input.Quantity;
+            Required_Quantity : constant Quantity_Type :=
+                                  To_Quantity
+                                    (To_Real (Capacity)
+                                     * To_Real (Quantity)
+                                     * Manager.Capacity);
+         begin
+            Stock.Set_Quantity
+              (Commodity => Input.Commodity,
+               Quantity  => Required_Quantity,
+               Price_Per =>
+                 Manager.Current_Market_Ask_Price (Input.Commodity));
          end;
       end loop;
    end Get_Required_Stock;

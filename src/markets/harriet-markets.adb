@@ -20,6 +20,14 @@ with Harriet.Db.Market_Maps;
 
 package body Harriet.Markets is
 
+   package Ask_Lists is
+     new Ada.Containers.Doubly_Linked_Lists
+       (Harriet.Db.Ask_Offer_Reference, Harriet.Db."=");
+
+   package Bid_Lists is
+     new Ada.Containers.Doubly_Linked_Lists
+       (Harriet.Db.Bid_Offer_Reference, Harriet.Db."=");
+
    package Market_Data_Holder is
      new Ada.Containers.Indefinite_Holders (Market_Data'Class);
 
@@ -144,6 +152,8 @@ package body Harriet.Markets is
       use Harriet.Money;
       use Harriet.Quantities;
       Remaining : Quantity_Type := Quantity;
+      Completed : Bid_Lists.List;
+
    begin
 
       Harriet.Db.Historical_Ask.Create
@@ -159,70 +169,98 @@ package body Harriet.Markets is
           (Market, Commodity, 0.0, Real'Last)
       loop
 
+         if Bid.Quantity = Zero then
+            Completed.Append (Bid.Get_Bid_Offer_Reference);
+         end if;
+
          exit when Bid.Price < Price;
 
          declare
             This_Quantity : constant Quantity_Type :=
                               Min (Bid.Quantity, Remaining);
          begin
-            if Harriet.Commodities.Is_Pop_Group (Commodity) then
-               Log_Market
-                 (Market, Bid.Agent, Commodity,
-                  "employ " & Show (This_Quantity)
-                  & " for " & Show (Total (Price, This_Quantity)));
-               Harriet.Employment.Create_Employment_Contract
-                 (Employer => Bid.Agent,
-                  Employee => Agent,
-                  Quantity => This_Quantity,
-                  Salary   => Price);
-            else
-               Log_Market
-                 (Market, Agent, Commodity,
-                  "sell " & Show (This_Quantity)
-                  & " for " & Show (Total (Price, This_Quantity)));
+            if This_Quantity > Zero then
+               if Harriet.Commodities.Is_Pop_Group (Commodity) then
+                  Log_Market
+                    (Market, Bid.Agent, Commodity,
+                     "employ " & Show (This_Quantity)
+                     & " for " & Show (Total (Price, This_Quantity)));
+                  Harriet.Employment.Create_Employment_Contract
+                    (Employer => Bid.Agent,
+                     Employee => Agent,
+                     Quantity => This_Quantity,
+                     Salary   => Price);
+               else
+                  Log_Market
+                    (Market, Agent, Commodity,
+                     "sell " & Show (This_Quantity)
+                     & " of " & Show (Bid.Quantity)
+                     & " to Agent" & Harriet.Db.To_String (Bid.Agent)
+                     & " for "
+                     & Show (Price)
+                     & " ea; total "
+                     & Show (Total (Price, This_Quantity)));
+               end if;
+
+               Execute_Ask_Offer
+                 (Account   => Account,
+                  Has_Stock => Has_Stock,
+                  Commodity => Commodity,
+                  Quantity  => This_Quantity,
+                  Price     => Price);
+
+               Execute_Bid_Offer
+                 (Account   => Bid.Account,
+                  Has_Stock => Bid.Has_Stock,
+                  Commodity => Commodity,
+                  Quantity  => This_Quantity,
+                  Price     => Price);
+
+               Bid.Set_Quantity (Bid.Quantity - This_Quantity);
+               if Bid.Quantity = Zero then
+                  Completed.Append (Bid.Get_Bid_Offer_Reference);
+               end if;
+
+               Harriet.Db.Transaction.Create
+                 (Time_Stamp => Harriet.Calendar.Clock,
+                  Market     => Market,
+                  Commodity  => Commodity,
+                  Buyer      => Bid.Agent,
+                  Seller     => Agent,
+                  Price      => Price,
+                  Quantity   => This_Quantity);
+               Remaining := Remaining - This_Quantity;
             end if;
-
-            Execute_Ask_Offer
-              (Account   => Account,
-               Has_Stock => Has_Stock,
-               Commodity => Commodity,
-               Quantity  => This_Quantity,
-               Price     => Price);
-
-            Execute_Bid_Offer
-              (Account   => Bid.Account,
-               Has_Stock => Bid.Has_Stock,
-               Commodity => Commodity,
-               Quantity  => This_Quantity,
-               Price     => Price);
-
-            Bid.Set_Quantity (Bid.Quantity - This_Quantity);
-
-            Harriet.Db.Transaction.Create
-              (Time_Stamp => Harriet.Calendar.Clock,
-               Market     => Market,
-               Commodity  => Commodity,
-               Buyer      => Bid.Agent,
-               Seller     => Agent,
-               Price      => Price,
-               Quantity   => This_Quantity);
-            Remaining := Remaining - Quantity;
          end;
          exit when Remaining = Zero;
       end loop;
 
-      if Remaining > Zero then
-         Harriet.Db.Ask_Offer.Create
-           (Market    => Market,
-            Commodity => Commodity,
-            Offer     => Harriet.Db.Ask,
-            Agent     => Agent,
-            Has_Stock => Has_Stock,
-            Account   => Account,
-            Price     => Price,
-            Priority  => Harriet.Money.To_Real (Price),
-            Quantity  => Remaining);
-      end if;
+      declare
+         Offer : constant Harriet.Db.Ask_Offer.Ask_Offer_Type :=
+                   Harriet.Db.Ask_Offer.Get_By_Market_Offer
+                     (Market    => Market,
+                      Agent     => Agent,
+                      Commodity => Commodity,
+                      Offer     => Harriet.Db.Ask);
+      begin
+         if Offer.Has_Element then
+            Offer.Set_Price (Price);
+            Offer.Set_Priority (Harriet.Money.To_Real (Price));
+            Offer.Set_Quantity (Remaining);
+         elsif Remaining > Zero then
+            Harriet.Db.Ask_Offer.Create
+              (Market    => Market,
+               Commodity => Commodity,
+               Offer     => Harriet.Db.Ask,
+               Agent     => Agent,
+               Has_Stock => Has_Stock,
+               Account   => Account,
+               Price     => Price,
+               Priority  => Harriet.Money.To_Real (Price),
+               Quantity  => Remaining);
+         end if;
+      end;
+
    end Ask;
 
    ---------
@@ -258,6 +296,7 @@ package body Harriet.Markets is
       use Harriet.Money;
       use Harriet.Quantities;
       Remaining : Quantity_Type := Quantity;
+      Completed : Ask_Lists.List;
    begin
 
       Harriet.Db.Historical_Bid.Create
@@ -273,6 +312,10 @@ package body Harriet.Markets is
           (Market, Commodity, 0.0, Real'Last)
       loop
 
+         if Ask.Quantity = Zero then
+            Completed.Append (Ask.Get_Ask_Offer_Reference);
+         end if;
+
          exit when Ask.Price > Price;
 
          declare
@@ -280,66 +323,89 @@ package body Harriet.Markets is
                               Min (Ask.Quantity, Remaining);
          begin
 
-            if Harriet.Commodities.Is_Pop_Group (Commodity) then
-               Log_Market
-                 (Market, Agent, Commodity,
-                  "employ " & Show (This_Quantity)
-                  & " for " & Show (Total (Price, This_Quantity)));
-               Harriet.Employment.Create_Employment_Contract
-                 (Employer => Agent,
-                  Employee => Ask.Agent,
-                  Quantity => This_Quantity,
-                  Salary   => Price);
-            else
-               Log_Market
-                 (Market, Agent, Commodity,
-                  "buy " & Show (This_Quantity)
-                  & " for " & Show (Total (Price, This_Quantity)));
+            if This_Quantity > Zero then
+               if Harriet.Commodities.Is_Pop_Group (Commodity) then
+                  Log_Market
+                    (Market, Agent, Commodity,
+                     "employ " & Show (This_Quantity)
+                     & " for " & Show (Total (Price, This_Quantity)));
+                  Harriet.Employment.Create_Employment_Contract
+                    (Employer => Agent,
+                     Employee => Ask.Agent,
+                     Quantity => This_Quantity,
+                     Salary   => Price);
+               else
+                  Log_Market
+                    (Market, Agent, Commodity,
+                     "buy " & Show (This_Quantity)
+                     & " of " & Show (Ask.Quantity)
+                     & " from Agent" & Harriet.Db.To_String (Ask.Agent)
+                     & " for "
+                     & Show (Price)
+                     & " ea; total "
+                     & Show (Total (Price, This_Quantity)));
 
+               end if;
+
+               Execute_Bid_Offer
+                 (Account   => Account,
+                  Has_Stock => Has_Stock,
+                  Commodity => Commodity,
+                  Quantity  => This_Quantity,
+                  Price     => Price);
+
+               Execute_Ask_Offer
+                 (Account   => Ask.Account,
+                  Has_Stock => Ask.Has_Stock,
+                  Commodity => Commodity,
+                  Quantity  => This_Quantity,
+                  Price     => Price);
+
+               Ask.Set_Quantity (Ask.Quantity - This_Quantity);
+               if Ask.Quantity = Zero then
+                  Completed.Append (Ask.Get_Ask_Offer_Reference);
+               end if;
+
+               Harriet.Db.Transaction.Create
+                 (Time_Stamp => Harriet.Calendar.Clock,
+                  Market     => Market,
+                  Commodity  => Commodity,
+                  Buyer      => Agent,
+                  Seller     => Ask.Agent,
+                  Price      => Price,
+                  Quantity   => This_Quantity);
+
+               Remaining := Remaining - This_Quantity;
             end if;
-
-            Execute_Bid_Offer
-              (Account   => Account,
-               Has_Stock => Has_Stock,
-               Commodity => Commodity,
-               Quantity  => This_Quantity,
-               Price     => Price);
-
-            Execute_Ask_Offer
-              (Account   => Ask.Account,
-               Has_Stock => Ask.Has_Stock,
-               Commodity => Commodity,
-               Quantity  => This_Quantity,
-               Price     => Price);
-
-            Ask.Set_Quantity (Ask.Quantity - This_Quantity);
-
-            Harriet.Db.Transaction.Create
-              (Time_Stamp => Harriet.Calendar.Clock,
-               Market     => Market,
-               Commodity  => Commodity,
-               Buyer      => Agent,
-               Seller     => Ask.Agent,
-               Price      => Price,
-               Quantity   => This_Quantity);
-
-            Remaining := Remaining - Quantity;
          end;
          exit when Remaining = Zero;
       end loop;
 
-      if Remaining > Zero then
-         Harriet.Db.Bid_Offer.Create
-           (Market    => Market,
-            Commodity => Commodity,
-            Offer     => Harriet.Db.Bid,
-            Agent     => Agent,
-            Has_Stock => Has_Stock,
-            Account   => Account,
-            Price     => Price,
-            Priority  => 1.0 / Harriet.Money.To_Real (Price),
-            Quantity  => Quantity);
-      end if;
+      declare
+         Offer : constant Harriet.Db.Bid_Offer.Bid_Offer_Type :=
+                   Harriet.Db.Bid_Offer.Get_By_Market_Offer
+                     (Market    => Market,
+                      Agent     => Agent,
+                      Commodity => Commodity,
+                      Offer     => Harriet.Db.Bid);
+      begin
+         if Offer.Has_Element then
+            Offer.Set_Price (Price);
+            Offer.Set_Priority (1.0 / Harriet.Money.To_Real (Price));
+            Offer.Set_Quantity (Remaining);
+         elsif Remaining > Zero then
+            Harriet.Db.Bid_Offer.Create
+              (Market    => Market,
+               Commodity => Commodity,
+               Offer     => Harriet.Db.Bid,
+               Agent     => Agent,
+               Has_Stock => Has_Stock,
+               Account   => Account,
+               Price     => Price,
+               Priority  => 1.0 / Harriet.Money.To_Real (Price),
+               Quantity  => Quantity);
+         end if;
+      end;
 
    end Bid;
 
@@ -626,30 +692,39 @@ package body Harriet.Markets is
    procedure Reset_Offers
      (Market : Harriet.Db.Market_Reference;
       Agent  : Harriet.Db.Agent_Reference)
-   is
-      package Offer_Lists is
-        new Ada.Containers.Doubly_Linked_Lists
-          (Harriet.Db.Market_Offer_Reference,
-           Harriet.Db."=");
-      Offers : Offer_Lists.List;
-   begin
-      for Offer of
-        Harriet.Db.Market_Offer.Select_By_Agent_Offer
-          (Market, Agent)
-      loop
-         Offers.Append (Offer.Get_Market_Offer_Reference);
-      end loop;
+   is null;
 
-      for Reference of Offers loop
-         declare
-            Offer : Harriet.Db.Market_Offer.Market_Offer_Type :=
-                      Harriet.Db.Market_Offer.Get (Reference);
-         begin
-            Offer.Delete;
-         end;
-      end loop;
-
-   end Reset_Offers;
+--        package Offer_Lists is
+--          new Ada.Containers.Doubly_Linked_Lists
+--            (Harriet.Db.Market_Offer_Reference,
+--             Harriet.Db."=");
+--        Offers : Offer_Lists.List;
+--     begin
+--        for Offer of
+--          Harriet.Db.Market_Offer.Select_By_Agent_Offer
+--            (Market, Agent)
+--        loop
+--           Offers.Append (Offer.Get_Market_Offer_Reference);
+--        end loop;
+--
+--        for Reference of Offers loop
+--           declare
+--              Offer : Harriet.Db.Market_Offer.Market_Offer_Type :=
+--                        Harriet.Db.Market_Offer.Get (Reference);
+--           begin
+--              Log_Market (Market, Agent, Offer.Commodity,
+--                          "delete "
+--                          & Harriet.Db.Offer_Type'Image (Offer.Offer)
+--                          & ": "
+--                          & Harriet.Quantities.Show (Offer.Quantity)
+--                          & " @ "
+--                          & Harriet.Money.Show (Offer.Price)
+--                          & " ea");
+--              Offer.Delete;
+--           end;
+--        end loop;
+--
+--     end Reset_Offers;
 
    -------------
    -- Try_Bid --

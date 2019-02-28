@@ -72,6 +72,21 @@ package body Harriet.Managers.Agents is
         (M.Next_Sleep_Duration);
    end Activate;
 
+   ---------------
+   -- Add_Stock --
+   ---------------
+
+   procedure Add_Stock
+     (Manager   : Root_Agent_Manager'Class;
+      Commodity : Harriet.Db.Commodity_Reference;
+      Quantity  : Harriet.Quantities.Quantity_Type;
+      Value     : Harriet.Money.Money_Type)
+   is
+   begin
+      Harriet.Stock.Add_Stock
+        (Manager.Has_Stock, Commodity, Quantity, Value);
+   end Add_Stock;
+
    ------------------------
    -- Calculate_Capacity --
    ------------------------
@@ -106,7 +121,7 @@ package body Harriet.Managers.Agents is
                        To_Real (Have) / To_Real (Required);
       begin
          if Limit < Capacity then
-            Capacity := Limit;
+            Capacity := Limit * 0.9;
          end if;
       end Limit_Capacity;
 
@@ -215,15 +230,6 @@ package body Harriet.Managers.Agents is
 --              & Harriet.Real_Images.Approximate_Image (Manager.Capacity));
 --
 --           Missing := Available.Missing (Required);
-
-         Harriet.Logging.Log
-           (Actor    => "Agent" & Harriet.Db.To_String (Manager.Agent),
-            Location => Harriet.Worlds.Name (Manager.World),
-            Category => "manager",
-            Message  =>
-              "bidding on "
-            & Harriet.Quantities.Show (Missing.Total_Quantity)
-            & " items");
 
          Missing.Iterate (Place_Bid'Access);
       end if;
@@ -397,6 +403,18 @@ package body Harriet.Managers.Agents is
       Manager.World := World;
    end Initialize_Agent_Manager;
 
+   ---------
+   -- Log --
+   ---------
+
+   procedure Log
+     (Manager : Root_Agent_Manager'Class;
+      Message : String)
+   is
+   begin
+      Harriet.Agents.Log_Agent (Manager.Agent, Message);
+   end Log;
+
    ----------------------
    -- Log_Market_State --
    ----------------------
@@ -480,6 +498,15 @@ package body Harriet.Managers.Agents is
       Price     : Harriet.Money.Price_Type)
    is
    begin
+      Manager.Log
+        ("ask " & Harriet.Money.Show (Price)
+         & " for "
+         & Harriet.Quantities.Show (Quantity)
+         & " "
+         & Harriet.Commodities.Local_Name (Commodity)
+         & "; total "
+         & Harriet.Money.Show
+           (Harriet.Money.Total (Price, Quantity)));
       Harriet.Markets.Ask
         (Market    => Manager.Market,
          Agent     => Manager.Agent,
@@ -501,6 +528,16 @@ package body Harriet.Managers.Agents is
       Price     : Harriet.Money.Price_Type)
    is
    begin
+      Manager.Log
+        ("bid " & Harriet.Money.Show (Price)
+         & " for "
+         & Harriet.Quantities.Show (Quantity)
+         & " "
+         & Harriet.Commodities.Local_Name (Commodity)
+         & "; total "
+         & Harriet.Money.Show
+           (Harriet.Money.Total (Price, Quantity)));
+
       Harriet.Markets.Bid
         (Market    => Manager.Market,
          Agent     => Manager.Agent,

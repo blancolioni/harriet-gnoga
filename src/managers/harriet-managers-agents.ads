@@ -76,6 +76,12 @@ package Harriet.Managers.Agents is
       Commodity : Harriet.Db.Commodity_Reference)
       return Harriet.Quantities.Quantity_Type;
 
+   procedure Add_Stock
+     (Manager   : Root_Agent_Manager'Class;
+      Commodity : Harriet.Db.Commodity_Reference;
+      Quantity  : Harriet.Quantities.Quantity_Type;
+      Value     : Harriet.Money.Money_Type);
+
    procedure Remove_Stock
      (Manager   : Root_Agent_Manager'Class;
       Commodity : Harriet.Db.Commodity_Reference;
@@ -120,6 +126,10 @@ package Harriet.Managers.Agents is
    function Cash
      (Manager : Root_Agent_Manager'Class)
       return Harriet.Money.Money_Type;
+
+   procedure Log
+     (Manager : Root_Agent_Manager'Class;
+      Message : String);
 
    procedure Log_Market_State
      (Manager : Root_Agent_Manager'Class);

@@ -1,3 +1,5 @@
+with Ada.Text_IO;
+
 with Harriet.Calendar;
 with Harriet.Logging;
 
@@ -84,6 +86,22 @@ package body Harriet.Stock is
       end if;
 
    end Add_Stock;
+
+   ------------------------
+   -- Get_Price_Per_Item --
+   ------------------------
+
+   function Get_Price_Per_Item
+     (Has_Stock : Harriet.Db.Has_Stock_Reference;
+      Commodity : Harriet.Db.Commodity_Reference)
+      return Harriet.Money.Price_Type
+   is
+      Quantity : Harriet.Quantities.Quantity_Type;
+      Value    : Harriet.Money.Money_Type;
+   begin
+      Get_Stock (Has_Stock, Commodity, Quantity, Value);
+      return Harriet.Money.Price (Value, Quantity);
+   end Get_Price_Per_Item;
 
    ------------------
    -- Get_Quantity --
@@ -215,10 +233,21 @@ package body Harriet.Stock is
             Stock : constant Harriet.Db.Stock_Item.Stock_Item_Type :=
                       Harriet.Db.Stock_Item.Get_By_Stock_Item
                         (From, Item);
+            Available : constant Quantity_Type := Stock.Quantity;
             Value : Money_Type;
          begin
+            if Available < Quantity then
+               Ada.Text_IO.Put_Line
+                 (Ada.Text_IO.Standard_Error,
+                  "remove-stock: "
+                  & Harriet.Commodities.Local_Name (Item)
+                  & ": attempt to remove "
+                  & Image (Quantity) & " but have only "
+                  & Image (Available));
+            end if;
+
             pragma Assert (Stock.Has_Element);
-            pragma Assert (Stock.Quantity >= Quantity);
+            pragma Assert (Available >= Quantity);
 
             Value := Total (Price (Stock.Value, Stock.Quantity), Quantity);
             Stock.Set_Quantity (Stock.Quantity - Quantity);

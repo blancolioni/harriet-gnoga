@@ -43,6 +43,11 @@ package Harriet.Stock is
       Commodity : Harriet.Db.Commodity_Reference)
       return Harriet.Money.Money_Type;
 
+   function Get_Price_Per_Item
+     (Has_Stock : Harriet.Db.Has_Stock_Reference;
+      Commodity : Harriet.Db.Commodity_Reference)
+      return Harriet.Money.Price_Type;
+
    procedure Get_Stock
      (Has_Stock : Harriet.Db.Has_Stock_Reference;
       Commodity : Harriet.Db.Commodity_Reference;
