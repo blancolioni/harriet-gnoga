@@ -20,6 +20,10 @@ package Harriet.Managers.Agents is
       Stock    : in out Harriet.Commodities.Stock_Type)
    is abstract;
 
+   procedure Get_Desired_Stock
+     (Manager  : Root_Agent_Manager;
+      Stock    : in out Harriet.Commodities.Stock_Type);
+
    procedure Execute_Agent_Tasks
      (Manager : in out Root_Agent_Manager)
    is abstract;

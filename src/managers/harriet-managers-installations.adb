@@ -58,6 +58,10 @@ package body Harriet.Managers.Installations is
      (Manager : Factory_Manager;
       Stock   : in out Harriet.Commodities.Stock_Type);
 
+   overriding procedure Get_Desired_Stock
+     (Manager : Factory_Manager;
+      Stock   : in out Harriet.Commodities.Stock_Type);
+
    overriding procedure Execute_Agent_Tasks
      (Manager : in out Factory_Manager);
 
@@ -818,6 +822,39 @@ package body Harriet.Managers.Installations is
       end if;
 
    end Execute_Agent_Tasks;
+
+   -----------------------
+   -- Get_Desired_Stock --
+   -----------------------
+
+   overriding procedure Get_Desired_Stock
+     (Manager : Factory_Manager;
+      Stock   : in out Harriet.Commodities.Stock_Type)
+   is
+      use Harriet.Quantities;
+      Capacity : constant Quantity_Type :=
+                   Harriet.Db.Factory.Get (Manager.Factory).Capacity;
+   begin
+      for Input of
+        Harriet.Db.Recipe_Input.Select_By_Recipe
+          (Manager.Recipe)
+      loop
+         declare
+            Quantity         : constant Quantity_Type := Input.Quantity;
+            Desired_Quantity : constant Quantity_Type :=
+                                 To_Quantity
+                                   (To_Real (Capacity)
+                                    * To_Real (Quantity)
+                                    * 4.0);
+         begin
+            Stock.Set_Quantity
+              (Commodity => Input.Commodity,
+               Quantity  => Desired_Quantity,
+               Price_Per =>
+                 Manager.Current_Market_Ask_Price (Input.Commodity));
+         end;
+      end loop;
+   end Get_Desired_Stock;
 
    ------------------------
    -- Get_Required_Stock --

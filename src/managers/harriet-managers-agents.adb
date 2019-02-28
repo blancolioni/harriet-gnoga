@@ -196,7 +196,7 @@ package body Harriet.Managers.Agents is
          Message  => "create market offers");
       Manager.Current_Stock (Have);
       Manager.Capacity := 1.0;
-      M.Get_Required_Stock (Required);
+      M.Get_Desired_Stock (Required);
       Missing := Harriet.Commodities.Missing (Have, Required);
 
       if Missing.Total_Quantity > Zero then
@@ -362,6 +362,18 @@ package body Harriet.Managers.Agents is
    begin
       return Last_Field;
    end Field_Count;
+
+   -----------------------
+   -- Get_Desired_Stock --
+   -----------------------
+
+   procedure Get_Desired_Stock
+     (Manager  : Root_Agent_Manager;
+      Stock    : in out Harriet.Commodities.Stock_Type)
+   is
+   begin
+      Root_Agent_Manager'Class (Manager).Get_Required_Stock (Stock);
+   end Get_Desired_Stock;
 
    -------------
    -- Heading --
