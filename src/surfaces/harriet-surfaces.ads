@@ -1,4 +1,3 @@
-private with Ada.Containers.Doubly_Linked_Lists;
 private with Ada.Containers.Vectors;
 
 with Ada.Numerics.Generic_Real_Arrays;
@@ -30,13 +29,16 @@ package Harriet.Surfaces is
    function Neighbour_Count
      (Surface : Root_Surface_Type'Class;
       Tile    : Surface_Tile_Index)
-      return Tile_Neighbour_Count;
+      return Tile_Neighbour_Count
+     with Pre => Tile <= Surface.Tile_Count;
 
    function Neighbour
      (Surface : Root_Surface_Type'Class;
       Tile    : Surface_Tile_Index;
       Index   : Tile_Neighbour_Index)
-      return Surface_Tile_Index;
+      return Surface_Tile_Index
+     with Pre => Tile <= Surface.Tile_Count
+     and then Index <= Surface.Neighbour_Count (Tile);
 
    function Get_Tile
      (Relative_Latitude  : Signed_Unit_Real;
@@ -71,9 +73,9 @@ package Harriet.Surfaces is
       Tile    : Surface_Tile_Index)
       return Tile_Vertex_Array;
 
-   procedure Create
-     (Surface        : in out Root_Surface_Type'Class;
-      Required_Depth : Positive);
+   procedure Create_Voronoi_Partition
+     (Surface : in out Root_Surface_Type'Class;
+      Count   : Natural);
 
    subtype Surface_Type is Root_Surface_Type'Class;
 
@@ -82,36 +84,47 @@ private
    package Neighbour_Vectors is
      new Ada.Containers.Vectors (Tile_Neighbour_Index, Surface_Tile_Index);
 
-   type Vertex_Record is
-      record
-         Position        : Vector_3;
-         Neighbours      : Neighbour_Vectors.Vector;
-      end record;
-
-   package Vertex_Vectors is
-     new Ada.Containers.Vectors (Surface_Tile_Index, Vertex_Record);
-
-   type Array_Of_Surface_Tile_Index is
-     array (Positive range <>) of Surface_Tile_Index;
-
    type Tile_Vertex_Index is new Surface_Tile_Index;
 
    package Tile_Vertex_Vectors is
-     new Ada.Containers.Vectors (Tile_Vertex_Index, Vector_3,
+     new Ada.Containers.Vectors (Tile_Neighbour_Index, Vector_3,
                                  Real_Arrays."=");
 
-   package Vertex_Lists is
-     new Ada.Containers.Doubly_Linked_Lists (Tile_Vertex_Index);
+   type Tile_Record is
+      record
+         Position    : Vector_3;
+         Vertices    : Tile_Vertex_Vectors.Vector;
+         Neighbours  : Neighbour_Vectors.Vector;
+      end record;
 
-   package Edge_Vectors is
-     new Ada.Containers.Vectors
-       (Surface_Tile_Index, Vertex_Lists.List, Vertex_Lists."=");
+   package Tile_Vectors is
+     new Ada.Containers.Vectors (Surface_Tile_Index, Tile_Record);
+
+   package Vertex_Vectors is
+     new Ada.Containers.Vectors (Positive, Vector_3, Real_Arrays."=");
 
    type Root_Surface_Type is tagged
       record
          Vertices      : Vertex_Vectors.Vector;
-         Tile_Vertices : Tile_Vertex_Vectors.Vector;
-         Tile_Edges    : Edge_Vectors.Vector;
+         Tiles         : Tile_Vectors.Vector;
       end record;
+
+   function Tile_Count
+     (Surface : Root_Surface_Type'Class)
+      return Surface_Tile_Count
+   is (Surface.Tiles.Last_Index);
+
+   function Neighbour_Count
+     (Surface : Root_Surface_Type'Class;
+      Tile    : Surface_Tile_Index)
+      return Tile_Neighbour_Count
+   is (Surface.Tiles (Tile).Neighbours.Last_Index);
+
+   function Neighbour
+     (Surface : Root_Surface_Type'Class;
+      Tile    : Surface_Tile_Index;
+      Index   : Tile_Neighbour_Index)
+      return Surface_Tile_Index
+   is (Surface.Tiles (Tile).Neighbours (Index));
 
 end Harriet.Surfaces;

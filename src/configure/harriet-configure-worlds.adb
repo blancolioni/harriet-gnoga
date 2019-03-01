@@ -3,6 +3,7 @@ with Ada.Text_IO;
 with Harriet.Random;
 
 with Harriet.Climates;
+with Harriet.Solar_System;
 with Harriet.Surfaces;
 
 with Harriet.Db.Climate_Terrain;
@@ -27,24 +28,22 @@ package body Harriet.Configure.Worlds is
      (World : Harriet.Db.World_Reference)
    is
       use Harriet.Db;
-      Required_Depth : Natural;
-      Rec            : constant Harriet.Db.World.World_Type :=
-                         Harriet.Db.World.Get (World);
+      Tile_Count : Natural;
+      Rec        : constant Harriet.Db.World.World_Type :=
+                     Harriet.Db.World.Get (World);
+      Radius     : constant Non_Negative_Real :=
+                     Rec.Radius
+                       / Harriet.Solar_System.Earth_Radius;
    begin
+
       case Rec.Category is
-         when Asteroid =>
-            Required_Depth := 1;
-         when Dwarf =>
-            Required_Depth := 1;
-         when Terrestrial =>
-            Required_Depth := 2;
-         when Super_Terrestrial =>
-            Required_Depth := 3;
+         when Asteroid | Dwarf | Terrestrial | Super_Terrestrial =>
+            Tile_Count := Natural (Radius * 5.0);
          when Sub_Jovian | Jovian | Super_Jovian =>
-            Required_Depth := 0;
+            Tile_Count := 0;
       end case;
 
-      if Required_Depth = 0 then
+      if Tile_Count = 0 then
          return;
       end if;
 
@@ -52,8 +51,9 @@ package body Harriet.Configure.Worlds is
          Surface   : Harriet.Surfaces.Root_Surface_Type;
       begin
          Ada.Text_IO.Put_Line
-           (Rec.Name & ": creating surface of depth" & Required_Depth'Image);
-         Surface.Create (Required_Depth);
+           (Rec.Name & ": creating surface with "
+            & Tile_Count'Image & " tiles");
+         Surface.Create_Voronoi_Partition (Tile_Count);
 
          Ada.Text_IO.Put_Line
            (Rec.Name & ": saving"

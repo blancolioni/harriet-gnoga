@@ -19,6 +19,25 @@ package Harriet.Voronoi_Diagrams is
    procedure Generate
      (Diagram : in out Voronoi_Diagram'Class);
 
+   function Delauny_Triangle_Count
+     (Diagram : Voronoi_Diagram'Class)
+      return Natural;
+
+   procedure Get_Delauny_Triangle
+     (Diagram : Voronoi_Diagram'Class;
+      Index   : Positive;
+      A, B, C : out Positive);
+
+   procedure Get_Delauny_Triangle_Vertex
+     (Diagram        : Voronoi_Diagram'Class;
+      Vertex_Index   : Positive;
+      X, Y           : out Real);
+
+   procedure Get_Delauny_Triangle_Vertex
+     (Diagram        : Voronoi_Diagram'Class;
+      Vertex_Index   : Positive;
+      X, Y, Z        : out Signed_Unit_Real);
+
    function Polygon_Count
      (Item : Voronoi_Diagram'Class)
       return Natural;
@@ -40,11 +59,20 @@ package Harriet.Voronoi_Diagrams is
       Vertex_Index  : Positive)
       return Real;
 
+   function Vertex_Count
+     (Item : Voronoi_Diagram'Class)
+      return Natural;
+
    procedure Get_Spherical_Vertex
      (Item          : Voronoi_Diagram'Class;
-      Polygon_Index : Positive;
       Vertex_Index  : Positive;
       X, Y, Z       : out Signed_Unit_Real);
+
+   function Polygon_Vertex_Index
+     (Item           : Voronoi_Diagram'Class;
+      Polygon_Index  : Positive;
+      Index          : Positive)
+      return Positive;
 
 private
 
@@ -75,13 +103,39 @@ private
    package Polygon_Vectors is
      new Ada.Containers.Indefinite_Vectors (Positive, Voronoi_Polygon);
 
+   type Voronoi_Triangle is
+      record
+         A, B, C : Positive;
+      end record;
+
+   package Triangle_Vectors is
+     new Ada.Containers.Vectors (Positive, Voronoi_Triangle);
+
    type Voronoi_Diagram is tagged limited
       record
          Sites        : Site_Vectors.Vector;
+         Triangles    : Triangle_Vectors.Vector;
          Min_X, Min_Y : Real := Real'Last;
          Max_X, Max_Y : Real := Real'First;
          Diagram_Pts  : Point_Vectors.Vector;
          Diagram      : Polygon_Vectors.Vector;
       end record;
+
+   function Vertex_Count
+     (Item : Voronoi_Diagram'Class)
+      return Natural
+   is (Item.Diagram_Pts.Last_Index);
+
+   function Polygon_Vertex_Index
+     (Item           : Voronoi_Diagram'Class;
+      Polygon_Index  : Positive;
+      Index          : Positive)
+      return Positive
+   is (Item.Diagram.Element (Polygon_Index).Vertices (Index));
+
+   function Delauny_Triangle_Count
+     (Diagram : Voronoi_Diagram'Class)
+      return Natural
+   is (Diagram.Triangles.Last_Index);
 
 end Harriet.Voronoi_Diagrams;

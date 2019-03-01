@@ -234,7 +234,7 @@ package body Harriet.Worlds is
      (Sector : Harriet.Db.World_Sector_Reference)
       return World_Sector_Array
    is
-      Result : World_Sector_Array (1 .. 10);
+      Result : World_Sector_Array (1 .. 20);
       Count  : Natural := 0;
    begin
       for Neighbour of
