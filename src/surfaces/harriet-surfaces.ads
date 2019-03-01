@@ -7,8 +7,7 @@ package Harriet.Surfaces is
 
    Max_Surface_Tiles : constant := 60_000;
 
-   Min_Tile_Neighbours : constant := 5;
-   Max_Tile_Neighbours : constant := 7;
+   Max_Tile_Neighbours : constant := 20;
 
    type Surface_Tile_Count is range 0 .. Max_Surface_Tiles;
    subtype Surface_Tile_Index is
@@ -80,20 +79,17 @@ package Harriet.Surfaces is
 
 private
 
+   package Neighbour_Vectors is
+     new Ada.Containers.Vectors (Tile_Neighbour_Index, Surface_Tile_Index);
+
    type Vertex_Record is
       record
          Position        : Vector_3;
-         Neighbour_Count : Tile_Neighbour_Count;
-         Neighbours      : Array_Of_Tile_Neighbours (Tile_Neighbour_Index);
+         Neighbours      : Neighbour_Vectors.Vector;
       end record;
 
    package Vertex_Vectors is
      new Ada.Containers.Vectors (Surface_Tile_Index, Vertex_Record);
-
-   type Triangle_Record is
-      record
-         V1, V2, V3 : Surface_Tile_Index;
-      end record;
 
    type Array_Of_Surface_Tile_Index is
      array (Positive range <>) of Surface_Tile_Index;
@@ -111,13 +107,9 @@ private
      new Ada.Containers.Vectors
        (Surface_Tile_Index, Vertex_Lists.List, Vertex_Lists."=");
 
-   package Triangle_Vectors is
-     new Ada.Containers.Vectors (Surface_Tile_Index, Triangle_Record);
-
    type Root_Surface_Type is tagged
       record
          Vertices      : Vertex_Vectors.Vector;
-         Triangles     : Triangle_Vectors.Vector;
          Tile_Vertices : Tile_Vertex_Vectors.Vector;
          Tile_Edges    : Edge_Vectors.Vector;
       end record;

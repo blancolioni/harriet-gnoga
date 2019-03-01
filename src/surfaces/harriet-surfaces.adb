@@ -20,6 +20,14 @@ package body Harriet.Surfaces is
    package Vertex_Map_Lists is
      new Ada.Containers.Doubly_Linked_Lists (Vertex_Index_Map);
 
+   type Triangle_Record is
+      record
+         V1, V2, V3 : Surface_Tile_Index;
+      end record;
+
+   package Triangle_Vectors is
+     new Ada.Containers.Vectors (Surface_Tile_Index, Triangle_Record);
+
    --------------------
    -- Create_Surface --
    --------------------
@@ -41,13 +49,15 @@ package body Harriet.Surfaces is
         ((-X, 0.0, Z), (X, 0.0, Z), (-X, 0.0, -Z), (X, 0.0, -Z),
          (0.0, Z, X), (0.0, Z, -X), (0.0, -Z, X), (0.0, -Z, -X),
          (Z, X, 0.0), (-Z, X, 0.0), (Z, -X, 0.0), (-Z, -X, 0.0));
-      Triangles   : constant array (1 .. 20, 1 .. 3) of Surface_Tile_Index :=
+      Initial_Triangles     : constant array (1 .. 20, 1 .. 3)
+        of Surface_Tile_Index :=
         ((2, 5, 1), (5, 10, 1), (5, 6, 10), (9, 6, 5), (2, 9, 5),
          (2, 11, 9), (11, 4, 9), (9, 4, 6), (4, 3, 6), (4, 8, 3),
          (4, 11, 8), (11, 7, 8), (7, 12, 8), (7, 1, 12), (7, 2, 1),
          (11, 2, 7), (12, 1, 10), (3, 12, 10), (6, 3, 10), (12, 3, 8));
 
       Vertex_Map : Vertex_Map_Lists.List;
+      Triangles     : Triangle_Vectors.Vector;
 
       procedure Add_Neighbour
         (Tile      : in out Vertex_Record;
@@ -77,8 +87,7 @@ package body Harriet.Surfaces is
          Neighbour : in Surface_Tile_Index)
       is
       begin
-         Tile.Neighbour_Count := Tile.Neighbour_Count + 1;
-         Tile.Neighbours (Tile.Neighbour_Count) := Neighbour;
+         Tile.Neighbours.Append (Neighbour);
       end Add_Neighbour;
 
       ----------------
@@ -145,7 +154,7 @@ package body Harriet.Surfaces is
             V12 : Vector_3 :=  (V1 + V2) / 2.0;
          begin
             V12 := V12 / abs V12;
-            Vs.Append ((V12, 0, (others => 1)));
+            Vs.Append ((V12, Neighbours => <>));
             Vertex_Map.Append ((Index_1, Index_2, Vs.Last_Index));
             return Vs.Last_Index;
          end;
@@ -171,7 +180,7 @@ package body Harriet.Surfaces is
                Add_Neighbour (Tile_1, Index_2);
                Add_Neighbour (Tile_2, Index_3);
                Add_Neighbour (Tile_3, Index_1);
-               Surface.Triangles.Append ((Index_1, Index_2, Index_3));
+               Triangles.Append ((Index_1, Index_2, Index_3));
             end;
          else
             declare
@@ -192,13 +201,13 @@ package body Harriet.Surfaces is
 
    begin
       for V of Vertex_Data loop
-         Vs.Append ((V, 0, (others => 1)));
+         Vs.Append ((V, Neighbours => <>));
       end loop;
 
-      for I in Triangles'Range (1) loop
-         Subdivide (Triangles (I, 1),
-                    Triangles (I, 2),
-                    Triangles (I, 3),
+      for I in Initial_Triangles'Range (1) loop
+         Subdivide (Initial_Triangles (I, 1),
+                    Initial_Triangles (I, 2),
+                    Initial_Triangles (I, 3),
                     Natural'Min (Required_Depth, Max_Depth));
       end loop;
 
@@ -206,7 +215,7 @@ package body Harriet.Surfaces is
          Surface.Tile_Edges.Append (Vertex_Lists.Empty_List);
       end loop;
 
-      for Triangle of Surface.Triangles loop
+      for Triangle of Triangles loop
          declare
             Sum : constant Vector_3 :=
                     Surface.Vertices.Element (Triangle.V1).Position
@@ -307,7 +316,7 @@ package body Harriet.Surfaces is
       return Tile_Neighbour_Count
    is
    begin
-      return Surface.Vertices.Element (Tile).Neighbour_Count;
+      return Surface.Vertices.Element (Tile).Neighbours.Last_Index;
    end Neighbour_Count;
 
    -------------------
