@@ -161,6 +161,7 @@ package body Harriet.Markets is
          Market     => Market,
          Commodity  => Commodity,
          Agent      => Agent,
+         Offer      => Harriet.Db.Ask,
          Quantity   => Quantity,
          Price      => Price);
 
@@ -304,6 +305,7 @@ package body Harriet.Markets is
          Market     => Market,
          Commodity  => Commodity,
          Agent      => Agent,
+         Offer      => Harriet.Db.Bid,
          Quantity   => Quantity,
          Price      => Price);
 

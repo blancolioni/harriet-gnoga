@@ -12,6 +12,7 @@ with Harriet.Worlds;
 with Harriet.Db.Ask_Offer;
 with Harriet.Db.Bid_Offer;
 with Harriet.Db.Commodity;
+with Harriet.Db.Historical_Offer;
 with Harriet.Db.Historical_Stock;
 with Harriet.Db.Stock_Price;
 with Harriet.Db.Transaction;
@@ -442,6 +443,8 @@ package body Harriet.Managers.Agents is
             use Harriet.Money, Harriet.Quantities;
             Traded : Quantity_Type := Zero;
             Value  : Money_Type := Zero;
+            Supply : Quantity_Type := Zero;
+            Demand : Quantity_Type := Zero;
          begin
             for Transaction of
               Harriet.Db.Transaction.Select_Transaction_Bounded_By_Time_Stamp
@@ -453,13 +456,27 @@ package body Harriet.Managers.Agents is
                  + Total (Transaction.Price, Transaction.Quantity);
             end loop;
 
+            for Offer of
+              Harriet.Db.Historical_Offer
+                .Select_Historical_Offer_Bounded_By_Time_Stamp
+                  (Manager.Market, Commodity.Get_Commodity_Reference,
+                   Now - Days (1.0), Now)
+            loop
+               case Offer.Offer is
+                  when Harriet.Db.Ask =>
+                     Supply := Supply + Offer.Quantity;
+                  when Harriet.Db.Bid =>
+                     Demand := Demand + Offer.Quantity;
+               end case;
+            end loop;
+
             declare
                Log : constant Market_State_Log :=
                        Market_State_Log'
                          (Market    => Manager.Market,
                           Commodity => Commodity.Get_Commodity_Reference,
-                          Supply    => Zero,
-                          Demand    => Zero,
+                          Supply    => Supply,
+                          Demand    => Demand,
                           Traded    => Traded,
                           Price     => Price (Value, Traded));
             begin
