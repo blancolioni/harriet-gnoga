@@ -66,7 +66,8 @@ package body Harriet.Factions.Create is
       Config      : Tropos.Configuration);
 
    function Choose_Facility
-     (Sector : Harriet.Db.World_Sector_Reference)
+     (Sector            : Harriet.Db.World_Sector_Reference;
+      Min_Accessibility : Unit_Real)
       return Harriet.Db.Facility_Reference;
 
    ---------------------
@@ -74,7 +75,8 @@ package body Harriet.Factions.Create is
    ---------------------
 
    function Choose_Facility
-     (Sector : Harriet.Db.World_Sector_Reference)
+     (Sector            : Harriet.Db.World_Sector_Reference;
+      Min_Accessibility : Unit_Real)
       return Harriet.Db.Facility_Reference
    is
       use Harriet.Db;
@@ -122,7 +124,9 @@ package body Harriet.Factions.Create is
             & ": ");
       end if;
 
-      if Best_Resource = Harriet.Db.Null_Resource_Reference then
+      if Best_Resource = Harriet.Db.Null_Resource_Reference
+        or else Best_Accessibility < Min_Accessibility
+      then
          if Log_Faction_Creation then
             Ada.Text_IO.Put_Line
               ("no available resources");
@@ -410,9 +414,13 @@ package body Harriet.Factions.Create is
          Harriet.Worlds.Set_Owner (Sector, Faction);
 
          declare
+            Min_Access : constant Unit_Real :=
+                           (if Everywhere
+                            then 0.5
+                            else 0.1);
             Ref : constant Harriet.Db.Installation_Reference :=
                     Create_Installation
-                      (Facility => Choose_Facility (Sector),
+                      (Facility => Choose_Facility (Sector, Min_Access),
                        Sector   => Sector,
                        Cash     => Harriet.Money.To_Money (1.0E6),
                        Manager  => "default-installation");
