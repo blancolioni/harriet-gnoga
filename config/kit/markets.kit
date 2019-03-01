@@ -41,6 +41,7 @@ record Market_Offer is
    Quantity        : Quantity_Type;
    key Market_Priority with Market, Commodity, Priority;
    key Agent_Offer with Market, Agent;
+   unique key Market_Offer with Market, Agent, Commodity, Offer;
 end Market_Offer;
 
 record Ask_Offer : Market_Offer;
@@ -52,6 +53,7 @@ record Historical_Offer is
    Market;
    Commodity;
    Agent;
+   Offer : Offer_Type;
    Quantity   : Quantity_Type;
    Price      : Price_Type;
    key Historical_Offer with Market, Commodity, Time_Stamp;

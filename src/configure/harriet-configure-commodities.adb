@@ -384,7 +384,7 @@ package body Harriet.Configure.Commodities is
 
          Initial_Price.Replace_Element
            (Commodity.Get_Commodity_Reference,
-            Price (Adjust (Total_Cost, 1.5), Unit));
+            Price (Adjust (Total_Cost, 2.5), Unit));
 
       end Update_Price;
 

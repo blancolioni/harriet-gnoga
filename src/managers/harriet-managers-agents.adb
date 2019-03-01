@@ -12,6 +12,7 @@ with Harriet.Worlds;
 with Harriet.Db.Ask_Offer;
 with Harriet.Db.Bid_Offer;
 with Harriet.Db.Commodity;
+with Harriet.Db.Historical_Offer;
 with Harriet.Db.Historical_Stock;
 with Harriet.Db.Stock_Price;
 with Harriet.Db.Transaction;
@@ -72,6 +73,21 @@ package body Harriet.Managers.Agents is
         (M.Next_Sleep_Duration);
    end Activate;
 
+   ---------------
+   -- Add_Stock --
+   ---------------
+
+   procedure Add_Stock
+     (Manager   : Root_Agent_Manager'Class;
+      Commodity : Harriet.Db.Commodity_Reference;
+      Quantity  : Harriet.Quantities.Quantity_Type;
+      Value     : Harriet.Money.Money_Type)
+   is
+   begin
+      Harriet.Stock.Add_Stock
+        (Manager.Has_Stock, Commodity, Quantity, Value);
+   end Add_Stock;
+
    ------------------------
    -- Calculate_Capacity --
    ------------------------
@@ -106,7 +122,7 @@ package body Harriet.Managers.Agents is
                        To_Real (Have) / To_Real (Required);
       begin
          if Limit < Capacity then
-            Capacity := Limit;
+            Capacity := Limit * 0.9;
          end if;
       end Limit_Capacity;
 
@@ -181,7 +197,7 @@ package body Harriet.Managers.Agents is
          Message  => "create market offers");
       Manager.Current_Stock (Have);
       Manager.Capacity := 1.0;
-      M.Get_Required_Stock (Required);
+      M.Get_Desired_Stock (Required);
       Missing := Harriet.Commodities.Missing (Have, Required);
 
       if Missing.Total_Quantity > Zero then
@@ -215,15 +231,6 @@ package body Harriet.Managers.Agents is
 --              & Harriet.Real_Images.Approximate_Image (Manager.Capacity));
 --
 --           Missing := Available.Missing (Required);
-
-         Harriet.Logging.Log
-           (Actor    => "Agent" & Harriet.Db.To_String (Manager.Agent),
-            Location => Harriet.Worlds.Name (Manager.World),
-            Category => "manager",
-            Message  =>
-              "bidding on "
-            & Harriet.Quantities.Show (Missing.Total_Quantity)
-            & " items");
 
          Missing.Iterate (Place_Bid'Access);
       end if;
@@ -357,6 +364,18 @@ package body Harriet.Managers.Agents is
       return Last_Field;
    end Field_Count;
 
+   -----------------------
+   -- Get_Desired_Stock --
+   -----------------------
+
+   procedure Get_Desired_Stock
+     (Manager  : Root_Agent_Manager;
+      Stock    : in out Harriet.Commodities.Stock_Type)
+   is
+   begin
+      Root_Agent_Manager'Class (Manager).Get_Required_Stock (Stock);
+   end Get_Desired_Stock;
+
    -------------
    -- Heading --
    -------------
@@ -397,6 +416,18 @@ package body Harriet.Managers.Agents is
       Manager.World := World;
    end Initialize_Agent_Manager;
 
+   ---------
+   -- Log --
+   ---------
+
+   procedure Log
+     (Manager : Root_Agent_Manager'Class;
+      Message : String)
+   is
+   begin
+      Harriet.Agents.Log_Agent (Manager.Agent, Message);
+   end Log;
+
    ----------------------
    -- Log_Market_State --
    ----------------------
@@ -412,6 +443,8 @@ package body Harriet.Managers.Agents is
             use Harriet.Money, Harriet.Quantities;
             Traded : Quantity_Type := Zero;
             Value  : Money_Type := Zero;
+            Supply : Quantity_Type := Zero;
+            Demand : Quantity_Type := Zero;
          begin
             for Transaction of
               Harriet.Db.Transaction.Select_Transaction_Bounded_By_Time_Stamp
@@ -423,13 +456,27 @@ package body Harriet.Managers.Agents is
                  + Total (Transaction.Price, Transaction.Quantity);
             end loop;
 
+            for Offer of
+              Harriet.Db.Historical_Offer
+                .Select_Historical_Offer_Bounded_By_Time_Stamp
+                  (Manager.Market, Commodity.Get_Commodity_Reference,
+                   Now - Days (1.0), Now)
+            loop
+               case Offer.Offer is
+                  when Harriet.Db.Ask =>
+                     Supply := Supply + Offer.Quantity;
+                  when Harriet.Db.Bid =>
+                     Demand := Demand + Offer.Quantity;
+               end case;
+            end loop;
+
             declare
                Log : constant Market_State_Log :=
                        Market_State_Log'
                          (Market    => Manager.Market,
                           Commodity => Commodity.Get_Commodity_Reference,
-                          Supply    => Zero,
-                          Demand    => Zero,
+                          Supply    => Supply,
+                          Demand    => Demand,
                           Traded    => Traded,
                           Price     => Price (Value, Traded));
             begin
@@ -480,6 +527,15 @@ package body Harriet.Managers.Agents is
       Price     : Harriet.Money.Price_Type)
    is
    begin
+      Manager.Log
+        ("ask " & Harriet.Money.Show (Price)
+         & " for "
+         & Harriet.Quantities.Show (Quantity)
+         & " "
+         & Harriet.Commodities.Local_Name (Commodity)
+         & "; total "
+         & Harriet.Money.Show
+           (Harriet.Money.Total (Price, Quantity)));
       Harriet.Markets.Ask
         (Market    => Manager.Market,
          Agent     => Manager.Agent,
@@ -501,6 +557,16 @@ package body Harriet.Managers.Agents is
       Price     : Harriet.Money.Price_Type)
    is
    begin
+      Manager.Log
+        ("bid " & Harriet.Money.Show (Price)
+         & " for "
+         & Harriet.Quantities.Show (Quantity)
+         & " "
+         & Harriet.Commodities.Local_Name (Commodity)
+         & "; total "
+         & Harriet.Money.Show
+           (Harriet.Money.Total (Price, Quantity)));
+
       Harriet.Markets.Bid
         (Market    => Manager.Market,
          Agent     => Manager.Agent,
@@ -524,6 +590,23 @@ package body Harriet.Managers.Agents is
       Harriet.Stock.Remove_Stock
         (Manager.Has_Stock, Commodity, Quantity);
    end Remove_Stock;
+
+   ------------------------
+   -- Scan_Current_Stock --
+   ------------------------
+
+   procedure Scan_Current_Stock
+     (Manager   : Root_Agent_Manager'Class;
+      Process   : not null access
+        procedure (Item     : Harriet.Db.Commodity_Reference;
+                   Quantity : Harriet.Quantities.Quantity_Type;
+                   Value    : Harriet.Money.Money_Type))
+   is
+   begin
+      Harriet.Stock.Scan_Stock
+        (Has_Stock => Manager.Has_Stock,
+         Process   => Process);
+   end Scan_Current_Stock;
 
    ---------------------------
    -- Scan_Historical_Stock --

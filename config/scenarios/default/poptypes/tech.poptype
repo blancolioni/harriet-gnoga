@@ -2,4 +2,4 @@ name = Technicians
 quality = { service = 2
             consumer = 2
           }
-salary = 5000
+salary = 1000

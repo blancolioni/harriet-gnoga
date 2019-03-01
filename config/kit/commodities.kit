@@ -21,6 +21,7 @@ package Commodities is
       key Recipe;
       key Commodity;
       Quantity : Quantity_Type;
+      unique key Recipe_Input with Recipe, Commodity;
    end Recipe_Input;
 
    record Consumer_Good : Commodity is
