@@ -166,7 +166,7 @@ package body Harriet.UI.Views.World is
                  (Sector : Harriet.Db.World_Sector_Reference)
                is
                begin
-                  if Harriet.Worlds.Get_Centre (Sector).Z > 0.0 then
+                  if Harriet.Worlds.Get_Centre (Sector).Y > 0.0 then
                      declare
                         use type Harriet.Db.Faction_Reference;
                         Border : constant Harriet.Worlds.Sector_Vertex_Array :=
@@ -177,7 +177,7 @@ package body Harriet.UI.Views.World is
                                     Harriet.Worlds.Get_Owner (Sector);
                      begin
                         for I in Border'Range loop
-                           Polygon (I) := (Border (I).X, Border (I).Y);
+                           Polygon (I) := (Border (I).X, Border (I).Z);
                         end loop;
 
                         if Owner = Harriet.Db.Null_Faction_Reference then

@@ -14,4 +14,8 @@ package Harriet.Spheres is
      (Point_List : in out Surface_Point_Vectors.Vector;
       Count      : Natural);
 
+   procedure Spiral_Sphere_Points
+     (Point_List : in out Surface_Point_Vectors.Vector;
+      Count      : Natural);
+
 end Harriet.Spheres;

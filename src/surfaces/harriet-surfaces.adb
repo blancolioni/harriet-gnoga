@@ -1,6 +1,5 @@
 with Ada.Containers.Doubly_Linked_Lists;
 with Ada.Numerics;
-with Ada.Text_IO;
 
 with Harriet.Elementary_Functions;
 with Harriet.Spheres;
@@ -163,12 +162,6 @@ package body Harriet.Surfaces is
                   end;
                end loop;
 
-               Ada.Text_IO.Put ("tile" & I'Image & ": neighbours:");
-               for N of Tile.Neighbours loop
-                  Ada.Text_IO.Put (N'Image);
-               end loop;
-               Ada.Text_IO.New_Line;
-
                Surface.Tiles.Append (Tile);
             end;
          end loop;
@@ -219,7 +212,7 @@ package body Harriet.Surfaces is
       end Find_Neighbour;
 
    begin
-      Harriet.Spheres.Random_Sphere_Points (Pts, Count);
+      Harriet.Spheres.Spiral_Sphere_Points (Pts, Count);
       for Pt of Pts loop
          Voronoi.Add_Spherical_Point (Pt.X, Pt.Y, Pt.Z);
       end loop;

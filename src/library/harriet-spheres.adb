@@ -103,4 +103,44 @@ package body Harriet.Spheres is
       end loop;
    end Random_Sphere_Points;
 
+   --------------------------
+   -- Spiral_Sphere_Points --
+   --------------------------
+
+   procedure Spiral_Sphere_Points
+     (Point_List : in out Surface_Point_Vectors.Vector;
+      Count      : Natural)
+   is
+
+      --  from http://web.archive.org/web/20120421191837/
+      --  http://www.cgafaq.info/wiki/Evenly_distributed_points_on_sphere
+      --  dlong := pi*(3-sqrt(5))  /* ~2.39996323 */
+      --  dz    := 2.0/N
+      --  long := 0
+      --  z    := 1 - dz/2
+      --  for k := 0 .. N-1
+      --      r    := sqrt(1-z*z)
+      --      node[k] := (cos(long)*r, sin(long)*r, z)
+      --      z    := z - dz
+      --      long := long + dlong
+
+      use Harriet.Elementary_Functions;
+      D_Long : constant Real := Ada.Numerics.Pi
+                 * (3.0 - Sqrt (5.0));
+      D_Z : constant Real := 2.0 / Real (Count);
+      Long : Real := 0.0;
+      Z : Real := 1.0 - (D_Z / 2.0);
+
+   begin
+      for K in 1 .. Count loop
+         declare
+            R : constant Real := Sqrt (1.0 - Z ** 2);
+         begin
+            Point_List.Append ((Cos (Long) * R, Sin (Long) * R, Z));
+            Z := Z - D_Z;
+            Long := Long + D_Long;
+         end;
+      end loop;
+   end Spiral_Sphere_Points;
+
 end Harriet.Spheres;
