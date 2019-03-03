@@ -1,5 +1,6 @@
 with Harriet.Managers.Installations;
 with Harriet.Managers.Pops;
+with Harriet.Managers.Ships;
 
 package body Harriet.Managers.Loader is
 
@@ -18,6 +19,9 @@ package body Harriet.Managers.Loader is
       Register.Insert
         ("default-pop",
          Harriet.Managers.Pops.Create_Default_Manager'Access);
+      Register.Insert
+        ("ship-trade",
+         Harriet.Managers.Ships.Create_Trade_Manager'Access);
    end Register_Managers;
 
 end Harriet.Managers.Loader;
