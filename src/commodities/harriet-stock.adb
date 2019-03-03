@@ -250,6 +250,10 @@ package body Harriet.Stock is
             pragma Assert (Available >= Quantity);
 
             Value := Total (Price (Stock.Value, Stock.Quantity), Quantity);
+
+            if Value = Stock.Value and then Quantity < Stock.Quantity then
+               Value := Stock.Value - To_Money (0.01);
+            end if;
             Stock.Set_Quantity (Stock.Quantity - Quantity);
             Stock.Set_Value (Stock.Value - Value);
          end;
