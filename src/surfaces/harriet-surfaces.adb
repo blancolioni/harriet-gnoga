@@ -20,11 +20,6 @@ package body Harriet.Surfaces is
 
       procedure Create_Partition;
 
-      function Find_Neighbour
-        (Polygon : Positive;
-         Vertex  : Positive)
-         return Surface_Tile_Count;
-
       ----------------------
       -- Create_Partition --
       ----------------------
@@ -168,49 +163,6 @@ package body Harriet.Surfaces is
 
       end Create_Partition;
 
-      --------------------
-      -- Find_Neighbour --
-      --------------------
-
-      function Find_Neighbour
-        (Polygon : Positive;
-         Vertex  : Positive)
-         return Surface_Tile_Count
-      is
-         Next    : constant Positive :=
-                     (if Vertex = Voronoi.Vertex_Count (Polygon)
-                      then 1 else Vertex + 1);
-         V1      : constant Positive :=
-                     Voronoi.Polygon_Vertex_Index (Polygon, Vertex);
-         V2      : constant Positive :=
-                     Voronoi.Polygon_Vertex_Index (Polygon, Next);
-      begin
-         for I in 1 .. Voronoi.Polygon_Count loop
-            if I /= Polygon then
-               for J in 1 .. Voronoi.Vertex_Count (I) loop
-                  declare
-                     Neighbour_Next : constant Positive :=
-                                        (if J = Voronoi.Vertex_Count (I)
-                                         then 1 else J + 1);
-                     N1             : constant Positive :=
-                                        Voronoi.Polygon_Vertex_Index
-                                          (I, J);
-                     N2             : constant Positive :=
-                                        Voronoi.Polygon_Vertex_Index
-                                          (I, Neighbour_Next);
-                  begin
-                     if (V1 = N1 and then V2 = N2)
-                       or else (V1 = N2 and then V2 = N1)
-                     then
-                        return Surface_Tile_Count (I);
-                     end if;
-                  end;
-               end loop;
-            end if;
-         end loop;
-         return 0;
-      end Find_Neighbour;
-
    begin
       Harriet.Spheres.Spiral_Sphere_Points (Pts, Count);
       for Pt of Pts loop
@@ -219,45 +171,6 @@ package body Harriet.Surfaces is
       Voronoi.Generate;
 
       Create_Partition;
-
-      for V in 1 .. Voronoi.Vertex_Count loop
-         declare
-            P : Harriet.Spheres.Surface_Point;
-         begin
-            Voronoi.Get_Spherical_Vertex (V, P.X, P.Y, P.Z);
-            Surface.Vertices.Append ((P.X, P.Y, P.Z));
-         end;
-      end loop;
-
-      for P in 1 .. Voronoi.Polygon_Count loop
-         declare
-            Tile    : Tile_Record;
-            SX, SY, SZ : Real := 0.0;
-            V_Count    : constant Natural := Voronoi.Vertex_Count (P);
-         begin
-            for V in 1 .. V_Count loop
-               declare
-                  X, Y, Z : Real;
-                  Neighbour : constant Surface_Tile_Count :=
-                                Find_Neighbour (P, V);
-               begin
-                  Voronoi.Get_Spherical_Vertex
-                    (Voronoi.Polygon_Vertex_Index (P, V),
-                     X, Y, Z);
-                  Tile.Vertices.Append ((X, Y, Z));
-                  if Neighbour > 0 then
-                     Tile.Neighbours.Append (Neighbour);
-                  end if;
-                  SX := SX + X;
-                  SY := SY + Y;
-                  SZ := SZ + Z;
-               end;
-            end loop;
-            Tile.Position :=
-              (SX / Real (V_Count), SY / Real (V_Count), SZ / Real (V_Count));
-            Surface.Tiles.Append (Tile);
-         end;
-      end loop;
 
    end Create_Voronoi_Partition;
 
