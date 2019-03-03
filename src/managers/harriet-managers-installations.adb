@@ -14,7 +14,6 @@ with Harriet.Worlds;
 
 with Harriet.Db.Consumer_Good;
 with Harriet.Db.Deposit;
-with Harriet.Db.Facility;
 with Harriet.Db.Facility_Worker;
 with Harriet.Db.Factory;
 with Harriet.Db.Generated_Resource;
@@ -379,13 +378,19 @@ package body Harriet.Managers.Installations is
             declare
                Current_Price : constant Harriet.Money.Price_Type :=
                                  Manager.Current_Market_Bid_Price (Item);
+               Cost_Price    : constant Harriet.Money.Price_Type :=
+                                 Harriet.Money.Price (Value, Quantity);
                Minimum_Price : constant Harriet.Money.Price_Type :=
                                  Harriet.Money.Adjust_Price
-                                   (Harriet.Money.Price (Value, Quantity),
-                                    1.1);
+                                   (Cost_Price, 1.1);
+               Desired_Price : constant Harriet.Money.Price_Type :=
+                                 Harriet.Money.Adjust_Price
+                                   (Cost_Price, 2.5);
                Ask_Price     : constant Harriet.Money.Price_Type :=
-                                 Harriet.Money.Max
-                                   (Current_Price, Minimum_Price);
+                                 Harriet.Money.Min
+                                   (Desired_Price,
+                                    Harriet.Money.Max
+                                      (Current_Price, Minimum_Price));
             begin
                Manager.Log
                  ("factory: creating ask for "
@@ -396,8 +401,8 @@ package body Harriet.Managers.Installations is
                   & Harriet.Money.Show (Value)
                   & "; current price "
                   & Harriet.Money.Show (Current_Price)
-                  & "; minimum ask price "
-                  & Harriet.Money.Show (Minimum_Price)
+                  & "; cost price "
+                  & Harriet.Money.Show (Cost_Price)
                   & "; ask price "
                   & Harriet.Money.Show (Ask_Price));
                Manager.Place_Ask
@@ -614,7 +619,9 @@ package body Harriet.Managers.Installations is
                loop
                   declare
                      Quantity : constant Quantity_Type :=
-                                  Input.Quantity * Current_Capacity;
+                                  To_Quantity
+                                    (To_Real (Input.Quantity)
+                                     * To_Real (Current_Capacity));
                      Price    : constant Price_Type :=
                                   Manager.Current_Agent_Stock_Price
                                     (Input.Commodity);
