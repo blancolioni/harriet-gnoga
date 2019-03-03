@@ -12,6 +12,11 @@ package Harriet.Managers.Agents is
    overriding procedure Activate
      (Manager : not null access Root_Agent_Manager);
 
+   function Managed_Object_Id
+     (Manager : Root_Agent_Manager)
+      return String
+      is abstract;
+
    procedure Create_Market_Offers
      (Manager : in out Root_Agent_Manager);
 

@@ -28,6 +28,11 @@ private
       return String
    is ("pop" & Harriet.Db.To_String (Manager.Pop) & " manager");
 
+   overriding function Managed_Object_Id
+     (Manager : Root_Pop_Manager)
+      return String
+   is ("pop" & Harriet.Db.To_String (Manager.Pop));
+
    overriding procedure Create_Market_Offers
      (Manager : in out Root_Pop_Manager);
 

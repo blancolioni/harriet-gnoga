@@ -191,7 +191,7 @@ package body Harriet.Managers.Agents is
 
    begin
       Harriet.Logging.Log
-        (Actor    => "Agent" & Harriet.Db.To_String (Manager.Agent),
+        (Actor    => M.Managed_Object_Id,
          Location => Harriet.Worlds.Name (Manager.World),
          Category => "manager",
          Message  => "create market offers");
@@ -425,7 +425,10 @@ package body Harriet.Managers.Agents is
       Message : String)
    is
    begin
-      Harriet.Agents.Log_Agent (Manager.Agent, Message);
+      Harriet.Agents.Log_Agent
+        (Manager.Agent,
+         Manager.Managed_Object_Id & ": "
+         & Message);
    end Log;
 
    ----------------------

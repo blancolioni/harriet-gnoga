@@ -1,6 +1,7 @@
 with Harriet.Commodities;
 
 private with Harriet.Managers.Agents;
+private with Harriet.Db.Facility;
 
 package Harriet.Managers.Installations is
 
@@ -26,6 +27,12 @@ private
       return String
    is ("installation"
        & Harriet.Db.To_String (Manager.Installation) & " manager");
+
+   overriding function Managed_Object_Id
+     (Manager : Root_Installation_Manager)
+      return String
+   is (Harriet.Db.Facility.Get (Manager.Facility).Tag
+       & Harriet.Db.To_String (Manager.Installation));
 
    overriding procedure Get_Required_Stock
      (Manager : Root_Installation_Manager;
