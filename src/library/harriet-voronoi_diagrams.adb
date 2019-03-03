@@ -8,14 +8,6 @@ with Harriet.Paths;
 
 package body Harriet.Voronoi_Diagrams is
 
-   type Voronoi_Triangle is
-      record
-         A, B, C : Positive;
-      end record;
-
-   package Triangle_Vectors is
-      new Ada.Containers.Vectors (Positive, Voronoi_Triangle);
-
    procedure Write_Sites
      (Path  : String;
       Sites : Site_Vectors.Vector);
@@ -145,6 +137,8 @@ package body Harriet.Voronoi_Diagrams is
                           Diagram.Sites.Element (T.C).Point);
          begin
             Diagram.Diagram_Pts.Append (Centre);
+            Diagram.Triangles.Append ((T.A, T.B, T.C));
+
          end;
       end loop;
 
@@ -300,24 +294,77 @@ package body Harriet.Voronoi_Diagrams is
    end Generate;
 
    --------------------------
+   -- Get_Delauny_Triangle --
+   --------------------------
+
+   procedure Get_Delauny_Triangle
+     (Diagram : Voronoi_Diagram'Class;
+      Index   : Positive;
+      A, B, C : out Positive)
+   is
+      T : constant Voronoi_Triangle := Diagram.Triangles.Element (Index);
+   begin
+      A := T.A;
+      B := T.B;
+      C := T.C;
+   end Get_Delauny_Triangle;
+
+   ---------------------------------
+   -- Get_Delauny_Triangle_Vertex --
+   ---------------------------------
+
+   procedure Get_Delauny_Triangle_Vertex
+     (Diagram        : Voronoi_Diagram'Class;
+      Vertex_Index   : Positive;
+      X, Y           : out Real)
+   is
+   begin
+      X := Diagram.Sites.Element (Vertex_Index).Point.X;
+      Y := Diagram.Sites.Element (Vertex_Index).Point.Y;
+   end Get_Delauny_Triangle_Vertex;
+
+   ---------------------------------
+   -- Get_Delauny_Triangle_Vertex --
+   ---------------------------------
+
+   procedure Get_Delauny_Triangle_Vertex
+     (Diagram        : Voronoi_Diagram'Class;
+      Vertex_Index   : Positive;
+      X, Y, Z        : out Signed_Unit_Real)
+   is
+      V_X, V_Y : Real;
+   begin
+      Diagram.Get_Delauny_Triangle_Vertex (Vertex_Index, V_X, V_Y);
+
+      declare
+         Divisor : constant Non_Negative_Real :=
+                     1.0 + V_X ** 2 + V_Y ** 2;
+      begin
+         X := 2.0 * V_X / Divisor;
+         Y := 2.0 * V_Y / Divisor;
+         Z := (Divisor - 2.0) / Divisor;
+      end;
+
+   end Get_Delauny_Triangle_Vertex;
+
+   --------------------------
    -- Get_Spherical_Vertex --
    --------------------------
 
    procedure Get_Spherical_Vertex
      (Item          : Voronoi_Diagram'Class;
-      Polygon_Index : Positive;
       Vertex_Index  : Positive;
       X, Y, Z       : out Signed_Unit_Real)
    is
-      V_X : constant Real := Item.Vertex_X (Polygon_Index, Vertex_Index);
-      V_Y : constant Real := Item.Vertex_Y (Polygon_Index, Vertex_Index);
+      V_X : constant Real := Item.Diagram_Pts.Element (Vertex_Index).X;
+      V_Y : constant Real := Item.Diagram_Pts.Element (Vertex_Index).Y;
 
       Divisor : constant Non_Negative_Real :=
                   1.0 + V_X ** 2 + V_Y ** 2;
    begin
       X := 2.0 * V_X / Divisor;
       Y := 2.0 * V_Y / Divisor;
-      Z := (Divisor - 2.0 / Divisor);
+      Z := (Divisor - 2.0) / Divisor;
    end Get_Spherical_Vertex;
 
    -------------------
@@ -331,6 +378,10 @@ package body Harriet.Voronoi_Diagrams is
    begin
       return Item.Diagram.Last_Index;
    end Polygon_Count;
+
+   --------------------
+   -- Read_Triangles --
+   --------------------
 
    procedure Read_Triangles
      (Path : String;
@@ -357,6 +408,8 @@ package body Harriet.Voronoi_Diagrams is
             Skip_Line (File);
          end;
       end loop;
+      Close (File);
+
    end Read_Triangles;
 
    -----------------

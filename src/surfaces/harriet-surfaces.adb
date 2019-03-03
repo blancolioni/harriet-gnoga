@@ -1,241 +1,178 @@
+with Ada.Containers.Doubly_Linked_Lists;
 with Ada.Numerics;
 
 with Harriet.Elementary_Functions;
+with Harriet.Spheres;
+with Harriet.Voronoi_Diagrams;
 
 package body Harriet.Surfaces is
 
-   Max_Depth : constant := 5;
+   ------------------------------
+   -- Create_Voronoi_Partition --
+   ------------------------------
 
-   function Cross
-     (Left, Right : Vector_3)
-      return Vector_3;
-
-   type Vertex_Index_Map is
-      record
-         Index_1      : Surface_Tile_Index;
-         Index_2      : Surface_Tile_Index;
-         Centre_Index : Surface_Tile_Index;
-      end record;
-
-   package Vertex_Map_Lists is
-     new Ada.Containers.Doubly_Linked_Lists (Vertex_Index_Map);
-
-   --------------------
-   -- Create_Surface --
-   --------------------
-
-   procedure Create
-     (Surface        : in out Root_Surface_Type'Class;
-      Required_Depth : Positive)
+   procedure Create_Voronoi_Partition
+     (Surface : in out Root_Surface_Type'Class;
+      Count   : Natural)
    is
-      use Real_Arrays;
+      Pts     : Harriet.Spheres.Surface_Point_Vectors.Vector;
+      Voronoi : Harriet.Voronoi_Diagrams.Voronoi_Diagram;
 
-      Vs      : Vertex_Vectors.Vector renames Surface.Vertices;
+      procedure Create_Partition;
 
-      X    : constant := 0.525731112119133606;
-      Z    : constant := 0.850650808352039932;
+      ----------------------
+      -- Create_Partition --
+      ----------------------
 
-      Vertex_Data : constant array
-        (Surface_Tile_Index range 1 .. 12)
-        of Vector_3 :=
-        ((-X, 0.0, Z), (X, 0.0, Z), (-X, 0.0, -Z), (X, 0.0, -Z),
-         (0.0, Z, X), (0.0, Z, -X), (0.0, -Z, X), (0.0, -Z, -X),
-         (Z, X, 0.0), (-Z, X, 0.0), (Z, -X, 0.0), (-Z, -X, 0.0));
-      Triangles   : constant array (1 .. 20, 1 .. 3) of Surface_Tile_Index :=
-        ((2, 5, 1), (5, 10, 1), (5, 6, 10), (9, 6, 5), (2, 9, 5),
-         (2, 11, 9), (11, 4, 9), (9, 4, 6), (4, 3, 6), (4, 8, 3),
-         (4, 11, 8), (11, 7, 8), (7, 12, 8), (7, 1, 12), (7, 2, 1),
-         (11, 2, 7), (12, 1, 10), (3, 12, 10), (6, 3, 10), (12, 3, 8));
+      procedure Create_Partition is
+         type Triangle is
+            record
+               Position : Vector_3;
+               A, B, C : Positive;
+            end record;
 
-      Vertex_Map : Vertex_Map_Lists.List;
+         package Triangle_Index_Lists is
+           new Ada.Containers.Doubly_Linked_Lists (Positive);
 
-      procedure Add_Neighbour
-        (Tile      : in out Vertex_Record;
-         Neighbour : in Surface_Tile_Index);
-
-      procedure Add_Vertex
-        (Tile      : Surface_Tile_Index;
-         Vertex    : Tile_Vertex_Index);
-
-      procedure Subdivide
-        (Index_1    : Surface_Tile_Index;
-         Index_2    : Surface_Tile_Index;
-         Index_3    : Surface_Tile_Index;
-         Depth      : Natural);
-
-      function Divide_Vertices
-        (Index_1 : Surface_Tile_Index;
-         Index_2 : Surface_Tile_Index)
-         return Surface_Tile_Index;
-
-      -------------------
-      -- Add_Neighbour --
-      -------------------
-
-      procedure Add_Neighbour
-        (Tile      : in out Vertex_Record;
-         Neighbour : in Surface_Tile_Index)
-      is
+         Vs   : array (1 .. Count) of Vector_3;
+         Idxs : array (1 .. Count) of Triangle_Index_Lists.List;
+         Ts : array (1 .. Voronoi.Delauny_Triangle_Count) of Triangle;
       begin
-         Tile.Neighbour_Count := Tile.Neighbour_Count + 1;
-         Tile.Neighbours (Tile.Neighbour_Count) := Neighbour;
-      end Add_Neighbour;
 
-      ----------------
-      -- Add_Vertex --
-      ----------------
-
-      procedure Add_Vertex
-        (Tile      : Surface_Tile_Index;
-         Vertex    : Tile_Vertex_Index)
-      is
-         use Vertex_Lists;
-         Edge : Vertex_Lists.List renames Surface.Tile_Edges (Tile);
-         Norm : constant Vector_3 := Surface.Vertices.Element (Tile).Position;
-         V1   : constant Vector_3 := Surface.Tile_Vertices.Element (Vertex);
-         Position : Cursor := Edge.Last;
-      begin
-         while Has_Element (Position) loop
+         for I in Vs'Range loop
             declare
-               V2 : constant Vector_3 :=
-                      Surface.Tile_Vertices (Element (Position));
+               P : constant Harriet.Spheres.Surface_Point :=
+                     Pts.Element (I);
             begin
-               exit when Norm * Cross (V1 - Norm, V2 - Norm) < 0.0;
-               Previous (Position);
+               Vs (I) := (P.X, P.Y, P.Z);
             end;
          end loop;
 
-         if Has_Element (Position) then
-            Next (Position);
-            if Has_Element (Position) then
-               Edge.Insert (Position, Vertex);
-            else
-               Edge.Append (Vertex);
-            end if;
-         else
-            Edge.Insert (Edge.First, Vertex);
-         end if;
+         for I in Ts'Range loop
+            declare
+               T : Triangle renames Ts (I);
+            begin
+               Voronoi.Get_Delauny_Triangle
+                 (I, T.A, T.B, T.C);
 
-      end Add_Vertex;
+               for J in 1 .. 3 loop
+                  T.Position (J) :=
+                    (Vs (T.A) (J)
+                     + Vs (T.B) (J)
+                     + Vs (T.C) (J))
+                      / 3.0;
+               end loop;
 
-      ---------------------
-      -- Divide_Vertices --
-      ---------------------
-
-      function Divide_Vertices
-        (Index_1 : Surface_Tile_Index;
-         Index_2 : Surface_Tile_Index)
-         return Surface_Tile_Index
-      is
-      begin
-         for Element of Vertex_Map loop
-            if (Element.Index_1 = Index_1 and then Element.Index_2 = Index_2)
-              or else
-                (Element.Index_2 = Index_1 and then Element.Index_1 = Index_2)
-            then
-               return Element.Centre_Index;
-            end if;
+               Idxs (T.A).Append (I);
+               Idxs (T.B).Append (I);
+               Idxs (T.C).Append (I);
+               Surface.Vertices.Append (T.Position);
+            end;
          end loop;
 
-         declare
-            V1  : constant Vector_3 :=
-                    Vs.Element (Index_1).Position;
-            V2  : constant Vector_3 :=
-                    Vs.Element (Index_2).Position;
-            V12 : Vector_3 :=  (V1 + V2) / 2.0;
-         begin
-            V12 := V12 / abs V12;
-            Vs.Append ((V12, 0, (others => 1)));
-            Vertex_Map.Append ((Index_1, Index_2, Vs.Last_Index));
-            return Vs.Last_Index;
-         end;
-      end Divide_Vertices;
-
-      ---------------
-      -- Subdivide --
-      ---------------
-
-      procedure Subdivide
-        (Index_1 : Surface_Tile_Index;
-         Index_2 : Surface_Tile_Index;
-         Index_3 : Surface_Tile_Index;
-         Depth   : Natural)
-      is
-      begin
-         if Depth = 0 then
+         for I in Idxs'Range loop
             declare
-               Tile_1 : Vertex_Record renames Vs (Index_1);
-               Tile_2 : Vertex_Record renames Vs (Index_2);
-               Tile_3 : Vertex_Record renames Vs (Index_3);
+
+               Centre : constant Vector_3 := Vs (I);
+               Normal : constant Vector_3 := Centre;
+
+               function Cross
+                 (Left, Right : Vector_3)
+                  return Vector_3
+                 is (Left (2) * Right (3) - Left (3) * Right (2),
+                     Left (3) * Right (1) - Left (1) * Right (3),
+                     Left (1) * Right (2) - Left (2) * Right (1));
+
+               function Less_Than
+                 (Index_1, Index_2 : Positive)
+                  return Boolean;
+
+               ---------------
+               -- Less_Than --
+               ---------------
+
+               function Less_Than
+                 (Index_1, Index_2 : Positive)
+                  return Boolean
+               is
+                  use Real_Arrays;
+                  C : constant Vector_3 :=
+                        Cross (Ts (Index_1).Position - Centre,
+                               Ts (Index_2).Position - Centre);
+               begin
+                  return Normal * C < 0.0;
+               end Less_Than;
+
+               package Triangle_Sorting is
+                 new Triangle_Index_Lists.Generic_Sorting (Less_Than);
             begin
-               Add_Neighbour (Tile_1, Index_2);
-               Add_Neighbour (Tile_2, Index_3);
-               Add_Neighbour (Tile_3, Index_1);
-               Surface.Triangles.Append ((Index_1, Index_2, Index_3));
+               Triangle_Sorting.Sort (Idxs (I));
             end;
-         else
+         end loop;
+
+         for I in Idxs'Range loop
             declare
-               Index_12 : constant Surface_Tile_Index :=
-                            Divide_Vertices (Index_1, Index_2);
-               Index_23 : constant Surface_Tile_Index :=
-                            Divide_Vertices (Index_2, Index_3);
-               Index_31 : constant Surface_Tile_Index :=
-                            Divide_Vertices (Index_3, Index_1);
+               S_Pos : constant Harriet.Spheres.Surface_Point :=
+                         Pts.Element (I);
+               V_Pos : constant Vector_3 :=
+                         (S_Pos.X, S_Pos.Y, S_Pos.Z);
+               Tile : Tile_Record :=
+                        Tile_Record'
+                          (Position   => V_Pos,
+                           Vertices   => <>,
+                           Neighbours => <>);
             begin
-               Subdivide (Index_1, Index_12, Index_31, Depth - 1);
-               Subdivide (Index_2, Index_23, Index_12, Depth - 1);
-               Subdivide (Index_3, Index_31, Index_23, Depth - 1);
-               Subdivide (Index_12, Index_23, Index_31, Depth - 1);
+               for V of Idxs (I) loop
+                  declare
+                     T : constant Triangle := Ts (V);
+
+                     procedure Check_Neighbour (Index : Positive);
+
+                     ---------------------
+                     -- Check_Neighbour --
+                     ---------------------
+
+                     procedure Check_Neighbour (Index : Positive) is
+                     begin
+                        if Index = I then
+                           return;
+                        end if;
+
+                        for N of Tile.Neighbours loop
+                           if N = Surface_Tile_Count (Index) then
+                              return;
+                           end if;
+                        end loop;
+
+                        Tile.Neighbours.Append
+                          (Surface_Tile_Count
+                             (Index));
+                     end Check_Neighbour;
+
+                  begin
+                     Tile.Vertices.Append (T.Position);
+                     Check_Neighbour (T.A);
+                     Check_Neighbour (T.B);
+                     Check_Neighbour (T.C);
+                  end;
+               end loop;
+
+               Surface.Tiles.Append (Tile);
             end;
-         end if;
-      end Subdivide;
+         end loop;
+
+      end Create_Partition;
 
    begin
-      for V of Vertex_Data loop
-         Vs.Append ((V, 0, (others => 1)));
+      Harriet.Spheres.Spiral_Sphere_Points (Pts, Count);
+      for Pt of Pts loop
+         Voronoi.Add_Spherical_Point (Pt.X, Pt.Y, Pt.Z);
       end loop;
+      Voronoi.Generate;
 
-      for I in Triangles'Range (1) loop
-         Subdivide (Triangles (I, 1),
-                    Triangles (I, 2),
-                    Triangles (I, 3),
-                    Natural'Min (Required_Depth, Max_Depth));
-      end loop;
+      Create_Partition;
 
-      for V of Surface.Vertices loop
-         Surface.Tile_Edges.Append (Vertex_Lists.Empty_List);
-      end loop;
-
-      for Triangle of Surface.Triangles loop
-         declare
-            Sum : constant Vector_3 :=
-                    Surface.Vertices.Element (Triangle.V1).Position
-                    + Surface.Vertices.Element (Triangle.V2).Position
-                    + Surface.Vertices.Element (Triangle.V3).Position;
-            V   : constant Vector_3 := Sum / abs Sum;
-         begin
-            Surface.Tile_Vertices.Append (V);
-            Add_Vertex (Triangle.V1, Surface.Tile_Vertices.Last_Index);
-            Add_Vertex (Triangle.V2, Surface.Tile_Vertices.Last_Index);
-            Add_Vertex (Triangle.V3, Surface.Tile_Vertices.Last_Index);
-         end;
-      end loop;
-
-   end Create;
-
-   -----------
-   -- Cross --
-   -----------
-
-   function Cross
-     (Left, Right : Vector_3)
-      return Vector_3
-   is
-   begin
-      return (Left (2) * Right (3) - Left (3) * Right (2),
-              Left (3) * Right (1) - Left (1) * Right (3),
-              Left (1) * Right (2) - Left (2) * Right (1));
-   end Cross;
+   end Create_Voronoi_Partition;
 
    --------------
    -- Get_Tile --
@@ -263,7 +200,7 @@ package body Harriet.Surfaces is
    is
       use Harriet.Elementary_Functions;
    begin
-      return Arcsin (Surface.Vertices.Element (Tile).Position (2),
+      return Arcsin (Surface.Tiles.Element (Tile).Position (2),
                      Cycle => 360.0);
    end Latitude;
 
@@ -278,37 +215,10 @@ package body Harriet.Surfaces is
    is
       use Harriet.Elementary_Functions;
       V : constant Vector_3 :=
-            Surface.Vertices.Element (Tile).Position;
+            Surface.Tiles.Element (Tile).Position;
    begin
       return Arctan (V (3), V (1), 360.0);
    end Longitude;
-
-   ---------------
-   -- Neighbour --
-   ---------------
-
-   function Neighbour
-     (Surface : Root_Surface_Type'Class;
-      Tile    : Surface_Tile_Index;
-      Index   : Tile_Neighbour_Index)
-      return Surface_Tile_Index
-   is
-   begin
-      return Surface.Vertices.Element (Tile).Neighbours (Index);
-   end Neighbour;
-
-   ---------------------
-   -- Neighbour_Count --
-   ---------------------
-
-   function Neighbour_Count
-     (Surface : Root_Surface_Type'Class;
-      Tile    : Surface_Tile_Index)
-      return Tile_Neighbour_Count
-   is
-   begin
-      return Surface.Vertices.Element (Tile).Neighbour_Count;
-   end Neighbour_Count;
 
    -------------------
    -- Tile_Boundary --
@@ -319,19 +229,14 @@ package body Harriet.Surfaces is
       Tile    : Surface_Tile_Index)
       return Tile_Vertex_Array
    is
-      Edge : Vertex_Lists.List renames Surface.Tile_Edges (Tile);
    begin
       return Boundary : Tile_Vertex_Array
-        (1 .. Tile_Neighbour_Count (Edge.Length))
+        (1 .. Surface.Tiles.Element (Tile).Vertices.Last_Index)
       do
-         declare
-            Count : Tile_Neighbour_Count := 0;
-         begin
-            for Index of Edge loop
-               Count := Count + 1;
-               Boundary (Count) := Surface.Tile_Vertices (Index);
-            end loop;
-         end;
+         for I in Boundary'Range loop
+            Boundary (I) :=
+              Surface.Tiles.Element (Tile).Vertices.Element (I);
+         end loop;
       end return;
    end Tile_Boundary;
 
@@ -345,19 +250,7 @@ package body Harriet.Surfaces is
       return Vector_3
    is
    begin
-      return Surface.Vertices.Element (Tile).Position;
+      return Surface.Tiles.Element (Tile).Position;
    end Tile_Centre;
-
-   ----------------
-   -- Tile_Count --
-   ----------------
-
-   function Tile_Count
-     (Surface : Root_Surface_Type'Class)
-      return Surface_Tile_Count
-   is
-   begin
-      return Surface.Vertices.Last_Index;
-   end Tile_Count;
 
 end Harriet.Surfaces;
