@@ -216,7 +216,7 @@ package body Harriet.Commodities is
                                    Available.Quantity + Rec.Quantity),
                                 Missing);
             begin
-               if Missing > Zero then
+               if Missing > Zero and then Value > Zero then
                   Stock.Set_Quantity
                     (Rec.Commodity, Missing, Value);
                end if;
