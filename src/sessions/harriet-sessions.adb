@@ -80,6 +80,18 @@ package body Harriet.Sessions is
       return Session.Dispatcher.Add_Handler (Signal, Handler, Data);
    end Add_Handler;
 
+   --------------------
+   -- Add_To_History --
+   --------------------
+
+   procedure Add_To_History
+     (Session      : in out Root_Harriet_Session'Class;
+      Command_Line : String)
+   is
+   begin
+      Session.History.Append (Command_Line);
+   end Add_To_History;
+
    ---------------
    -- Broadcast --
    ---------------
