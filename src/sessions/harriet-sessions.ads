@@ -106,8 +106,10 @@ package Harriet.Sessions is
 
    function History
      (Session : Root_Harriet_Session'Class;
-      Index   : Positive)
-      return String;
+      Index   : Integer)
+      return String
+     with Pre => Index in -Session.History_Length .. Session.History_Length
+     and then Index /= 0;
 
    type Harriet_Session is access all Root_Harriet_Session'Class;
 
@@ -206,8 +208,10 @@ private
 
    function History
      (Session : Root_Harriet_Session'Class;
-      Index   : Positive)
+      Index   : Integer)
       return String
-   is (Session.History.Element (Session.History.Last_Index - Index + 1));
+   is (if Index > 0
+       then Session.History.Element (Index)
+       else Session.History.Element (Session.History.Last_Index + Index + 1));
 
 end Harriet.Sessions;
