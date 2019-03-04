@@ -96,6 +96,17 @@ package body Harriet.Commands is
          return;
       end if;
 
+      if Line = "!!" then
+         if Session.History_Length > 0 then
+            Execute_Command_Line (Session.History (1), Session, Writer);
+         else
+            Writer.Put_Error ("no history");
+         end if;
+         return;
+      end if;
+
+      Session.Add_To_History (Line);
+
       declare
          Extended_Line : constant String := Line & ' ';
          First         : constant Positive :=
