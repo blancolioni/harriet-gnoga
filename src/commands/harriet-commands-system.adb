@@ -52,6 +52,15 @@ package body Harriet.Commands.System is
       Writer    : Writer_Interface'Class;
       Arguments : Argument_List);
 
+   type History_Command is
+     new Root_Harriet_Command with null record;
+
+   overriding procedure Perform
+     (Command   : History_Command;
+      Session   : Harriet.Sessions.Harriet_Session;
+      Writer    : Writer_Interface'Class;
+      Arguments : Argument_List);
+
    type Status_Command_Type is
      (Pause_Server, Resume_Server, Stop_Server,
       Update_Speed,
@@ -79,6 +88,7 @@ package body Harriet.Commands.System is
       Cat                   : Cat_Command;
       Change_Scope          : Change_Scope_Command;
       Echo                  : Echo_Command;
+      History               : History_Command;
       List                  : List_Command;
       Pause_Command         : Status_Command (Pause_Server);
       Resume_Command        : Status_Command (Resume_Server);
@@ -91,6 +101,7 @@ package body Harriet.Commands.System is
       Register ("cd", Change_Scope);
       Register ("change-scope", Change_Scope);
       Register ("echo", Echo);
+      Register ("history", History);
       Register ("ls", List);
       Register ("pause", Pause_Command);
       Register ("resume", Resume_Command);
@@ -198,6 +209,32 @@ package body Harriet.Commands.System is
          Writer.New_Line;
       end if;
 
+   end Perform;
+
+   overriding procedure Perform
+     (Command   : History_Command;
+      Session   : Harriet.Sessions.Harriet_Session;
+      Writer    : Writer_Interface'Class;
+      Arguments : Argument_List)
+   is
+      pragma Unreferenced (Command, Arguments);
+   begin
+      for I in 1 .. Session.History_Length loop
+         declare
+            Index_Image : String (1 .. 5);
+            It          : Natural := I;
+         begin
+            for Ch of reverse Index_Image loop
+               if It = 0 then
+                  Ch := ' ';
+               else
+                  Ch := Character'Val (It mod 10 + 48);
+                  It := It / 10;
+               end if;
+            end loop;
+            Writer.Put_Line (Index_Image & "  " & Session.History (I));
+         end;
+      end loop;
    end Perform;
 
    -------------
