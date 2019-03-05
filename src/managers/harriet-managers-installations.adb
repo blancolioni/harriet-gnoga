@@ -714,6 +714,9 @@ package body Harriet.Managers.Installations is
    overriding procedure Execute_Agent_Tasks
      (Manager : in out Hub_Manager)
    is
+
+      Trend_Length : constant := 7;
+
       procedure Check_Trend (Commodity : Harriet.Db.Commodity_Reference);
 
       -----------------
@@ -745,7 +748,8 @@ package body Harriet.Managers.Installations is
 
       begin
          Manager.Scan_Historical_Stock
-           (Commodity, 7.0, Add_Data_Point'Access);
+           (Commodity, Non_Negative_Real (Trend_Length),
+            Add_Data_Point'Access);
 
          Add_Data_Point (Harriet.Calendar.Clock,
                          Manager.Current_Stock (Commodity));
@@ -859,15 +863,15 @@ package body Harriet.Managers.Installations is
       Root_Installation_Manager (Manager).Execute_Agent_Tasks;
 
       Manager.Day_Tick := Manager.Day_Tick + 1;
-      if Manager.Day_Tick = 7 then
+      if Manager.Day_Tick mod Trend_Length = 0
+        or else Manager.Day_Tick in 2 .. Trend_Length - 1
+      then
          for Item of Harriet.Db.Consumer_Good.Scan_By_Tag loop
             Check_Trend (Item.Get_Commodity_Reference);
          end loop;
          for Item of Harriet.Db.Resource.Scan_By_Tag loop
             Check_Trend (Item.Get_Commodity_Reference);
          end loop;
-
-         Manager.Day_Tick := 0;
       end if;
 
       if Manager.Log_State then
