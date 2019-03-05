@@ -25,9 +25,9 @@ package body Harriet.Managers.Pops is
                    Pop                 => Pop.Get_Pop_Reference,
                    Group               => Pop.Pop_Group,
                    Commodity           => Group.Get_Commodity_Reference,
-                   Employer            => Pop.Installation,
+                   Employer            => Pop.Employer,
                    Employed            =>
-                     Pop.Installation /= Null_Installation_Reference,
+                     Pop.Employer /= Null_Employer_Reference,
                    Consumption_Quality => Group.Consumer_Quality,
                    Service_Quality     => Group.Service_Quality);
    begin

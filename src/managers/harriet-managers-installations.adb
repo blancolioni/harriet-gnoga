@@ -2,7 +2,6 @@ with Ada.Text_IO;
 
 with Harriet.Data_Series;
 with Harriet.Logging;
-with Harriet.Money;
 with Harriet.Options;
 with Harriet.Quantities;
 with Harriet.Random;
@@ -10,6 +9,7 @@ with Harriet.Real_Images;
 with Harriet.Stock;
 with Harriet.Weighted_Random_Choices;
 
+with Harriet.Agents;
 with Harriet.Worlds;
 
 with Harriet.Db.Consumer_Good;
@@ -244,7 +244,10 @@ package body Harriet.Managers.Installations is
                            (Harriet.Managers.Agents.Root_Agent_Manager with
                             Installation =>
                               Installation.Get_Installation_Reference,
+                            Employer        =>
+                              Installation.Get_Employer_Reference,
                             Facility        => Installation.Facility,
+                            Payroll         => Harriet.Money.Zero,
                             Rgen            => Rgen);
             begin
                Manager.Initialize_Agent_Manager
@@ -268,7 +271,10 @@ package body Harriet.Managers.Installations is
                            (Harriet.Managers.Agents.Root_Agent_Manager with
                             Installation    =>
                               Installation.Get_Installation_Reference,
+                            Employer        =>
+                              Installation.Get_Employer_Reference,
                             Facility        => Installation.Facility,
+                            Payroll         => Harriet.Money.Zero,
                             Factory         => Factory,
                             Production      => Installation.Production,
                             Recipe          =>
@@ -305,8 +311,11 @@ package body Harriet.Managers.Installations is
                          (Harriet.Managers.Agents.Root_Agent_Manager with
                           Installation =>
                             Installation.Get_Installation_Reference,
-                          Facility     => Installation.Facility,
-                          Log_State    => Harriet.Options.Log_Trade_Offers,
+                          Employer        =>
+                            Installation.Get_Employer_Reference,
+                          Facility        => Installation.Facility,
+                          Payroll         => Harriet.Money.Zero,
+                          Log_State       => Harriet.Options.Log_Trade_Offers,
                           Day_Tick     => 0);
    begin
       Manager.Initialize_Agent_Manager
@@ -372,12 +381,15 @@ package body Harriet.Managers.Installations is
          Value    : Harriet.Money.Money_Type)
       is
       begin
-         if not Harriet.Db.Recipe_Input.Is_Recipe_Input
-           (Manager.Recipe, Item)
+         if not Harriet.Commodities.Is_Pop_Group (Item)
+           and then not Harriet.Db.Recipe_Input.Is_Recipe_Input
+             (Manager.Recipe, Item)
          then
             declare
                Current_Price : constant Harriet.Money.Price_Type :=
-                                 Manager.Current_Market_Bid_Price (Item);
+                                 Harriet.Money.Adjust_Price
+                                   (Manager.Current_Market_Bid_Price (Item),
+                                    0.95);
                Cost_Price    : constant Harriet.Money.Price_Type :=
                                  Harriet.Money.Price (Value, Quantity);
                Minimum_Price : constant Harriet.Money.Price_Type :=
@@ -510,6 +522,44 @@ package body Harriet.Managers.Installations is
    -------------------------
 
    overriding procedure Execute_Agent_Tasks
+     (Manager : in out Root_Installation_Manager)
+   is
+      use Harriet.Money;
+   begin
+
+      Manager.Payroll := Zero;
+
+      for Workers of
+        Harriet.Db.Pop.Select_By_Employer
+          (Manager.Employer)
+      loop
+
+         declare
+            This_Cost : constant Money_Type :=
+                          Total (Workers.Salary, Workers.Size);
+         begin
+            Manager.Log
+              ("salary for " & Harriet.Quantities.Show (Workers.Size)
+               & " "
+               & Harriet.Db.Pop_Group.Get (Workers.Pop_Group).Tag
+               & " "
+               & Show (Workers.Salary)
+               & " total "
+               & Show (This_Cost));
+
+            Manager.Pay (This_Cost);
+            Harriet.Agents.Add_Cash (Workers, This_Cost);
+            Manager.Payroll := Manager.Payroll + This_Cost;
+         end;
+      end loop;
+
+   end Execute_Agent_Tasks;
+
+   -------------------------
+   -- Execute_Agent_Tasks --
+   -------------------------
+
+   overriding procedure Execute_Agent_Tasks
      (Manager : in out Resource_Generator_Manager)
    is
       Installation : constant Harriet.Db.Installation.Installation_Type :=
@@ -521,6 +571,8 @@ package body Harriet.Managers.Installations is
             (Manager.Rgen);
 
    begin
+
+      Root_Installation_Manager (Manager).Execute_Agent_Tasks;
 
       for Deposit of
         Harriet.Db.Deposit.Select_By_World_Sector
@@ -566,6 +618,9 @@ package body Harriet.Managers.Installations is
    is
       Have      : Harriet.Commodities.Stock_Type;
    begin
+
+      Root_Installation_Manager (Manager).Execute_Agent_Tasks;
+
       Manager.Current_Stock (Have);
 
       declare
@@ -614,6 +669,10 @@ package body Harriet.Managers.Installations is
 
             begin
 
+               Manager.Log ("payroll cost: "
+                            & Harriet.Money.Show (Manager.Payroll));
+               Production_Cost := Manager.Payroll;
+
                for Input of
                  Harriet.Db.Recipe_Input.Select_By_Recipe (Manager.Recipe)
                loop
@@ -633,22 +692,6 @@ package body Harriet.Managers.Installations is
                         Quantity  => Quantity,
                         Value     => Value);
                   end;
-               end loop;
-
-               for Workers of
-                 Harriet.Db.Pop.Select_By_Installation
-                   (Manager.Installation)
-               loop
-                  Manager.Log ("salary for " & Show (Workers.Size)
-                               & " "
-                               & Harriet.Db.Pop_Group.Get (Workers.Pop_Group)
-                               .Tag
-                               & " "
-                               & Show (Workers.Salary)
-                               & " total "
-                               & Show (Total (Workers.Salary, Workers.Size)));
-                  Production_Cost := Production_Cost
-                    + Total (Workers.Salary, Workers.Size);
                end loop;
 
                Manager.Log ("producing " & Show (Current_Capacity)
@@ -812,6 +855,9 @@ package body Harriet.Managers.Installations is
       end Check_Trend;
 
    begin
+
+      Root_Installation_Manager (Manager).Execute_Agent_Tasks;
+
       Manager.Day_Tick := Manager.Day_Tick + 1;
       if Manager.Day_Tick = 7 then
          for Item of Harriet.Db.Consumer_Good.Scan_By_Tag loop
@@ -842,6 +888,7 @@ package body Harriet.Managers.Installations is
       Capacity : constant Quantity_Type :=
                    Harriet.Db.Factory.Get (Manager.Factory).Capacity;
    begin
+      Root_Installation_Manager (Manager).Get_Required_Stock (Stock);
       for Input of
         Harriet.Db.Recipe_Input.Select_By_Recipe
           (Manager.Recipe)
@@ -901,6 +948,7 @@ package body Harriet.Managers.Installations is
       Stock   : in out Harriet.Commodities.Stock_Type)
    is
    begin
+      Root_Installation_Manager (Manager).Get_Required_Stock (Stock);
       for Input of
         Harriet.Db.Recipe_Input.Select_By_Recipe
           (Manager.Recipe)

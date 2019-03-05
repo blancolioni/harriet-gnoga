@@ -72,8 +72,8 @@ package body Harriet.Pops is
                        Faction          => Faction,
                        World            => World,
                        World_Sector     => Sector,
-                       Installation     =>
-                         Harriet.Db.Null_Installation_Reference,
+                       Employer         =>
+                         Harriet.Db.Null_Employer_Reference,
                        Ship             =>
                          Harriet.Db.Null_Ship_Reference,
                        Pop_Group        => Group,

@@ -13,8 +13,8 @@ installations = {
       cash = 100M
       stock = {
          consumer-goods = 10000
-         industrial-goods = 10000
-         resource = 10000
+         industrial-goods = 100000
+         resource = 1000000
       }
     }
 }
