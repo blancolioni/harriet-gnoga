@@ -49,6 +49,11 @@ package body Harriet.Commands is
       Process : not null access
         procedure (Word : String));
 
+   procedure Execute_Single_Command
+     (Command : String;
+      Session : Harriet.Sessions.Harriet_Session;
+      Writer  : Writer_Interface'Class);
+
    ---------
    -- Add --
    ---------
@@ -91,39 +96,109 @@ package body Harriet.Commands is
       Session : Harriet.Sessions.Harriet_Session;
       Writer  : Writer_Interface'Class)
    is
+
+      function Is_Integer (Image : String) return Boolean;
+
+      ----------------
+      -- Is_Integer --
+      ----------------
+
+      function Is_Integer (Image : String) return Boolean is
+         First : Boolean := True;
+      begin
+         for Ch of Image loop
+            if Ch in '+' | '-' then
+               if not First then
+                  return False;
+               end if;
+            elsif Ch not in '0' .. '9' then
+               return False;
+            end if;
+            First := False;
+         end loop;
+         return True;
+      end Is_Integer;
+
    begin
       if Ada.Strings.Fixed.Trim (Line, Ada.Strings.Both) = "" then
          return;
       end if;
 
-      declare
-         Extended_Line : constant String := Line & ' ';
-         First         : constant Positive :=
-                           Ada.Strings.Fixed.Index_Non_Blank (Extended_Line);
-         Index         : constant Positive :=
-                           Ada.Strings.Fixed.Index (Extended_Line, " ", First);
-         Command_Name  : constant String :=
-                          Extended_Line
-                            (Extended_Line'First .. Index - 1);
-      begin
-         if not Map.Contains (Command_Name) then
-            Writer.Put_Error (Command_Name & ": command not found");
-            return;
+      if Line = "!!" then
+         if Session.History_Length > 0 then
+            declare
+               Command : constant String := Session.History (-1);
+            begin
+               Writer.Put_Line (Command);
+               Execute_Single_Command (Command, Session, Writer);
+            end;
+         else
+            Writer.Put_Error ("!!: event not found");
          end if;
+         return;
+      end if;
 
+      if Line (Line'First) = '!'
+        and then Is_Integer (Line (Line'First + 1 .. Line'Last))
+      then
          declare
-            Command   : constant Root_Harriet_Command'Class :=
-                          Map.Element (Command_Name);
-            Arguments : constant Argument_List :=
-                          Scan_Arguments
-                            (Session,
-                             Extended_Line (Index + 1 .. Extended_Line'Last));
+            Image : constant String := Line (Line'First + 1 .. Line'Last);
+            X     : constant Integer := Integer'Value (Image);
          begin
-            Command.Execute (Session, Writer, Arguments);
+            if abs X <= Session.History_Length then
+               declare
+                  Command : constant String :=
+                              Session.History (X);
+               begin
+                  Writer.Put_Line (Command);
+                  Execute_Single_Command (Command, Session, Writer);
+               end;
+            else
+               Writer.Put_Error (Line & ": event not found");
+            end if;
+            return;
          end;
-      end;
+      end if;
+
+      Session.Add_To_History (Line);
+      Execute_Single_Command (Line, Session, Writer);
 
    end Execute_Command_Line;
+
+   ----------------------------
+   -- Execute_Single_Command --
+   ----------------------------
+
+   procedure Execute_Single_Command
+     (Command : String;
+      Session : Harriet.Sessions.Harriet_Session;
+      Writer  : Writer_Interface'Class)
+   is
+      Extended_Line : constant String := Command & ' ';
+      First         : constant Positive :=
+                        Ada.Strings.Fixed.Index_Non_Blank (Extended_Line);
+      Index         : constant Positive :=
+                        Ada.Strings.Fixed.Index (Extended_Line, " ", First);
+      Command_Name  : constant String :=
+                        Extended_Line
+                          (Extended_Line'First .. Index - 1);
+   begin
+      if not Map.Contains (Command_Name) then
+         Writer.Put_Error (Command_Name & ": command not found");
+         return;
+      end if;
+
+      declare
+         Command   : constant Root_Harriet_Command'Class :=
+                       Map.Element (Command_Name);
+         Arguments : constant Argument_List :=
+                       Scan_Arguments
+                         (Session,
+                          Extended_Line (Index + 1 .. Extended_Line'Last));
+      begin
+         Command.Execute (Session, Writer, Arguments);
+      end;
+   end Execute_Single_Command;
 
    -------------------
    -- Iterate_Words --

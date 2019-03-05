@@ -1,3 +1,4 @@
+with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
 with Harriet.Commands;
@@ -40,7 +41,8 @@ package body Harriet.Repl is
                exit when Line = "exit";
 
                Harriet.Commands.Execute_Command_Line
-                 (Line, Session, Writer);
+                 (Ada.Strings.Fixed.Trim (Line, Ada.Strings.Both),
+                  Session, Writer);
             end;
          exception
             when Ada.Text_IO.End_Error =>

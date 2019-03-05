@@ -1,5 +1,6 @@
 private with Ada.Containers.Doubly_Linked_Lists;
 private with Ada.Containers.Indefinite_Holders;
+private with Ada.Containers.Indefinite_Vectors;
 
 with Gnoga.Types;
 
@@ -95,6 +96,21 @@ package Harriet.Sessions is
       Name    : String;
       Value   : String);
 
+   procedure Add_To_History
+     (Session      : in out Root_Harriet_Session'Class;
+      Command_Line : String);
+
+   function History_Length
+     (Session : Root_Harriet_Session'Class)
+      return Natural;
+
+   function History
+     (Session : Root_Harriet_Session'Class;
+      Index   : Integer)
+      return String
+     with Pre => Index in -Session.History_Length .. Session.History_Length
+     and then Index /= 0;
+
    type Harriet_Session is access all Root_Harriet_Session'Class;
 
    function New_Gnoga_Session return Harriet_Session;
@@ -123,6 +139,9 @@ private
    package Environment_Maps is
      new WL.String_Maps (String);
 
+   package History_Vectors is
+     new Ada.Containers.Indefinite_Vectors (Positive, String);
+
    type Root_Harriet_Session is
      new Gnoga.Types.Connection_Data_Type
      and Harriet.Signals.Signaler with
@@ -141,6 +160,7 @@ private
          Views         : View_Lists.List;
          Dispatcher    : Harriet.Signals.Signal_Dispatcher;
          Environment   : Environment_Maps.Map;
+         History       : History_Vectors.Vector;
       end record;
 
    function Administrator
@@ -180,5 +200,18 @@ private
    is (if Session.Environment.Contains (Name)
        then Session.Environment.Element (Name)
        else Default);
+
+   function History_Length
+     (Session : Root_Harriet_Session'Class)
+      return Natural
+   is (Session.History.Last_Index);
+
+   function History
+     (Session : Root_Harriet_Session'Class;
+      Index   : Integer)
+      return String
+   is (if Index > 0
+       then Session.History.Element (Index)
+       else Session.History.Element (Session.History.Last_Index + Index + 1));
 
 end Harriet.Sessions;

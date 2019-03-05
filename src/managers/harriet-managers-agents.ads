@@ -62,6 +62,12 @@ package Harriet.Managers.Agents is
       Commodity : Harriet.Db.Commodity_Reference)
       return Harriet.Quantities.Quantity_Type;
 
+   function Minimum_Bid_Price
+     (Manager   : Root_Agent_Manager'Class;
+      Commodity : Harriet.Db.Commodity_Reference;
+      Quantity  : Harriet.Quantities.Quantity_Type)
+      return Harriet.Money.Price_Type;
+
    function Current_Agent_Stock_Price
      (Manager   : Root_Agent_Manager'Class;
       Commodity : Harriet.Db.Commodity_Reference)
@@ -135,6 +141,14 @@ package Harriet.Managers.Agents is
    function Cash
      (Manager : Root_Agent_Manager'Class)
       return Harriet.Money.Money_Type;
+
+   procedure Pay
+     (Manager : Root_Agent_Manager'Class;
+      Amount  : Harriet.Money.Money_Type);
+
+   procedure Earn
+     (Manager : Root_Agent_Manager'Class;
+      Amount  : Harriet.Money.Money_Type);
 
    procedure Log
      (Manager : Root_Agent_Manager'Class;

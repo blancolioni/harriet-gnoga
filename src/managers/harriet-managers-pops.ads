@@ -17,7 +17,7 @@ private
          Pop                 : Harriet.Db.Pop_Reference;
          Group               : Harriet.Db.Pop_Group_Reference;
          Commodity           : Harriet.Db.Commodity_Reference;
-         Employer            : Harriet.Db.Installation_Reference;
+         Employer            : Harriet.Db.Employer_Reference;
          Employed            : Boolean;
          Consumption_Quality : Positive;
          Service_Quality     : Positive;

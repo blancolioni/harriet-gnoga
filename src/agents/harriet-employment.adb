@@ -1,10 +1,12 @@
 with Ada.Containers.Doubly_Linked_Lists;
 
 with Harriet.Calendar;
-with Harriet.Pops;
 with Harriet.Updates.Events;
 
-with Harriet.Db.Installation;
+with Harriet.Agents;
+with Harriet.Pops;
+
+with Harriet.Db.Employer;
 with Harriet.Db.Pop;
 
 package body Harriet.Employment is
@@ -31,10 +33,10 @@ package body Harriet.Employment is
    Current : Contract_Lists.List;
 
    procedure Execute
-     (Employer : Harriet.Db.Agent_Reference;
-      Employee : Harriet.Db.Agent_Reference;
-      Quantity : Harriet.Quantities.Quantity_Type;
-      Salary   : Harriet.Money.Price_Type);
+     (Employer_Agent : Harriet.Db.Agent_Reference;
+      Employee_Agent : Harriet.Db.Agent_Reference;
+      Quantity       : Harriet.Quantities.Quantity_Type;
+      Salary         : Harriet.Money.Price_Type);
 
    --------------
    -- Activate --
@@ -84,35 +86,55 @@ package body Harriet.Employment is
    -------------
 
    procedure Execute
-     (Employer : Harriet.Db.Agent_Reference;
-      Employee : Harriet.Db.Agent_Reference;
-      Quantity : Harriet.Quantities.Quantity_Type;
-      Salary   : Harriet.Money.Price_Type)
+     (Employer_Agent : Harriet.Db.Agent_Reference;
+      Employee_Agent : Harriet.Db.Agent_Reference;
+      Quantity       : Harriet.Quantities.Quantity_Type;
+      Salary         : Harriet.Money.Price_Type)
    is
-      Installation : constant Harriet.Db.Installation.Installation_Type :=
-                       Harriet.Db.Installation.Get_Installation (Employer);
-      Pop          : constant Harriet.Db.Pop.Pop_Type :=
-                       Harriet.Db.Pop.Get_Pop (Employee);
-      Employed_Pop : constant Harriet.Db.Pop.Pop_Type :=
-                       Harriet.Db.Pop.Get_By_Pop_Group_Installation
-                         (Pop.Pop_Group,
-                          Installation.Get_Installation_Reference);
+      Employer : constant Harriet.Db.Employer_Reference :=
+                   Harriet.Db.Employer.Get_Employer (Employer_Agent)
+                   .Get_Employer_Reference;
+      Pop      : constant Harriet.Db.Pop.Pop_Type :=
+        Harriet.Db.Pop.Get_Pop (Employee_Agent);
    begin
-      if Employed_Pop.Has_Element then
-         Employed_Pop.Set_Salary (Salary);
-         Harriet.Pops.Move_Pops (Pop, Employed_Pop, Quantity);
+
+      if Harriet.Db.Pop.Is_Pop_Group_Employer (Pop.Pop_Group, Employer) then
+         declare
+            Employed : constant Harriet.Db.Pop.Pop_Type :=
+                         Harriet.Db.Pop.Get_By_Pop_Group_Employer
+                           (Pop.Pop_Group, Employer);
+         begin
+            Harriet.Pops.Move_Pops (Pop, Employed, Quantity);
+            Employed.Set_Salary (Salary);
+            Harriet.Agents.Log_Agent
+              (Employed.Get_Agent_Reference,
+               "executing employment contract: quantity "
+               & Harriet.Quantities.Show (Quantity)
+               & "; salary "
+               & Harriet.Money.Show (Salary)
+               & "; employer"
+               & Harriet.Db.To_String (Employer));
+         end;
       else
          declare
-            New_Pop : constant Harriet.Db.Pop.Pop_Type :=
-                        Harriet.Pops.New_Empty_Pop
-                          (Pop.Faction, Pop.Pop_Group,
-                           Installation.World,
-                           Installation.World_Sector);
+            Employed : constant Harriet.Db.Pop.Pop_Type :=
+                         Harriet.Pops.New_Empty_Pop
+                           (Faction => Pop.Faction,
+                            Group   => Pop.Pop_Group,
+                            World   => Pop.World,
+                            Sector  => Pop.World_Sector);
          begin
-            New_Pop.Set_Active (True);
-            New_Pop.Set_Next_Event (Pop.Next_Event);
-            New_Pop.Set_Installation (Installation);
-            Harriet.Pops.Move_Pops (Pop, New_Pop, Quantity);
+            Harriet.Pops.Move_Pops (Pop, Employed, Quantity);
+            Employed.Set_Salary (Salary);
+            Employed.Set_Employer (Employer);
+            Harriet.Agents.Log_Agent
+              (Employed.Get_Agent_Reference,
+               "executing employment contract: quantity "
+               & Harriet.Quantities.Show (Quantity)
+               & "; salary "
+               & Harriet.Money.Show (Salary)
+               & "; employer"
+               & Harriet.Db.To_String (Employer));
          end;
       end if;
    end Execute;

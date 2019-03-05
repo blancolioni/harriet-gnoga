@@ -57,6 +57,12 @@ package Harriet.Markets is
       Wanted    : Harriet.Commodities.Stock_Type;
       Available : out Harriet.Commodities.Stock_Type);
 
+   function Minimum_Bid_Price
+     (Market    : Harriet.Db.Market_Reference;
+      Commodity : Harriet.Db.Commodity_Reference;
+      Quantity  : Harriet.Quantities.Quantity_Type)
+      return Harriet.Money.Price_Type;
+
    procedure Initialize_Markets;
 
    type Market_Handler_Id is private;

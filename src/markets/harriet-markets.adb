@@ -330,7 +330,9 @@ package body Harriet.Markets is
                   Log_Market
                     (Market, Agent, Commodity,
                      "employ " & Show (This_Quantity)
-                     & " for " & Show (Total (Price, This_Quantity)));
+                     & " for " & Show (Price)
+                     & " ea; total "
+                     & Show (Total (Price, This_Quantity)));
                   Harriet.Employment.Create_Employment_Contract
                     (Employer => Agent,
                      Employee => Ask.Agent,
@@ -636,6 +638,33 @@ package body Harriet.Markets is
                   & ": "
                   & Message);
    end Log_Market_Bid;
+
+   function Minimum_Bid_Price
+     (Market    : Harriet.Db.Market_Reference;
+      Commodity : Harriet.Db.Commodity_Reference;
+      Quantity  : Harriet.Quantities.Quantity_Type)
+      return Harriet.Money.Price_Type
+   is
+      use Harriet.Money, Harriet.Quantities;
+      Available  : Quantity_Type := Zero;
+      Last_Price : Price_Type := Zero;
+   begin
+      for Ask of
+        Harriet.Db.Ask_Offer.Select_Market_Priority_Bounded_By_Priority
+          (Market, Commodity, 0.0, Real'Last)
+      loop
+         Available := Available + Ask.Quantity;
+         if Available > Quantity then
+            return Ask.Price;
+         end if;
+         Last_Price := Ask.Price;
+      end loop;
+      if Last_Price > Zero then
+         return Adjust_Price (Last_Price, 1.1);
+      else
+         return Current_Ask_Price (Market, Commodity);
+      end if;
+   end Minimum_Bid_Price;
 
    ----------------------
    -- Notify_New_Offer --

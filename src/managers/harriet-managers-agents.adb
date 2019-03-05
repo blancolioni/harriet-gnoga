@@ -66,6 +66,11 @@ package body Harriet.Managers.Agents is
       M : Root_Agent_Manager'Class renames
             Root_Agent_Manager'Class (Manager.all);
    begin
+      Manager.Log
+        ("activating: cash = "
+         & Harriet.Money.Show
+           (Harriet.Agents.Cash (M.Account)));
+
       Harriet.Markets.Reset_Offers (Manager.Market, Manager.Agent);
       M.Create_Market_Offers;
       M.Execute_Agent_Tasks;
@@ -184,7 +189,7 @@ package body Harriet.Managers.Agents is
       is
          pragma Unreferenced (Value);
          Price : constant Harriet.Money.Price_Type :=
-                   Manager.Current_Market_Ask_Price (Commodity);
+                   Manager.Minimum_Bid_Price (Commodity, Quantity);
       begin
          Manager.Place_Bid (Commodity, Quantity, Price);
       end Place_Bid;
@@ -351,6 +356,19 @@ package body Harriet.Managers.Agents is
       return Harriet.Stock.Get_Quantity (Manager.Has_Stock, Commodity);
    end Current_Stock;
 
+   ----------
+   -- Earn --
+   ----------
+
+   procedure Earn
+     (Manager : Root_Agent_Manager'Class;
+      Amount  : Harriet.Money.Money_Type)
+   is
+   begin
+      Manager.Log ("earn " & Harriet.Money.Show (Amount));
+      Harriet.Agents.Add_Cash (Manager.Account, Amount);
+   end Earn;
+
    -----------------
    -- Field_Count --
    -----------------
@@ -490,6 +508,21 @@ package body Harriet.Managers.Agents is
 
    end Log_Market_State;
 
+   -----------------------
+   -- Minimum_Bid_Price --
+   -----------------------
+
+   function Minimum_Bid_Price
+     (Manager   : Root_Agent_Manager'Class;
+      Commodity : Harriet.Db.Commodity_Reference;
+      Quantity  : Harriet.Quantities.Quantity_Type)
+      return Harriet.Money.Price_Type
+   is
+   begin
+      return Harriet.Markets.Minimum_Bid_Price
+        (Manager.Market, Commodity, Quantity);
+   end Minimum_Bid_Price;
+
    -------------------------
    -- Next_Sleep_Duration --
    -------------------------
@@ -518,6 +551,19 @@ package body Harriet.Managers.Agents is
         & "/"
         & Harriet.Db.Commodity.Get (Log.Commodity).Tag;
    end Path;
+
+   ---------
+   -- Pay --
+   ---------
+
+   procedure Pay
+     (Manager : Root_Agent_Manager'Class;
+      Amount  : Harriet.Money.Money_Type)
+   is
+   begin
+      Manager.Log ("pay " & Harriet.Money.Show (Amount));
+      Harriet.Agents.Remove_Cash (Manager.Account, Amount);
+   end Pay;
 
    ---------------
    -- Place_Ask --
