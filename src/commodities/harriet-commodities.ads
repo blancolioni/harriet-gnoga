@@ -9,6 +9,8 @@ package Harriet.Commodities is
 
    subtype Harriet_Commodity is Harriet.Db.Commodity_Reference;
 
+   type Commodity_Array is array (Positive range <>) of Harriet_Commodity;
+
    function Local_Name
      (Commodity : Harriet_Commodity)
       return String;
@@ -20,6 +22,8 @@ package Harriet.Commodities is
    function Is_Pop_Group
      (Commodity : Harriet_Commodity)
       return Boolean;
+
+   function All_Commodities return Commodity_Array;
 
    type Stock_Type is tagged private;
 

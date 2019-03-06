@@ -16,6 +16,16 @@ package Harriet.Markets is
       Commodity : Harriet.Db.Commodity_Reference)
       return Harriet.Money.Price_Type;
 
+   function Daily_Demand
+     (Market    : Harriet.Db.Market_Reference;
+      Commodity : Harriet.Db.Commodity_Reference)
+      return Harriet.Quantities.Quantity_Type;
+
+   function Daily_Supply
+     (Market    : Harriet.Db.Market_Reference;
+      Commodity : Harriet.Db.Commodity_Reference)
+      return Harriet.Quantities.Quantity_Type;
+
    procedure Reset_Offers
      (Market : Harriet.Db.Market_Reference;
       Agent  : Harriet.Db.Agent_Reference);
@@ -62,6 +72,12 @@ package Harriet.Markets is
       Commodity : Harriet.Db.Commodity_Reference;
       Quantity  : Harriet.Quantities.Quantity_Type)
       return Harriet.Money.Price_Type;
+
+   function Available_At_Bid_Price
+     (Market    : Harriet.Db.Market_Reference;
+      Commodity : Harriet.Db.Commodity_Reference;
+      Price     : Harriet.Money.Price_Type)
+      return Harriet.Quantities.Quantity_Type;
 
    procedure Initialize_Markets;
 

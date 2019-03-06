@@ -1,5 +1,6 @@
 private with Harriet.Managers.Agents;
 private with Harriet.Commodities;
+private with Harriet.Quantities;
 
 package Harriet.Managers.Ships is
 
@@ -12,7 +13,10 @@ private
    type Root_Ship_Manager is
      abstract new Harriet.Managers.Agents.Root_Agent_Manager with
       record
-         Ship : Harriet.Db.Ship_Reference;
+         Ship           : Harriet.Db.Ship_Reference;
+         Current_World  : Harriet.Db.World_Reference;
+         Current_System : Harriet.Db.Star_System_Reference;
+         Cargo_Space    : Harriet.Quantities.Quantity_Type;
       end record;
 
    overriding function Identifier

@@ -281,6 +281,29 @@ package body Harriet.Markets is
            Commodity, Quantity, Price);
    end Ask;
 
+   ----------------------------
+   -- Available_At_Bid_Price --
+   ----------------------------
+
+   function Available_At_Bid_Price
+     (Market    : Harriet.Db.Market_Reference;
+      Commodity : Harriet.Db.Commodity_Reference;
+      Price     : Harriet.Money.Price_Type)
+      return Harriet.Quantities.Quantity_Type
+   is
+      use Harriet.Money, Harriet.Quantities;
+      Available  : Quantity_Type := Zero;
+   begin
+      for Ask of
+        Harriet.Db.Ask_Offer.Select_Market_Priority_Bounded_By_Priority
+          (Market, Commodity, 0.0, Real'Last)
+      loop
+         exit when Ask.Price > Price;
+         Available := Available + Ask.Quantity;
+      end loop;
+      return Available;
+   end Available_At_Bid_Price;
+
    ---------
    -- Bid --
    ---------
@@ -470,6 +493,56 @@ package body Harriet.Markets is
       end if;
    end Current_Bid_Price;
 
+   ------------------
+   -- Daily_Demand --
+   ------------------
+
+   function Daily_Demand
+     (Market    : Harriet.Db.Market_Reference;
+      Commodity : Harriet.Db.Commodity_Reference)
+      return Harriet.Quantities.Quantity_Type
+   is
+      use type Harriet.Calendar.Time;
+      use type Harriet.Quantities.Quantity_Type;
+      Now : constant Harriet.Calendar.Time := Harriet.Calendar.Clock;
+      Quantity : Harriet.Quantities.Quantity_Type :=
+                   Harriet.Quantities.Zero;
+   begin
+      for Offer of
+        Harriet.Db.Historical_Bid
+          .Select_Historical_Offer_Bounded_By_Time_Stamp
+            (Market, Commodity, Now - Harriet.Calendar.Days (1.0), Now)
+      loop
+         Quantity := Quantity + Offer.Quantity;
+      end loop;
+      return Quantity;
+   end Daily_Demand;
+
+   ------------------
+   -- Daily_Supply --
+   ------------------
+
+   function Daily_Supply
+     (Market    : Harriet.Db.Market_Reference;
+      Commodity : Harriet.Db.Commodity_Reference)
+      return Harriet.Quantities.Quantity_Type
+   is
+      use type Harriet.Calendar.Time;
+      use type Harriet.Quantities.Quantity_Type;
+      Now : constant Harriet.Calendar.Time := Harriet.Calendar.Clock;
+      Quantity : Harriet.Quantities.Quantity_Type :=
+                   Harriet.Quantities.Zero;
+   begin
+      for Offer of
+        Harriet.Db.Historical_Ask
+          .Select_Historical_Offer_Bounded_By_Time_Stamp
+            (Market, Commodity, Now - Harriet.Calendar.Days (1.0), Now)
+      loop
+         Quantity := Quantity + Offer.Quantity;
+      end loop;
+      return Quantity;
+   end Daily_Supply;
+
    -----------------------
    -- Execute_Ask_Offer --
    -----------------------
@@ -639,6 +712,10 @@ package body Harriet.Markets is
                   & Message);
    end Log_Market_Bid;
 
+   -----------------------
+   -- Minimum_Bid_Price --
+   -----------------------
+
    function Minimum_Bid_Price
      (Market    : Harriet.Db.Market_Reference;
       Commodity : Harriet.Db.Commodity_Reference;
@@ -654,7 +731,7 @@ package body Harriet.Markets is
           (Market, Commodity, 0.0, Real'Last)
       loop
          Available := Available + Ask.Quantity;
-         if Available > Quantity then
+         if Available >= Quantity then
             return Ask.Price;
          end if;
          Last_Price := Ask.Price;
