@@ -31,10 +31,11 @@ package body Harriet.Ships is
    -----------------
 
    procedure Create_Ship
-     (Owner  : Harriet.Db.Faction_Reference;
-      World  : Harriet.Db.World_Reference;
-      Design : Harriet.Db.Ship_Design_Reference;
-      Name   : String)
+     (Owner   : Harriet.Db.Faction_Reference;
+      World   : Harriet.Db.World_Reference;
+      Design  : Harriet.Db.Ship_Design_Reference;
+      Manager : String;
+      Name    : String)
    is
       World_Rec : constant Harriet.Db.World.World_Type :=
                     Harriet.Db.World.Get (World);
@@ -44,36 +45,41 @@ package body Harriet.Ships is
                           Harriet.Money.Zero,
                           Harriet.Money.Zero);
       Ship         : constant Harriet.Db.Ship_Reference :=
-                    Harriet.Db.Ship.Create
-                      (Name            => Name,
-                       Capacity        =>
-                         Harriet.Db.Ship_Design.Get (Design).Hold_Size,
-                       Account         => Account,
-                       Faction         => Owner,
-                       Active          => True,
-                       Scheduled       => False,
-                       Next_Event      => Harriet.Calendar.Clock,
-                       Manager         => "default",
-                       Owner           =>
-                         Harriet.Db.Faction.Get (Owner).Get_Owner_Reference,
-                       World           => World,
-                       Star_System     => World_Rec.Star_System,
-                       Orbit           =>
-                         World_Rec.Radius
-                       + (300.0 + 100.0 * Harriet.Random.Unit_Random)
-                       * 1000.0,
-                       Inclination     =>
-                         Harriet.Random.Unit_Random * 10.0 - 5.0,
-                       Start_Time      => Harriet.Calendar.Clock,
-                       Start_Longitude => Harriet.Random.Unit_Random * 360.0,
-                       Ship_Design     => Design,
-                       Alive           => True,
-                       Training        => 0.0,
-                       Fuel            => 0.0,
-                       Destination     => Harriet.Db.Null_World_Reference,
-                       Progress        => 0.0,
-                       Current_Order   => 0,
-                       Cycle_Orders    => False);
+                       Harriet.Db.Ship.Create
+                         (Name              => Name,
+                          Capacity          =>
+                            Harriet.Db.Ship_Design.Get (Design).Hold_Size,
+                          Account           => Account,
+                          Faction           => Owner,
+                          Active            => True,
+                          Scheduled         => False,
+                          Next_Event        => Harriet.Calendar.Clock,
+                          Manager           => Manager,
+                          Owner             =>
+                            Harriet.Db.Faction.Get (Owner).Get_Owner_Reference,
+                          World             => World,
+                          Star_System       => World_Rec.Star_System,
+                          Orbit             =>
+                            World_Rec.Radius
+                          + (300.0 + 100.0 * Harriet.Random.Unit_Random)
+                          * 1000.0,
+                          Inclination       =>
+                            Harriet.Random.Unit_Random * 10.0 - 5.0,
+                          Epoch             => Harriet.Calendar.Clock,
+                          Start_Longitude   =>
+                            Harriet.Random.Unit_Random * 360.0,
+                          Ship_Design       => Design,
+                          Alive             => True,
+                          Training          => 0.0,
+                          Fuel              => 0.0,
+                          Departure         => Harriet.Calendar.Clock,
+                          Arrival           => Harriet.Calendar.Clock,
+                          Dest_Orbit        => 0.0,
+                          Dest_Incl         => 0.0,
+                          Dest_Epoch        => Harriet.Calendar.Clock,
+                          Final_Destination => Harriet.Db.Null_World_Reference,
+                          Current_Order     => 0,
+                          Cycle_Orders      => False);
    begin
       for Design_Component of
         Harriet.Db.Ship_Module_Design.Select_By_Ship_Design
@@ -127,10 +133,10 @@ package body Harriet.Ships is
                            / World_Mass);
       Start       : constant Non_Negative_Real :=
                      Harriet.Db.Ship.Get (Ship.Reference).Start_Longitude;
-      Start_Time  : constant Time :=
-                     Harriet.Db.Ship.Get (Ship.Reference).Start_Time;
+      Epoch       : constant Time :=
+                     Harriet.Db.Ship.Get (Ship.Reference).Epoch;
       Now         : constant Time := Clock;
-      Elapsed     : constant Duration := Now - Start_Time;
+      Elapsed     : constant Duration := Now - Epoch;
       Orbit_Count : constant Non_Negative_Real := Real (Elapsed) / Period;
       Partial     : constant Unit_Real :=
                       Orbit_Count - Real'Truncation (Orbit_Count);

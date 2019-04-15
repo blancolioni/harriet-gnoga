@@ -5,6 +5,8 @@ with Harriet.Db.Stock_Item;
 
 package body Harriet.Commodities is
 
+   All_Commodities_Array : access Commodity_Array := null;
+
    function Get_Rec
      (Stock     : Stock_Type;
       Commodity : Harriet.Db.Commodity_Reference)
@@ -31,6 +33,35 @@ package body Harriet.Commodities is
          end;
       end loop;
    end Add;
+
+   ---------------------
+   -- All_Commodities --
+   ---------------------
+
+   function All_Commodities return Commodity_Array is
+   begin
+      if All_Commodities_Array = null then
+         declare
+            Count : Natural := 0;
+         begin
+            for Commodity of Harriet.Db.Commodity.Scan_By_Tag loop
+               Count := Count + 1;
+            end loop;
+            All_Commodities_Array := new Commodity_Array (1 .. Count);
+         end;
+
+         declare
+            Index : Natural := 0;
+         begin
+            for Commodity of Harriet.Db.Commodity.Scan_By_Tag loop
+               Index := Index + 1;
+               All_Commodities_Array (Index) :=
+                 Commodity.Get_Commodity_Reference;
+            end loop;
+         end;
+      end if;
+      return All_Commodities_Array.all;
+   end All_Commodities;
 
    ------------------------
    -- Get_Price_Per_Item --

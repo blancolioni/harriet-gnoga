@@ -38,7 +38,7 @@ package body Harriet.Configure.Worlds is
 
       case Rec.Category is
          when Asteroid | Dwarf | Terrestrial | Super_Terrestrial =>
-            Tile_Count := Natural (Radius * 100.0);
+            Tile_Count := Natural (Radius * 200.0);
          when Sub_Jovian | Jovian | Super_Jovian =>
             Tile_Count := 0;
       end case;

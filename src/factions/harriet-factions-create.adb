@@ -599,6 +599,8 @@ package body Harriet.Factions.Create is
                     (Owner  => Faction,
                      World  => World,
                      Design => Design,
+                     Manager =>
+                       Harriet.Db.Ship_Design.Get (Design).Default_Manager,
                      Name   => Create_Ship_Name (Design_Name, I));
                end loop;
             end if;

@@ -67,10 +67,11 @@ package Harriet.Ships is
       return Non_Negative_Real;
 
    procedure Create_Ship
-     (Owner  : Harriet.Db.Faction_Reference;
-      World  : Harriet.Db.World_Reference;
-      Design : Harriet.Db.Ship_Design_Reference;
-      Name   : String);
+     (Owner   : Harriet.Db.Faction_Reference;
+      World   : Harriet.Db.World_Reference;
+      Design  : Harriet.Db.Ship_Design_Reference;
+      Manager : String;
+      Name    : String);
 
 private
 

@@ -233,9 +233,11 @@ package body Harriet.Configure.Ships is
       Design : constant Harriet.Db.Ship_Design_Reference :=
                  Harriet.Db.Ship_Design.Create
                    (Name      => Design_Config.Config_Name,
-                    Hold_Size => Harriet.Quantities.Zero);
+                    Hold_Size => Harriet.Quantities.Zero,
+                    Default_Manager =>
+                      Design_Config.Get ("default-manager", "ship-default"));
    begin
-      for Component_Config of Design_Config loop
+      for Component_Config of Design_Config.Child ("components") loop
          declare
             use Harriet.Db;
             Component : constant Harriet.Db.Ship_Component_Reference :=

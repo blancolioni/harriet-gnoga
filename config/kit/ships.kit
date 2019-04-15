@@ -11,25 +11,30 @@ with Worlds;
 package Ships is
 
 record Ship_Design : Has_Name is
-   Hold_Size : Quantity_Type;
+   Hold_Size       : Quantity_Type;
+   Default_Manager : String (32);
 end Ship_Design;
 
 record Ship : Has_Name, Has_Owner, Managed, Agent is
    key Faction;
    key World;
    key Star_System;
-   Orbit           : Long_Float;
-   Inclination     : Long_Float;
-   Start_Time      : Time;
-   Start_Longitude : Long_Float;
+   Orbit             : Long_Float;
+   Inclination       : Long_Float;
+   Epoch             : Time;
+   Start_Longitude   : Long_Float;
    Ship_Design;
-   key Alive       : Boolean;
-   Training        : Long_Float;
-   Fuel            : Long_Float;
-   key Destination : World;
-   Progress        : Float;
-   Current_Order   : Natural;
-   Cycle_Orders    : Boolean;
+   key Alive         : Boolean;
+   Training          : Long_Float;
+   Fuel              : Long_Float;
+   Departure         : Time;
+   Arrival           : Time;
+   Dest_Orbit        : Long_Float;
+   Dest_Incl         : Long_Float;
+   Dest_Epoch        : Time;
+   Final_Destination : World;
+   Current_Order     : Natural;
+   Cycle_Orders      : Boolean;
    key Faction_And_World with Faction, World;
 end Ship;
 
