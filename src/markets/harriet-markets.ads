@@ -26,6 +26,28 @@ package Harriet.Markets is
       Commodity : Harriet.Db.Commodity_Reference)
       return Harriet.Quantities.Quantity_Type;
 
+   function Historical_Demand
+     (Market    : Harriet.Db.Market_Reference;
+      Commodity : Harriet.Db.Commodity_Reference;
+      Days      : Non_Negative_Real)
+      return Harriet.Quantities.Quantity_Type;
+
+   function Historical_Supply
+     (Market    : Harriet.Db.Market_Reference;
+      Commodity : Harriet.Db.Commodity_Reference;
+      Days      : Non_Negative_Real)
+      return Harriet.Quantities.Quantity_Type;
+
+   function Current_Demand
+     (Market    : Harriet.Db.Market_Reference;
+      Commodity : Harriet.Db.Commodity_Reference)
+      return Harriet.Quantities.Quantity_Type;
+
+   function Current_Supply
+     (Market    : Harriet.Db.Market_Reference;
+      Commodity : Harriet.Db.Commodity_Reference)
+      return Harriet.Quantities.Quantity_Type;
+
    procedure Reset_Offers
      (Market : Harriet.Db.Market_Reference;
       Agent  : Harriet.Db.Agent_Reference);
@@ -35,14 +57,14 @@ package Harriet.Markets is
       Agent     : Harriet.Db.Agent.Agent_Type;
       Commodity : Harriet.Db.Commodity_Reference;
       Quantity  : Harriet.Quantities.Quantity_Type;
-      Price     : Harriet.Money.Price_Type);
+      Priority  : Non_Negative_Real);
 
    procedure Bid
      (Market    : Harriet.Db.Market_Reference;
       Agent     : Harriet.Db.Agent.Agent_Type;
       Commodity : Harriet.Db.Commodity_Reference;
       Quantity  : Harriet.Quantities.Quantity_Type;
-      Price     : Harriet.Money.Price_Type);
+      Priority  : Non_Negative_Real);
 
    procedure Ask
      (Market    : Harriet.Db.Market_Reference;
@@ -51,7 +73,7 @@ package Harriet.Markets is
       Has_Stock : Harriet.Db.Has_Stock_Reference;
       Commodity : Harriet.Db.Commodity_Reference;
       Quantity  : Harriet.Quantities.Quantity_Type;
-      Price     : Harriet.Money.Price_Type);
+      Priority  : Non_Negative_Real);
 
    procedure Bid
      (Market    : Harriet.Db.Market_Reference;
@@ -60,26 +82,17 @@ package Harriet.Markets is
       Has_Stock : Harriet.Db.Has_Stock_Reference;
       Commodity : Harriet.Db.Commodity_Reference;
       Quantity  : Harriet.Quantities.Quantity_Type;
-      Price     : Harriet.Money.Price_Type);
+      Priority  : Non_Negative_Real);
 
    procedure Try_Bid
      (Market    : Harriet.Db.Market_Reference;
       Wanted    : Harriet.Commodities.Stock_Type;
       Available : out Harriet.Commodities.Stock_Type);
 
-   function Minimum_Bid_Price
-     (Market    : Harriet.Db.Market_Reference;
-      Commodity : Harriet.Db.Commodity_Reference;
-      Quantity  : Harriet.Quantities.Quantity_Type)
-      return Harriet.Money.Price_Type;
-
-   function Available_At_Bid_Price
-     (Market    : Harriet.Db.Market_Reference;
-      Commodity : Harriet.Db.Commodity_Reference;
-      Price     : Harriet.Money.Price_Type)
-      return Harriet.Quantities.Quantity_Type;
-
    procedure Initialize_Markets;
+
+   procedure Update_Market
+     (Market : Harriet.Db.Market_Reference);
 
    type Market_Handler_Id is private;
 

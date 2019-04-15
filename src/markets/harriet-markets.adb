@@ -3,6 +3,7 @@ with Ada.Containers.Indefinite_Holders;
 
 with Harriet.Calendar;
 with Harriet.Logging;
+with Harriet.Real_Images;
 
 with Harriet.Agents;
 with Harriet.Employment;
@@ -11,6 +12,7 @@ with Harriet.Stock;
 with Harriet.Db.Ask_Offer;
 with Harriet.Db.Bid_Offer;
 with Harriet.Db.Market_Offer;
+with Harriet.Db.Market_Price;
 with Harriet.Db.Transaction;
 
 with Harriet.Db.Historical_Ask;
@@ -55,16 +57,6 @@ package body Harriet.Markets is
 
    procedure Notify_New_Transaction
      (Reference : Harriet.Db.Transaction_Reference);
-
-   function First_Ask
-     (Market    : Harriet.Db.Market_Reference;
-      Commodity : Harriet.Db.Commodity_Reference)
-      return Harriet.Db.Ask_Offer_Reference;
-
-   function First_Bid
-     (Market    : Harriet.Db.Market_Reference;
-      Commodity : Harriet.Db.Commodity_Reference)
-     return Harriet.Db.Bid_Offer_Reference;
 
    procedure Log_Market
      (Market    : Harriet.Db.Market_Reference;
@@ -147,13 +139,14 @@ package body Harriet.Markets is
       Has_Stock : Harriet.Db.Has_Stock_Reference;
       Commodity : Harriet.Db.Commodity_Reference;
       Quantity  : Harriet.Quantities.Quantity_Type;
-      Price     : Harriet.Money.Price_Type)
+      Priority  : Non_Negative_Real)
    is
       use Harriet.Money;
       use Harriet.Quantities;
       Remaining : Quantity_Type := Quantity;
       Completed : Bid_Lists.List;
-
+      Price     : constant Price_Type :=
+                    Current_Ask_Price (Market, Commodity);
    begin
 
       Harriet.Db.Historical_Ask.Create
@@ -246,7 +239,7 @@ package body Harriet.Markets is
       begin
          if Offer.Has_Element then
             Offer.Set_Price (Price);
-            Offer.Set_Priority (Harriet.Money.To_Real (Price));
+            Offer.Set_Priority (Priority);
             Offer.Set_Quantity (Remaining);
          elsif Remaining > Zero then
             Harriet.Db.Ask_Offer.Create
@@ -257,7 +250,7 @@ package body Harriet.Markets is
                Has_Stock => Has_Stock,
                Account   => Account,
                Price     => Price,
-               Priority  => Harriet.Money.To_Real (Price),
+               Priority  => Priority,
                Quantity  => Remaining);
          end if;
       end;
@@ -273,36 +266,14 @@ package body Harriet.Markets is
       Agent     : Harriet.Db.Agent.Agent_Type;
       Commodity : Harriet.Db.Commodity_Reference;
       Quantity  : Harriet.Quantities.Quantity_Type;
-      Price     : Harriet.Money.Price_Type)
+      Priority  : Non_Negative_Real)
    is
    begin
       Ask (Market, Agent.Get_Agent_Reference, Agent.Account,
            Agent.Get_Has_Stock_Reference,
-           Commodity, Quantity, Price);
+           Commodity, Quantity,
+           Priority);
    end Ask;
-
-   ----------------------------
-   -- Available_At_Bid_Price --
-   ----------------------------
-
-   function Available_At_Bid_Price
-     (Market    : Harriet.Db.Market_Reference;
-      Commodity : Harriet.Db.Commodity_Reference;
-      Price     : Harriet.Money.Price_Type)
-      return Harriet.Quantities.Quantity_Type
-   is
-      use Harriet.Money, Harriet.Quantities;
-      Available  : Quantity_Type := Zero;
-   begin
-      for Ask of
-        Harriet.Db.Ask_Offer.Select_Market_Priority_Bounded_By_Priority
-          (Market, Commodity, 0.0, Real'Last)
-      loop
-         exit when Ask.Price > Price;
-         Available := Available + Ask.Quantity;
-      end loop;
-      return Available;
-   end Available_At_Bid_Price;
 
    ---------
    -- Bid --
@@ -315,12 +286,14 @@ package body Harriet.Markets is
       Has_Stock : Harriet.Db.Has_Stock_Reference;
       Commodity : Harriet.Db.Commodity_Reference;
       Quantity  : Harriet.Quantities.Quantity_Type;
-      Price     : Harriet.Money.Price_Type)
+      Priority  : Non_Negative_Real)
    is
       use Harriet.Money;
       use Harriet.Quantities;
       Remaining : Quantity_Type := Quantity;
       Completed : Ask_Lists.List;
+      Price     : constant Price_Type :=
+                    Current_Bid_Price (Market, Commodity);
    begin
 
       Harriet.Db.Historical_Bid.Create
@@ -340,8 +313,6 @@ package body Harriet.Markets is
          if Ask.Quantity = Zero then
             Completed.Append (Ask.Get_Ask_Offer_Reference);
          end if;
-
-         exit when Ask.Price > Price;
 
          declare
             This_Quantity : constant Quantity_Type :=
@@ -418,7 +389,7 @@ package body Harriet.Markets is
       begin
          if Offer.Has_Element then
             Offer.Set_Price (Price);
-            Offer.Set_Priority (1.0 / Harriet.Money.To_Real (Price));
+            Offer.Set_Priority (Priority);
             Offer.Set_Quantity (Remaining);
          elsif Remaining > Zero then
             Harriet.Db.Bid_Offer.Create
@@ -429,7 +400,7 @@ package body Harriet.Markets is
                Has_Stock => Has_Stock,
                Account   => Account,
                Price     => Price,
-               Priority  => 1.0 / Harriet.Money.To_Real (Price),
+               Priority  => Priority,
                Quantity  => Quantity);
          end if;
       end;
@@ -445,12 +416,12 @@ package body Harriet.Markets is
       Agent     : Harriet.Db.Agent.Agent_Type;
       Commodity : Harriet.Db.Commodity_Reference;
       Quantity  : Harriet.Quantities.Quantity_Type;
-      Price     : Harriet.Money.Price_Type)
+      Priority  : Non_Negative_Real)
    is
    begin
       Bid (Market, Agent.Get_Agent_Reference, Agent.Account,
            Agent.Get_Has_Stock_Reference,
-           Commodity, Quantity, Price);
+           Commodity, Quantity, Priority);
    end Bid;
 
    -----------------------
@@ -462,14 +433,14 @@ package body Harriet.Markets is
       Commodity : Harriet.Db.Commodity_Reference)
       return Harriet.Money.Price_Type
    is
-      use Harriet.Db;
-      Ask_Ref : constant Harriet.Db.Ask_Offer_Reference :=
-                  First_Ask (Market, Commodity);
+      State : constant Harriet.Db.Market_Price.Market_Price_Type :=
+                Harriet.Db.Market_Price.Get_By_Market_Price
+                  (Market, Commodity);
    begin
-      if Ask_Ref = Null_Ask_Offer_Reference then
+      if not State.Has_Element then
          return Harriet.Commodities.Initial_Price (Commodity);
       else
-         return Harriet.Db.Ask_Offer.Get (Ask_Ref).Price;
+         return State.Price;
       end if;
    end Current_Ask_Price;
 
@@ -482,16 +453,58 @@ package body Harriet.Markets is
       Commodity : Harriet.Db.Commodity_Reference)
       return Harriet.Money.Price_Type
    is
-      use Harriet.Db;
-      Bid_Ref : constant Harriet.Db.Bid_Offer_Reference :=
-                  First_Bid (Market, Commodity);
+      State : constant Harriet.Db.Market_Price.Market_Price_Type :=
+                Harriet.Db.Market_Price.Get_By_Market_Price
+                  (Market, Commodity);
    begin
-      if Bid_Ref = Null_Bid_Offer_Reference then
+      if not State.Has_Element then
          return Harriet.Commodities.Initial_Price (Commodity);
       else
-         return Harriet.Db.Bid_Offer.Get (Bid_Ref).Price;
+         return State.Price;
       end if;
    end Current_Bid_Price;
+
+   --------------------
+   -- Current_Demand --
+   --------------------
+
+   function Current_Demand
+     (Market    : Harriet.Db.Market_Reference;
+      Commodity : Harriet.Db.Commodity_Reference)
+      return Harriet.Quantities.Quantity_Type
+   is
+      use Harriet.Quantities;
+      Available  : Quantity_Type := Zero;
+   begin
+      for Ask of
+        Harriet.Db.Bid_Offer.Select_Market_Priority_Bounded_By_Priority
+          (Market, Commodity, 0.0, Real'Last)
+      loop
+         Available := Available + Ask.Quantity;
+      end loop;
+      return Available;
+   end Current_Demand;
+
+   --------------------
+   -- Current_Supply --
+   --------------------
+
+   function Current_Supply
+     (Market    : Harriet.Db.Market_Reference;
+      Commodity : Harriet.Db.Commodity_Reference)
+      return Harriet.Quantities.Quantity_Type
+   is
+      use Harriet.Quantities;
+      Available  : Quantity_Type := Zero;
+   begin
+      for Ask of
+        Harriet.Db.Ask_Offer.Select_Market_Priority_Bounded_By_Priority
+          (Market, Commodity, 0.0, Real'Last)
+      loop
+         Available := Available + Ask.Quantity;
+      end loop;
+      return Available;
+   end Current_Supply;
 
    ------------------
    -- Daily_Demand --
@@ -590,43 +603,57 @@ package body Harriet.Markets is
 
    end Execute_Bid_Offer;
 
-   ---------------
-   -- First_Ask --
-   ---------------
+   -----------------------
+   -- Historical_Demand --
+   -----------------------
 
-   function First_Ask
+   function Historical_Demand
      (Market    : Harriet.Db.Market_Reference;
-      Commodity : Harriet.Db.Commodity_Reference)
-      return Harriet.Db.Ask_Offer_Reference
+      Commodity : Harriet.Db.Commodity_Reference;
+      Days      : Non_Negative_Real)
+      return Harriet.Quantities.Quantity_Type
    is
+      use type Harriet.Calendar.Time;
+      use type Harriet.Quantities.Quantity_Type;
+      Now : constant Harriet.Calendar.Time := Harriet.Calendar.Clock;
+      Quantity : Harriet.Quantities.Quantity_Type :=
+                   Harriet.Quantities.Zero;
    begin
-      for Ask of
-        Harriet.Db.Ask_Offer.Select_Market_Priority_Bounded_By_Priority
-          (Market, Commodity, 0.0, Real'Last)
+      for Offer of
+        Harriet.Db.Historical_Bid
+          .Select_Historical_Offer_Bounded_By_Time_Stamp
+            (Market, Commodity, Now - Harriet.Calendar.Days (Days), Now)
       loop
-         return Ask.Get_Ask_Offer_Reference;
+         Quantity := Quantity + Offer.Quantity;
       end loop;
-      return Harriet.Db.Null_Ask_Offer_Reference;
-   end First_Ask;
+      return Quantity;
+   end Historical_Demand;
 
-   ---------------
-   -- First_Bid --
-   ---------------
+   -----------------------
+   -- Historical_Supply --
+   -----------------------
 
-   function First_Bid
+   function Historical_Supply
      (Market    : Harriet.Db.Market_Reference;
-      Commodity : Harriet.Db.Commodity_Reference)
-      return Harriet.Db.Bid_Offer_Reference
+      Commodity : Harriet.Db.Commodity_Reference;
+      Days      : Non_Negative_Real)
+      return Harriet.Quantities.Quantity_Type
    is
+      use type Harriet.Calendar.Time;
+      use type Harriet.Quantities.Quantity_Type;
+      Now : constant Harriet.Calendar.Time := Harriet.Calendar.Clock;
+      Quantity : Harriet.Quantities.Quantity_Type :=
+                   Harriet.Quantities.Zero;
    begin
-      for Bid of
-        Harriet.Db.Bid_Offer.Select_Market_Priority_Bounded_By_Priority
-        (Market, Commodity, 0.0, Real'Last)
+      for Offer of
+        Harriet.Db.Historical_Ask
+          .Select_Historical_Offer_Bounded_By_Time_Stamp
+            (Market, Commodity, Now - Harriet.Calendar.Days (Days), Now)
       loop
-         return Bid.Get_Bid_Offer_Reference;
+         Quantity := Quantity + Offer.Quantity;
       end loop;
-      return Harriet.Db.Null_Bid_Offer_Reference;
-   end First_Bid;
+      return Quantity;
+   end Historical_Supply;
 
    ------------------------
    -- Initialize_Markets --
@@ -711,37 +738,6 @@ package body Harriet.Markets is
                   & ": "
                   & Message);
    end Log_Market_Bid;
-
-   -----------------------
-   -- Minimum_Bid_Price --
-   -----------------------
-
-   function Minimum_Bid_Price
-     (Market    : Harriet.Db.Market_Reference;
-      Commodity : Harriet.Db.Commodity_Reference;
-      Quantity  : Harriet.Quantities.Quantity_Type)
-      return Harriet.Money.Price_Type
-   is
-      use Harriet.Money, Harriet.Quantities;
-      Available  : Quantity_Type := Zero;
-      Last_Price : Price_Type := Zero;
-   begin
-      for Ask of
-        Harriet.Db.Ask_Offer.Select_Market_Priority_Bounded_By_Priority
-          (Market, Commodity, 0.0, Real'Last)
-      loop
-         Available := Available + Ask.Quantity;
-         if Available >= Quantity then
-            return Ask.Price;
-         end if;
-         Last_Price := Ask.Price;
-      end loop;
-      if Last_Price > Zero then
-         return Adjust_Price (Last_Price, 1.1);
-      else
-         return Current_Ask_Price (Market, Commodity);
-      end if;
-   end Minimum_Bid_Price;
 
    ----------------------
    -- Notify_New_Offer --
@@ -882,5 +878,98 @@ package body Harriet.Markets is
    begin
       Wanted.Iterate (Check_Bid'Access);
    end Try_Bid;
+
+   -------------------
+   -- Update_Market --
+   -------------------
+
+   procedure Update_Market
+     (Market : Harriet.Db.Market_Reference)
+   is
+      procedure Update_Commodity
+        (Commodity : Harriet.Db.Commodity_Reference);
+
+      ----------------------
+      -- Update_Commodity --
+      ----------------------
+
+      procedure Update_Commodity
+        (Commodity : Harriet.Db.Commodity_Reference)
+      is
+         use Harriet.Money, Harriet.Quantities;
+         Demand : constant Quantity_Type :=
+                    Historical_Demand (Market, Commodity, 5.0);
+         Supply : constant Quantity_Type :=
+                    Historical_Supply (Market, Commodity, 5.0);
+         State  : constant Harriet.Db.Market_Price.Market_Price_Type :=
+                    Harriet.Db.Market_Price.Get_By_Market_Price
+                      (Market, Commodity);
+         Current_Price : constant Price_Type := State.Price;
+         New_Price     : Price_Type := Current_Price;
+         New_Force     : Non_Negative_Real := 1.0;
+         Current_Force : constant Non_Negative_Real :=
+                           To_Real (Current_Price)
+                           / To_Real (State.Base_Price);
+         Adjustment    : Non_Negative_Real := 1.0;
+      begin
+         if Demand = Zero and then Supply = Zero then
+            New_Force := 1.0;
+         elsif Demand = Zero then
+            New_Force := 0.4;
+         elsif Supply = Zero then
+            New_Force := 2.2;
+         elsif Supply > Demand then
+            New_Force :=
+              Real'Max
+                (1.0 - To_Real (Supply - Demand) / To_Real (Supply) / 2.0,
+                 0.4);
+         elsif Demand > Supply then
+            New_Force :=
+              1.0 + To_Real (Demand - Supply) / To_Real (Demand) / 2.0;
+         end if;
+
+         Adjustment := Current_Force + (New_Force - Current_Force) / 10.0;
+
+         New_Price :=
+           Adjust_Price (State.Base_Price, Adjustment);
+
+         if New_Price /= Current_Price then
+            Harriet.Logging.Log
+              (Actor    => "",
+               Location => "Market" & Harriet.Db.To_String (Market),
+               Category => Harriet.Commodities.Local_Name (Commodity),
+               Message  =>
+                 "current price: " & Show (Current_Price)
+               & "; demand: " & Show (Demand)
+               & "; supply: " & Show (Supply)
+               & "; current force: "
+               & Harriet.Real_Images.Approximate_Image (Current_Force)
+               & "; new force: "
+               & Harriet.Real_Images.Approximate_Image (New_Force)
+               & "; adjustment: "
+               & Harriet.Real_Images.Approximate_Image (Adjustment)
+               & "; new price: " & Show (New_Price));
+
+            State.Set_Price (New_Price);
+         end if;
+
+      end Update_Commodity;
+
+   begin
+      for Commodity of Harriet.Commodities.All_Commodities loop
+
+         if not Harriet.Db.Market_Price.Is_Market_Price
+           (Market, Commodity)
+         then
+            Harriet.Db.Market_Price.Create
+              (Market     => Market,
+               Commodity  => Commodity,
+               Base_Price => Harriet.Commodities.Initial_Price (Commodity),
+               Price      => Harriet.Commodities.Initial_Price (Commodity));
+         end if;
+
+         Update_Commodity (Commodity);
+      end loop;
+   end Update_Market;
 
 end Harriet.Markets;

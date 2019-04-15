@@ -395,7 +395,7 @@ package body Harriet.Factions.Create is
                   Harriet.Stock.Add_Initial_Stock
                     (Harriet.Db.Installation.Get (Hub).Get_Has_Stock_Reference,
                      Needs.Commodity,
-                     Harriet.Quantities.Scale (Employee.Quantity, 21.0));
+                     Harriet.Quantities.Scale (Employee.Quantity, 17.0));
                end loop;
 
             end;

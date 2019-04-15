@@ -14,16 +14,18 @@ record Market_State is
    key Time_Stamp : Time;
    Market;
    Commodity;
-   Price  : Price_Type;
-   Demand : Quantity_Type;
-   Supply : Quantity_Type;
+   Base_Price : Price_Type;
+   Price      : Price_Type;
+   Demand     : Quantity_Type;
+   Supply     : Quantity_Type;
    key Market_State with Market, Commodity, Time_Stamp;
 end Market_State;
 
 record Market_Price is
    key Market;
    key Commodity;
-   Price : Price_Type;
+   Base_Price : Price_Type;
+   Price      : Price_Type;
    unique key Market_Price with Market, Commodity;
 end Market_Price;
 

@@ -188,10 +188,8 @@ package body Harriet.Managers.Agents is
          Value     : Money_Type)
       is
          pragma Unreferenced (Value);
-         Price : constant Harriet.Money.Price_Type :=
-                   Manager.Minimum_Bid_Price (Commodity, Quantity);
       begin
-         Manager.Place_Bid (Commodity, Quantity, Price);
+         Manager.Place_Bid (Commodity, Quantity);
       end Place_Bid;
 
    begin
@@ -422,9 +420,10 @@ package body Harriet.Managers.Agents is
    ------------------------------
 
    procedure Initialize_Agent_Manager
-     (Manager : in out Root_Agent_Manager'Class;
-      Agent   : Harriet.Db.Agent.Agent_Type;
-      World   : Harriet.Db.World_Reference)
+     (Manager  : in out Root_Agent_Manager'Class;
+      Agent    : Harriet.Db.Agent.Agent_Type;
+      World    : Harriet.Db.World_Reference;
+      Priority : Non_Negative_Real)
    is
    begin
       Manager.Agent := Agent.Get_Agent_Reference;
@@ -432,6 +431,7 @@ package body Harriet.Managers.Agents is
       Manager.Market := Harriet.Worlds.Market (World);
       Manager.Account := Agent.Account;
       Manager.World := World;
+      Manager.Priority := Priority;
    end Initialize_Agent_Manager;
 
    ---------
@@ -508,21 +508,6 @@ package body Harriet.Managers.Agents is
 
    end Log_Market_State;
 
-   -----------------------
-   -- Minimum_Bid_Price --
-   -----------------------
-
-   function Minimum_Bid_Price
-     (Manager   : Root_Agent_Manager'Class;
-      Commodity : Harriet.Db.Commodity_Reference;
-      Quantity  : Harriet.Quantities.Quantity_Type)
-      return Harriet.Money.Price_Type
-   is
-   begin
-      return Harriet.Markets.Minimum_Bid_Price
-        (Manager.Market, Commodity, Quantity);
-   end Minimum_Bid_Price;
-
    -------------------------
    -- Next_Sleep_Duration --
    -------------------------
@@ -572,9 +557,10 @@ package body Harriet.Managers.Agents is
    procedure Place_Ask
      (Manager   : Root_Agent_Manager'Class;
       Commodity : Harriet.Db.Commodity_Reference;
-      Quantity  : Harriet.Quantities.Quantity_Type;
-      Price     : Harriet.Money.Price_Type)
+      Quantity  : Harriet.Quantities.Quantity_Type)
    is
+      Price : constant Harriet.Money.Price_Type :=
+                Manager.Current_Market_Ask_Price (Commodity);
    begin
       Manager.Log
         ("ask " & Harriet.Money.Show (Price)
@@ -592,7 +578,7 @@ package body Harriet.Managers.Agents is
          Has_Stock => Manager.Has_Stock,
          Commodity => Commodity,
          Quantity  => Quantity,
-         Price     => Price);
+         Priority  => Manager.Priority);
    end Place_Ask;
 
    ---------------
@@ -602,9 +588,10 @@ package body Harriet.Managers.Agents is
    procedure Place_Bid
      (Manager   : Root_Agent_Manager'Class;
       Commodity : Harriet.Db.Commodity_Reference;
-      Quantity  : Harriet.Quantities.Quantity_Type;
-      Price     : Harriet.Money.Price_Type)
+      Quantity  : Harriet.Quantities.Quantity_Type)
    is
+      Price : constant Harriet.Money.Price_Type :=
+                Manager.Current_Market_Bid_Price (Commodity);
    begin
       Manager.Log
         ("bid " & Harriet.Money.Show (Price)
@@ -623,7 +610,7 @@ package body Harriet.Managers.Agents is
          Has_Stock => Manager.Has_Stock,
          Commodity => Commodity,
          Quantity  => Quantity,
-         Price     => Price);
+         Priority  => Manager.Priority);
    end Place_Bid;
 
    ------------------

@@ -42,8 +42,8 @@ package body Harriet.Ships is
       Account      : constant Harriet.Db.Account_Reference :=
                        Harriet.Db.Account.Create
                          (Harriet.Db.Null_Account_Reference,
-                          Harriet.Money.Zero,
-                          Harriet.Money.Zero);
+                          Harriet.Money.To_Money (1000.0),
+                          Harriet.Money.To_Money (1000.0));
       Ship         : constant Harriet.Db.Ship_Reference :=
                        Harriet.Db.Ship.Create
                          (Name              => Name,

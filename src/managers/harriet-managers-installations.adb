@@ -12,6 +12,8 @@ with Harriet.Weighted_Random_Choices;
 with Harriet.Agents;
 with Harriet.Worlds;
 
+with Harriet.Markets;
+
 with Harriet.Db.Consumer_Good;
 with Harriet.Db.Deposit;
 with Harriet.Db.Facility_Worker;
@@ -251,7 +253,7 @@ package body Harriet.Managers.Installations is
                             Rgen            => Rgen);
             begin
                Manager.Initialize_Agent_Manager
-                 (Installation, Installation.World);
+                 (Installation, Installation.World, 1.0);
                return new Resource_Generator_Manager'(Manager);
             end;
 
@@ -282,7 +284,7 @@ package body Harriet.Managers.Installations is
                                 (Installation.Production));
             begin
                Manager.Initialize_Agent_Manager
-                 (Installation, Installation.World);
+                 (Installation, Installation.World, 0.8);
                return new Factory_Manager'(Manager);
             end;
 
@@ -319,7 +321,7 @@ package body Harriet.Managers.Installations is
                           Day_Tick     => 0);
    begin
       Manager.Initialize_Agent_Manager
-        (Installation, Installation.World);
+        (Installation, Installation.World, 9.9);
       return new Hub_Manager'(Manager);
    end Create_Hub_Manager;
 
@@ -349,8 +351,7 @@ package body Harriet.Managers.Installations is
             if Quantity > Zero then
                Manager.Place_Ask
                  (Commodity => Commodity,
-                  Quantity  => Quantity,
-                  Price     => Manager.Current_Market_Bid_Price (Commodity));
+                  Quantity  => Quantity);
             end if;
          end;
       end loop;
@@ -386,10 +387,10 @@ package body Harriet.Managers.Installations is
              (Manager.Recipe, Item)
          then
             declare
+               use Harriet.Money;
+               use Harriet.Quantities;
                Current_Price : constant Harriet.Money.Price_Type :=
-                                 Harriet.Money.Adjust_Price
-                                   (Manager.Current_Market_Bid_Price (Item),
-                                    0.95);
+                                 Manager.Current_Market_Bid_Price (Item);
                Cost_Price    : constant Harriet.Money.Price_Type :=
                                  Harriet.Money.Price (Value, Quantity);
                Minimum_Price : constant Harriet.Money.Price_Type :=
@@ -398,11 +399,18 @@ package body Harriet.Managers.Installations is
                Desired_Price : constant Harriet.Money.Price_Type :=
                                  Harriet.Money.Adjust_Price
                                    (Cost_Price, 2.5);
-               Ask_Price     : constant Harriet.Money.Price_Type :=
-                                 Harriet.Money.Min
-                                   (Desired_Price,
-                                    Harriet.Money.Max
-                                      (Current_Price, Minimum_Price));
+               Offered_Quantity : constant Quantity_Type :=
+                                    (if Current_Price >= Desired_Price
+                                     then Quantity
+                                     elsif Current_Price >= Minimum_Price
+                                     then Scale (Quantity,
+                                       0.2 +
+                                         0.8 * To_Real
+                                           (Current_Price - Minimum_Price)
+                                       / To_Real
+                                         (Desired_Price - Minimum_Price))
+                                     else Zero);
+
             begin
                Manager.Log
                  ("factory: creating ask for "
@@ -415,10 +423,10 @@ package body Harriet.Managers.Installations is
                   & Harriet.Money.Show (Current_Price)
                   & "; cost price "
                   & Harriet.Money.Show (Cost_Price)
-                  & "; ask price "
-                  & Harriet.Money.Show (Ask_Price));
-               Manager.Place_Ask
-                 (Item, Quantity, Ask_Price);
+                  & "; offered quantity "
+                  & Harriet.Quantities.Show (Offered_Quantity));
+
+               Manager.Place_Ask (Item, Offered_Quantity);
             end;
          end if;
       end Add_Ask;
@@ -464,13 +472,16 @@ package body Harriet.Managers.Installations is
          Value    : Harriet.Money.Money_Type)
       is
          pragma Unreferenced (Value);
+         use Harriet.Quantities;
+         Demand : constant Quantity_Type :=
+                    Manager.Current_Market_Bid_Quantity (Item);
       begin
-         Manager.Place_Ask
-           (Commodity => Item,
-            Quantity  => Quantity,
-            Price     =>
-              Harriet.Money.Adjust_Price
-                (Manager.Current_Agent_Stock_Price (Item), 1.1));
+         if Demand > Zero then
+            Manager.Place_Ask
+              (Commodity => Item,
+               Quantity  =>
+                 Min (Demand, Harriet.Quantities.Scale (Quantity, 0.0625)));
+         end if;
       end Add_Ask;
 
       -------------
@@ -488,11 +499,7 @@ package body Harriet.Managers.Installations is
          if Quantity > Manager.Current_Stock (Item) then
             Manager.Place_Bid
               (Commodity => Item,
-               Quantity  => Quantity - Manager.Current_Stock (Item),
-               Price     =>
-                 Harriet.Money.Adjust_Price
-                   (Manager.Current_Agent_Stock_Price (Item),
-                    0.9));
+               Quantity  => Quantity - Manager.Current_Stock (Item));
          end if;
       end Add_Bid;
 
@@ -769,10 +776,12 @@ package body Harriet.Managers.Installations is
                                   (Harriet.Data_Series.X_Intercept (Trend));
                   Now       : constant Harriet.Calendar.Time :=
                                 Harriet.Calendar.Clock;
+                  Start_Window : constant Duration := Days (7.0);
+                  End_Window   : constant Duration := Days (70.0);
                   Max_Increase : constant Harriet.Calendar.Time :=
-                                   Now + Days (7.0);
+                                   Now + Start_Window;
                   Min_Increase : constant Harriet.Calendar.Time :=
-                                   Now + Days (70.0);
+                                   Now + End_Window;
                   Adjustment   : Non_Negative_Real := 1.0;
                   Old_Price    : constant Harriet.Money.Price_Type :=
                                    Manager.Current_Agent_Stock_Price
@@ -785,8 +794,7 @@ package body Harriet.Managers.Installations is
                         Adjustment :=
                           1.0 +
                             Real (Min_Increase - Zero_Date)
-                          / Real (Days (1))
-                          / 500.0;
+                          / Real (End_Window - Start_Window);
                      end if;
 
                      if Adjustment /= 1.0 then
@@ -824,7 +832,7 @@ package body Harriet.Managers.Installations is
                   elsif Harriet.Data_Series.Gradient (Trend) > 0.5 then
                      declare
                         D : constant Unit_Real :=
-                              1.0 - Real'Min (Gradient, 5.0) / 50.0;
+                              1.0 - Real'Min (Gradient, 5.0) / 10.0;
                      begin
                         Manager.Set_Agent_Stock_Price
                           (Commodity,
@@ -861,6 +869,8 @@ package body Harriet.Managers.Installations is
    begin
 
       Root_Installation_Manager (Manager).Execute_Agent_Tasks;
+
+      Harriet.Markets.Update_Market (Manager.Current_Market);
 
       Manager.Day_Tick := Manager.Day_Tick + 1;
       if Manager.Day_Tick mod Trend_Length = 0
