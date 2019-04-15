@@ -55,12 +55,19 @@ package body Harriet.Managers.Ships is
      (Manager  : Ship_Trade_Manager'Class;
       From, To : Harriet.Db.Market_Reference)
    is
+      type Trade_Commodity_Record is
+         record
+            Commodity : Harriet.Db.Commodity_Reference;
+            Max_Price : Harriet.Money.Price_Type;
+            Quantity  : Harriet.Quantities.Quantity_Type;
+         end record;
+
       package Trade_Queues is
         new WL.Heaps
           (Key_Type     => Non_Negative_Real,
-           Element_Type => Harriet.Db.Commodity_Reference,
-           "<"          => "<",
-           "="          => Harriet.Db."=");
+           Element_Type => Trade_Commodity_Record,
+           "<"          => "<");
+
       Queue : Trade_Queues.Heap;
    begin
       for Commodity of Harriet.Commodities.All_Commodities loop
@@ -75,8 +82,8 @@ package body Harriet.Managers.Ships is
             Max_Local_Price : constant Price_Type :=
                                 Adjust_Price (Remote_Price, 0.9);
             Local_Supply    : constant Quantity_Type :=
-                              Harriet.Markets.Available_At_Bid_Price
-                                  (From, Commodity, Max_Local_Price);
+                              Harriet.Markets.Current_Supply
+                                  (From, Commodity);
          begin
             if Local_Supply > Zero
               and then Remote_Demand > Zero
@@ -84,8 +91,8 @@ package body Harriet.Managers.Ships is
 
                declare
                   Local_Price : constant Price_Type :=
-                                  Harriet.Markets.Minimum_Bid_Price
-                                    (From, Commodity, Local_Supply);
+                                  Harriet.Markets.Current_Bid_Price
+                                    (From, Commodity);
                begin
                   Manager.Log
                     (Harriet.Commodities.Local_Name (Commodity)
@@ -97,9 +104,26 @@ package body Harriet.Managers.Ships is
                      & Show (Local_Supply) & "/" & Show (Max_Local_Price));
 
                   Queue.Insert (To_Real (Local_Price) / To_Real (Remote_Price),
-                                Commodity);
+                                Trade_Commodity_Record'
+                                  (Commodity => Commodity,
+                                   Max_Price => Max_Local_Price,
+                                   Quantity  => Local_Supply));
                end;
             end if;
+         end;
+      end loop;
+
+      while not Queue.Is_Empty loop
+         declare
+            Commodity : constant Harriet.Db.Commodity_Reference :=
+                          Queue.First_Element.Commodity;
+            Quantity  : constant Harriet.Quantities.Quantity_Type :=
+                          Queue.First_Element.Quantity;
+         begin
+            Queue.Delete_First;
+            Manager.Place_Bid
+              (Commodity => Commodity,
+               Quantity  => Quantity);
          end;
       end loop;
 
@@ -144,22 +168,18 @@ package body Harriet.Managers.Ships is
                Remote_Demand   : constant Quantity_Type :=
                                    Harriet.Markets.Daily_Demand
                                      (Market, Commodity);
-               Max_Local_Price : constant Price_Type :=
-                                   Adjust_Price (Remote_Price, 0.9);
                Local_Supply    : constant Quantity_Type :=
-                                   Harriet.Markets.Available_At_Bid_Price
-                                     (Manager.Market,
-                                      Commodity, Max_Local_Price);
+                                   Harriet.Markets.Current_Supply
+                                     (Manager.Market, Commodity);
                Trade_Quantity  : constant Quantity_Type :=
                                    Min (Local_Supply, Remote_Demand);
                Local_Price     : constant Price_Type :=
-                                   (if Trade_Quantity > Zero
-                                    then Harriet.Markets.Minimum_Bid_Price
-                                      (Manager.Market, Commodity,
-                                       Trade_Quantity)
-                                    else Zero);
+                                   Harriet.Markets.Current_Bid_Price
+                                     (Manager.Market, Commodity);
             begin
-               if Trade_Quantity > Zero then
+               if Trade_Quantity > Zero
+                 and then Local_Price < Remote_Price
+               then
                   Total_Available := Total_Available + Trade_Quantity;
                   Score := Score
                     + Natural
@@ -277,7 +297,7 @@ package body Harriet.Managers.Ships is
               Harriet.Quantities.To_Quantity
                 (Harriet.Ships.Design_Cargo_Volume (Ship.Ship_Design)));
    begin
-      Manager.Initialize_Agent_Manager (Ship, Ship.World);
+      Manager.Initialize_Agent_Manager (Ship, Ship.World, 10.0);
       return new Ship_Trade_Manager'(Manager);
    end Create_Trade_Manager;
 

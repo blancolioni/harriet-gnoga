@@ -1,6 +1,7 @@
 package Harriet.Random is
 
    procedure Reset;
+   procedure Reset (Initiator : Integer);
 
    function Unit_Random return Unit_Real;
 

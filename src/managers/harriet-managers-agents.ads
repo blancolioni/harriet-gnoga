@@ -42,6 +42,10 @@ package Harriet.Managers.Agents is
      (Manager : Root_Agent_Manager)
      return Duration;
 
+   function Current_Market
+     (Manager : Root_Agent_Manager'Class)
+      return Harriet.Db.Market_Reference;
+
    function Current_Market_Ask_Price
      (Manager   : Root_Agent_Manager'Class;
       Commodity : Harriet.Db.Commodity_Reference)
@@ -61,12 +65,6 @@ package Harriet.Managers.Agents is
      (Manager   : Root_Agent_Manager'Class;
       Commodity : Harriet.Db.Commodity_Reference)
       return Harriet.Quantities.Quantity_Type;
-
-   function Minimum_Bid_Price
-     (Manager   : Root_Agent_Manager'Class;
-      Commodity : Harriet.Db.Commodity_Reference;
-      Quantity  : Harriet.Quantities.Quantity_Type)
-      return Harriet.Money.Price_Type;
 
    function Current_Agent_Stock_Price
      (Manager   : Root_Agent_Manager'Class;
@@ -125,14 +123,12 @@ package Harriet.Managers.Agents is
    procedure Place_Bid
      (Manager   : Root_Agent_Manager'Class;
       Commodity : Harriet.Db.Commodity_Reference;
-      Quantity  : Harriet.Quantities.Quantity_Type;
-      Price     : Harriet.Money.Price_Type);
+      Quantity  : Harriet.Quantities.Quantity_Type);
 
    procedure Place_Ask
      (Manager   : Root_Agent_Manager'Class;
       Commodity : Harriet.Db.Commodity_Reference;
-      Quantity  : Harriet.Quantities.Quantity_Type;
-      Price     : Harriet.Money.Price_Type);
+      Quantity  : Harriet.Quantities.Quantity_Type);
 
    function Capacity
      (Manager : Root_Agent_Manager'Class)
@@ -158,9 +154,10 @@ package Harriet.Managers.Agents is
      (Manager : Root_Agent_Manager'Class);
 
    procedure Initialize_Agent_Manager
-     (Manager : in out Root_Agent_Manager'Class;
-      Agent   : Harriet.Db.Agent.Agent_Type;
-      World   : Harriet.Db.World_Reference);
+     (Manager  : in out Root_Agent_Manager'Class;
+      Agent    : Harriet.Db.Agent.Agent_Type;
+      World    : Harriet.Db.World_Reference;
+      Priority : Non_Negative_Real);
 
 private
 
@@ -173,11 +170,17 @@ private
          Account      : Harriet.Db.Account_Reference;
          World        : Harriet.Db.World_Reference;
          Capacity     : Unit_Real := 1.0;
+         Priority     : Non_Negative_Real;
       end record;
 
    function Capacity
      (Manager : Root_Agent_Manager'Class)
       return Unit_Real
    is (Manager.Capacity);
+
+   function Current_Market
+     (Manager : Root_Agent_Manager'Class)
+      return Harriet.Db.Market_Reference
+   is (Manager.Market);
 
 end Harriet.Managers.Agents;

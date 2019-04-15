@@ -31,7 +31,7 @@ package body Harriet.Managers.Pops is
                    Consumption_Quality => Group.Consumer_Quality,
                    Service_Quality     => Group.Service_Quality);
    begin
-      Manager.Initialize_Agent_Manager (Pop, Pop.World);
+      Manager.Initialize_Agent_Manager (Pop, Pop.World, 1.5);
       return new Root_Pop_Manager'(Manager);
    end Create_Default_Manager;
 
@@ -49,8 +49,7 @@ package body Harriet.Managers.Pops is
          Manager.Place_Ask
            (Commodity => Manager.Commodity,
             Quantity  =>
-              Harriet.Db.Pop.Get (Manager.Pop).Size,
-            Price     => Manager.Current_Market_Bid_Price (Manager.Commodity));
+              Harriet.Db.Pop.Get (Manager.Pop).Size);
       end if;
 
    end Create_Market_Offers;
