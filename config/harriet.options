@@ -4,6 +4,7 @@ package Harriet.Options is
    Language                : String;
    
    Randomise               : Boolean;
+   Random_Seed             : Natural;
    Generate_Root_Password  : Boolean;
    Command_Line            : Boolean;
    Timed_Run               : Natural;

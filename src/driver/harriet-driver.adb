@@ -116,8 +116,13 @@ begin
             return;
          end if;
 
-         Harriet.Random.Reset;
-         WL.Random.Randomise;
+         if Harriet.Options.Randomise then
+            Harriet.Random.Reset;
+            WL.Random.Randomise;
+         else
+            Harriet.Random.Reset (Harriet.Options.Random_Seed);
+            WL.Random.Reset (Harriet.Options.Random_Seed);
+         end if;
 
          Harriet.Db.Database.Open;
          Database_Open := True;
