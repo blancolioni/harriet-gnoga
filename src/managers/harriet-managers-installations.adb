@@ -600,16 +600,35 @@ package body Harriet.Managers.Installations is
                   Commodity : constant Harriet.Db.Commodity_Reference :=
                                 Harriet.Db.Resource.Get (Resource)
                                 .Get_Commodity_Reference;
+                  Factor    : constant Non_Negative_Real :=
+                                Real'Max
+                                  (Harriet.Random.Normal_Random (0.25) + 1.0,
+                                   0.1);
                   Quantity : constant Quantity_Type :=
                                To_Quantity
-                                 (Deposit.Accessibility * 20.0
-                                  * (Harriet.Random.Unit_Random + 0.5));
+                                 (Deposit.Accessibility * 200.0
+                                  * Factor);
                   Cost     : constant Harriet.Money.Money_Type :=
                                Harriet.Money.Total
                                  (Manager.Current_Market_Bid_Price
                                     (Commodity),
                                   Quantity);
                begin
+                  Manager.Log
+                    ("extracting: "
+                     & Harriet.Commodities.Local_Name (Commodity)
+                     & ": accessibility="
+                     & Harriet.Real_Images.Approximate_Image
+                       (Deposit.Accessibility)
+                     & "; abundance="
+                     & Harriet.Real_Images.Approximate_Image
+                       (Deposit.Abundance)
+                     & "; factor="
+                     & Harriet.Real_Images.Approximate_Image
+                       (Factor)
+                     & "; recovered="
+                     & Show (Quantity));
+
                   Harriet.Stock.Add_Stock
                     (Installation, Commodity, Quantity, Cost);
                end;

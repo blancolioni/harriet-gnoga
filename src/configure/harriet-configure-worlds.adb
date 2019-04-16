@@ -183,10 +183,10 @@ package body Harriet.Configure.Worlds is
                   Harriet.Db.Deposit.Create
                     (World_Sector  => Sector.Get_World_Sector_Reference,
                      Resource      => Terrain_Resource.Resource,
-                     Accessibility => Harriet.Random.Unit_Random,
+                     Accessibility => Harriet.Random.Unit_Random ** 2,
                      Abundance     =>
                        (Harriet.Random.Unit_Random + 0.5)
-                     * 1.0e6);
+                     * 1.0e8);
                end if;
             end loop;
 
