@@ -46,6 +46,11 @@ package Harriet.Managers.Agents is
      (Manager : Root_Agent_Manager'Class)
       return Harriet.Db.Market_Reference;
 
+   function Estimated_Demand
+     (Manager   : Root_Agent_Manager'Class;
+      Commodity : Harriet.Db.Commodity_Reference)
+      return Harriet.Quantities.Quantity_Type;
+
    function Current_Market_Ask_Price
      (Manager   : Root_Agent_Manager'Class;
       Commodity : Harriet.Db.Commodity_Reference)

@@ -115,9 +115,11 @@ package body Harriet.Managers.Installations is
          Worker_Cost : Money_Type := Zero;
          Capacity    : constant Quantity_Type :=
                          Harriet.Db.Facility.Get (Manager.Facility).Capacity;
-         Value : constant Money_Type :=
+         Value       : constant Money_Type :=
                          Total (Manager.Current_Market_Bid_Price (Commodity),
                                 Capacity);
+         Demand      : constant Quantity_Type :=
+                         Manager.Estimated_Demand (Commodity);
       begin
          for Input of Harriet.Db.Recipe_Input.Select_By_Recipe (Recipe) loop
             Input_Cost := Input_Cost
@@ -148,7 +150,7 @@ package body Harriet.Managers.Installations is
                             (To_Real (Value) / To_Real (Total_Cost) - 1.0);
             Score       : constant Natural :=
                             (if Profit > 0.0
-                             then Natural (Profit * 1000.0)
+                             then Natural (To_Real (Demand))
                              else 0);
          begin
             Harriet.Logging.Log
@@ -157,7 +159,8 @@ package body Harriet.Managers.Installations is
                Category => "production",
                Message  =>
                  Harriet.Commodities.Local_Name (Commodity)
-               & ": input price " & Show (Input_Price)
+               & ": estimated demand " & Show (Demand)
+               & "; input price " & Show (Input_Price)
                & "; total input cost " & Show (Total (Input_Price, Capacity))
                & "; worker cost " & Show (Worker_Cost)
                & "; expected earnings " & Show (Value)

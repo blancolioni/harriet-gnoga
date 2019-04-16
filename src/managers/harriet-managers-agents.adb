@@ -14,6 +14,8 @@ with Harriet.Db.Bid_Offer;
 with Harriet.Db.Commodity;
 with Harriet.Db.Historical_Offer;
 with Harriet.Db.Historical_Stock;
+with Harriet.Db.Pop;
+with Harriet.Db.Pop_Group_Needs;
 with Harriet.Db.Stock_Price;
 with Harriet.Db.Transaction;
 
@@ -366,6 +368,28 @@ package body Harriet.Managers.Agents is
       Manager.Log ("earn " & Harriet.Money.Show (Amount));
       Harriet.Agents.Add_Cash (Manager.Account, Amount);
    end Earn;
+
+   ----------------------
+   -- Estimated_Demand --
+   ----------------------
+
+   function Estimated_Demand
+     (Manager   : Root_Agent_Manager'Class;
+      Commodity : Harriet.Db.Commodity_Reference)
+      return Harriet.Quantities.Quantity_Type
+   is
+      use Harriet.Quantities;
+   begin
+      return Demand : Quantity_Type := Zero do
+         for Pop of Harriet.Db.Pop.Select_By_World (Manager.World) loop
+            if Harriet.Db.Pop_Group_Needs.Is_Pop_Group_Need
+              (Pop.Pop_Group, Commodity)
+            then
+               Demand := Demand + Pop.Size;
+            end if;
+         end loop;
+      end return;
+   end Estimated_Demand;
 
    -----------------
    -- Field_Count --
