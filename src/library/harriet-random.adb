@@ -55,6 +55,15 @@ package body Harriet.Random is
       Ada.Numerics.Float_Random.Reset (Gen);
    end Reset;
 
+   -----------
+   -- Reset --
+   -----------
+
+   procedure Reset (Initiator : Integer) is
+   begin
+      Ada.Numerics.Float_Random.Reset (Gen, Initiator);
+   end Reset;
+
    -----------------
    -- Unit_Random --
    -----------------
